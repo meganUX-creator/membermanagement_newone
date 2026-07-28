@@ -27,30 +27,29 @@
                         </div>
                     </div>
                     <div class="toolbar-right">
-                        <button class="btn btn-primary"><i class="ph ph-plus"></i> 新增會員</button>
+                        <button class="btn btn-primary">新增會員</button>
+                        <button class="btn btn-outline">資料驗證</button>
                         <!-- 批量操作下拉選單 -->
                         <div class="batch-dropdown-container">
                             <button class="btn btn-outline" id="btnBatchOperations">批量操作 <i
                                     class="ph ph-caret-down"></i></button>
                             <ul class="batch-dropdown-menu" id="batchOperationsMenu">
-                                <li>批量更新用戶餘額</li>
-                                <li>批量更新用戶</li>
-                                <li>批量更新用戶狀態</li>
-                                <li>批量代理變更</li>
-                                <li>批量更新最大提款次數</li>
-                            </ul>
-                        </div>
-                        <!-- 導出數據下拉選單 -->
-                        <div class="export-dropdown-container">
-                            <button class="btn btn-outline" id="btnExportData"><i class="ph ph-download-simple"></i>
-                                導出數據 <i class="ph ph-caret-down"></i></button>
-                            <ul class="export-dropdown-menu" id="exportDataMenu">
-                                <li>導出已篩選用戶</li>
-                                <li>導出用戶數據</li>
+                                <li>更新用戶餘額</li>
+                                <li>更新用戶</li>
+                                <li>更新用戶狀態</li>
+                                <li>代理變更</li>
+                                <li>更新最大提款次數</li>
                             </ul>
                         </div>
                         <div class="topbar-divider"></div>
-                        <button class="btn btn-text">資料驗證 <i class="ph ph-gear-six"></i></button>
+                        <!-- 導出數據下拉選單 -->
+                        <div class="export-dropdown-container">
+                            <button class="btn btn-outline" id="btnExportData">導出數據 <i class="ph ph-caret-down"></i></button>
+                            <ul class="export-dropdown-menu" id="exportDataMenu">
+                                <li>已篩選用戶</li>
+                                <li>用戶數據</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
 
@@ -183,9 +182,8 @@
                         </div>
 
                         <div class="form-group" data-filter-id="depositAmount">
-                            <div class="input-with-prefix">
+                            <div class="input-with-inline-label">
                                 <span class="inline-label">存款金額大於：</span>
-                                <span class="prefix">$</span>
                                 <input type="text" placeholder="金額" id="inputDepositOuter">
                             </div>
                         </div>
@@ -232,6 +230,9 @@
                         <button class="btn btn-primary" id="btnSearch">
                             <i class="ph ph-magnifying-glass"></i> 搜尋
                         </button>
+                        <button class="btn btn-outline" id="btnReset">
+                            <i class="ph ph-arrow-counter-clockwise"></i> 重置
+                        </button>
                         <button class="btn btn-outline btn-icon-only" id="btnCustomizeFilter" title="自訂篩選欄位">
                             <i class="ph ph-faders"></i>
                         </button>
@@ -246,8 +247,8 @@
                             <div class="filter-tags" id="filterTagsContainer">
                                 <!-- Dynamic filter tags will be rendered here -->
                             </div>
-                            <button class="btn-clear text-danger" id="btnClearAll">
-                                <i class="ph ph-trash"></i> 清除全部
+                            <button class="btn-clear text-danger" id="btnClearAll" title="清除全部">
+                                <i class="ph ph-trash"></i>
                             </button>
                         </div>
                         <div class="table-wrapper">
@@ -295,27 +296,27 @@
                 </button>
                 <div class="bottom-stats-left">
                     <div class="stat-item">
-                        <span class="stat-label">用戶總餘額</span>
+                        <span class="stat-label">用戶餘額寶總額</span>
                         <span class="stat-value"><strong>$ 15,057.43</strong> <span class="stat-unit">T</span></span>
                     </div>
                     <div class="stat-divider"></div>
                     <div class="stat-item">
-                        <span class="stat-label">餘額官總額</span>
+                        <span class="stat-label">用戶總金額</span>
                         <span class="stat-value"><strong>$ 20,417,771</strong></span>
                     </div>
                     <div class="stat-divider"></div>
                     <div class="stat-item">
-                        <span class="stat-label">三方餘額總額 <i class="ph ph-info" title="參考值"></i></span>
+                        <span class="stat-label">三方遊戲總餘額總額 <i class="ph ph-info" title="參考值"></i></span>
                         <span class="stat-value"><strong>$ 620,847</strong></span>
                     </div>
                     <div class="stat-divider"></div>
                     <div class="stat-item">
-                        <span class="stat-label">今日註冊</span>
+                        <span class="stat-label">註冊</span>
                         <span class="stat-value text-indigo"><strong>15</strong> <span class="stat-unit">人</span></span>
                     </div>
                     <div class="stat-divider"></div>
                     <div class="stat-item">
-                        <span class="stat-label">今日首充 (有效)</span>
+                        <span class="stat-label">有效首充</span>
                         <span class="stat-value text-emerald"><strong>1</strong> <span class="stat-unit">人</span></span>
                     </div>
                 </div>
@@ -394,10 +395,7 @@
                     </div>
                     <div class="form-group">
                         <label>存款金額大於</label>
-                        <div class="input-with-prefix">
-                            <span>$</span>
-                            <input type="text" id="inputDeposit" value="" placeholder="金額">
-                        </div>
+                        <input type="text" id="inputDeposit" value="" placeholder="金額">
                     </div>
                 </div>
             </div>近
@@ -809,7 +807,7 @@
                                 <tbody>
                                     <tr style="height: 60px;">
                                         <td colspan="6" style="text-align: center; color: #94a3b8; font-size: 13px;">
-                                            暫無數據</td>
+                                            -</td>
                                     </tr>
                                 </tbody>
                             </table>
