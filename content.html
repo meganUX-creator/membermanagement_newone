@@ -247,9 +247,22 @@
                             <div class="filter-tags" id="filterTagsContainer">
                                 <!-- Dynamic filter tags will be rendered here -->
                             </div>
-                            <button class="btn-clear text-danger" id="btnClearAll" title="清除全部">
-                                <i class="ph ph-trash"></i>
-                            </button>
+                            <!-- 分頁區塊 (極簡版) -->
+                            <div class="pagination-container" style="gap: 8px;">
+                                <div class="pagination-size-wrapper">
+                                    <select id="selectPageSize" class="page-size-select" style="padding: 2px 6px; font-size: 12px; height: 24px;">
+                                        <option value="10">10 條/頁</option>
+                                        <option value="20" selected>20 條/頁</option>
+                                        <option value="50">50 條/頁</option>
+                                        <option value="100">100 條/頁</option>
+                                    </select>
+                                </div>
+                                <div class="pagination-pages" id="paginationPagesContainer" style="display: flex; align-items: center; gap: 4px;">
+                                    <button class="btn-page" id="btnPrevPage" disabled style="padding: 2px 6px; font-size: 12px; height: 24px; min-width: 24px;"><i class="ph ph-caret-left"></i></button>
+                                    <span id="pageNumbersList" style="font-size: 12px; color: var(--text-main); margin: 0 4px; font-weight: 500;"></span>
+                                    <button class="btn-page" id="btnNextPage" disabled style="padding: 2px 6px; font-size: 12px; height: 24px; min-width: 24px;"><i class="ph ph-caret-right"></i></button>
+                                </div>
+                            </div>
                         </div>
                         <div class="table-wrapper">
                             <table id="userTable">
@@ -263,29 +276,7 @@
                         </div>
                     </div>
 
-                    <!-- 分頁區塊 -->
-                    <div class="pagination-container">
-                        <div class="pagination-info">
-                            共 <span id="totalCount">0</span> 條
-                        </div>
-                        <div class="pagination-size-wrapper">
-                            <select id="selectPageSize" class="page-size-select">
-                                <option value="10">10 條/頁</option>
-                                <option value="20" selected>20 條/頁</option>
-                                <option value="50">50 條/頁</option>
-                                <option value="100">100 條/頁</option>
-                            </select>
-                        </div>
-                        <div class="pagination-pages" id="paginationPagesContainer">
-                            <button class="btn-page" id="btnPrevPage" disabled><i class="ph ph-caret-left"></i></button>
-                            <div id="pageNumbersList" style="display: flex; gap: 6px;"></div>
-                            <button class="btn-page" id="btnNextPage" disabled><i
-                                    class="ph ph-caret-right"></i></button>
-                        </div>
-                        <div class="pagination-jump">
-                            前往 <input type="number" id="inputJumpPage" min="1" max="1" value="1"> 頁
-                        </div>
-                    </div>
+
                 </section>
             </div>
 

@@ -2509,6 +2509,7 @@ body.stats-collapsed .app-container {
     display: flex;
     gap: 12px;
     align-items: center;
+    flex-wrap: wrap;
 }
 
 .account-input-group {
@@ -2583,13 +2584,20 @@ body.stats-collapsed .app-container {
 
 .current-filters {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
+    gap: 16px;
     padding: 12px 24px;
     background-color: #ffffff;
     border-bottom: 1px solid var(--border-color);
 }
 
+.current-filters .pagination-container {
+    padding: 0;
+    border-top: none;
+    background-color: transparent;
+    flex-shrink: 0; /* Prevent pagination from shrinking */
+}
 .filter-tags {
     display: flex;
     flex-wrap: wrap;
@@ -3484,6 +3492,8 @@ td {
     50% { opacity: 0.4; }
     100% { opacity: 1; }
 }
+
+
 .skeleton-box {
     display: inline-block;
     height: 16px;
