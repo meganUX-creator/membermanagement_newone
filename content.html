@@ -13,323 +13,330 @@
 <body>
 
     <main class="main-content">
-            <div class="app-container">
-                <!-- 操作工具列 (Action Bar) -->
-                <div class="action-toolbar">
-                    <div class="toolbar-left">
-                        <div class="mode-segmented-control">
-                            <button type="button" class="mode-btn active" id="btnModeNested" data-mode="nested" title="巢狀模式">
-                                <i class="ph ph-squares-four"></i>
-                            </button>
-                            <button type="button" class="mode-btn" id="btnModeCompact" data-mode="compact" title="壓縮模式">
-                                <i class="ph ph-rows"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="toolbar-right">
-                        <button class="btn btn-primary">新增會員</button>
-                        <button class="btn btn-outline">資料驗證</button>
-                        <!-- 批量操作下拉選單 -->
-                        <div class="batch-dropdown-container">
-                            <button class="btn btn-outline" id="btnBatchOperations">批量操作 <i
-                                    class="ph ph-caret-down"></i></button>
-                            <ul class="batch-dropdown-menu" id="batchOperationsMenu">
-                                <li>更新用戶餘額</li>
-                                <li>更新用戶</li>
-                                <li>更新用戶狀態</li>
-                                <li>代理變更</li>
-                                <li>更新最大提款次數</li>
-                            </ul>
-                        </div>
-                        <div class="topbar-divider"></div>
-                        <!-- 導出數據下拉選單 -->
-                        <div class="export-dropdown-container">
-                            <button class="btn btn-outline" id="btnExportData">導出數據 <i class="ph ph-caret-down"></i></button>
-                            <ul class="export-dropdown-menu" id="exportDataMenu">
-                                <li>已篩選用戶</li>
-                                <li>用戶數據</li>
-                            </ul>
-                        </div>
+        <div class="app-container">
+            <!-- 操作工具列 (Action Bar) -->
+            <div class="action-toolbar">
+                <div class="toolbar-left">
+                    <div class="mode-segmented-control">
+                        <button type="button" class="mode-btn active" id="btnModeNested" data-mode="nested"
+                            title="巢狀模式">
+                            <i class="ph ph-squares-four"></i>
+                        </button>
+                        <button type="button" class="mode-btn" id="btnModeCompact" data-mode="compact" title="壓縮模式">
+                            <i class="ph ph-rows"></i>
+                        </button>
                     </div>
                 </div>
-
-                <!-- Anchor to detect scroll threshold for sticky filter card -->
-                <div id="filter-scroll-anchor" style="height: 1px; margin-bottom: -1px;"></div>
-                <!-- 搜尋過濾區塊 -->
-                <section class="filter-card">
-                    <div class="filter-row">
-                        <div class="form-group" data-filter-id="status">
-                            <div class="custom-select-single" id="dropdownStatus">
-                                <div class="select-selected">
-                                    <span class="inline-label">狀態：</span>
-                                    <span class="selected-val">正常</span>
-                                    <i class="ph ph-caret-down"></i>
-                                </div>
-                                <ul class="select-options">
-                                    <li data-value="" class="active">所有</li>
-                                    <li data-value="正常">正常</li>
-                                    <li data-value="冻结">冻结</li>
-                                    <li data-value="停用">停用</li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="form-group" data-filter-id="level">
-                            <div class="custom-select-single" id="dropdownLevel">
-                                <div class="select-selected">
-                                    <span class="inline-label">用戶層級：</span>
-                                    <span class="selected-val">默認層</span>
-                                    <i class="ph ph-caret-down"></i>
-                                </div>
-                                <ul class="select-options">
-                                    <li data-value="" class="active">全部</li>
-                                    <li data-value="普通會員">普通會員</li>
-                                    <li data-value="VIP會員">VIP會員</li>
-                                    <li data-value="黃金會員">黃金會員</li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="form-group" data-filter-id="vip">
-                            <div class="custom-select-multi" id="dropdownVip">
-                                <div class="select-selected">
-                                    <span class="inline-label">會員等級：</span>
-                                    <span class="selected-val">請選擇</span>
-                                    <i class="ph ph-caret-down"></i>
-                                </div>
-                                <ul class="select-options">
-                                    <li data-value="普通会员"><input type="checkbox"> <span>普通会员</span></li>
-                                    <li data-value="白银会员"><input type="checkbox"> <span>白银会员</span></li>
-                                    <li data-value="黄金会员"><input type="checkbox"> <span>黄金会员</span></li>
-                                    <li data-value="铂金会员"><input type="checkbox"> <span>铂金会员</span></li>
-                                    <li data-value="钻石会员"><input type="checkbox"> <span>钻石会员</span></li>
-                                    <li data-value="至尊会员"><input type="checkbox"> <span>至尊会员</span></li>
-                                    <li data-value="管理员"><input type="checkbox"> <span>管理员</span></li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="form-group" data-filter-id="other">
-                            <div class="custom-select-multi" id="dropdownOther">
-                                <div class="select-selected">
-                                    <span class="inline-label">排除條件：</span>
-                                    <span class="selected-val">測試帳號</span>
-                                    <i class="ph ph-caret-down"></i>
-                                </div>
-                                <ul class="select-options">
-                                    <li data-value="測試帳號" class="selected"><input type="checkbox" checked>
-                                        <span>測試帳號</span>
-                                    </li>
-                                    <li data-value="未充值玩家"><input type="checkbox"> <span>未充值玩家</span></li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <!-- 新增隱藏的過濾欄位 (自訂篩選觸發) -->
-                        <div class="form-group" data-filter-id="birthday">
-                            <div class="custom-select-single" id="dropdownBirthdayOuter">
-                                <div class="select-selected">
-                                    <span class="inline-label">生日月份：</span>
-                                    <span class="selected-val">全部</span>
-                                    <i class="ph ph-caret-down"></i>
-                                </div>
-                                <ul class="select-options">
-                                    <li data-value="" class="active">全部</li>
-                                    <li data-value="1">1月</li>
-                                    <li data-value="2">2月</li>
-                                    <li data-value="3">3月</li>
-                                    <li data-value="4">4月</li>
-                                    <li data-value="5">5月</li>
-                                    <li data-value="6">6月</li>
-                                    <li data-value="7">7月</li>
-                                    <li data-value="8">8月</li>
-                                    <li data-value="9">9月</li>
-                                    <li data-value="10">10月</li>
-                                    <li data-value="11">11月</li>
-                                    <li data-value="12">12月</li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div class="form-group" data-filter-id="registerTime">
-                            <div class="date-range-container">
-                                <span class="inline-label">新增時間：</span>
-                                <input type="datetime-local" class="date-text" id="inputDateStartOuter"
-                                    style="border:none; outline:none; background:transparent;">
-                                <span class="date-separator-line">~</span>
-                                <input type="datetime-local" class="date-text" id="inputDateEndOuter"
-                                    style="border:none; outline:none; background:transparent;">
-                            </div>
-                        </div>
-
-                        <div class="form-group" data-filter-id="bankCard">
-                            <div class="input-with-inline-label">
-                                <span class="inline-label">綁定銀行卡：</span>
-                                <input type="text" placeholder="銀行卡號" id="inputBankCardOuter">
-                            </div>
-                        </div>
-
-                        <div class="form-group" data-filter-id="notLoginDays">
-                            <div class="input-with-suffix">
-                                <span class="inline-label">未登入天數 (大於)：</span>
-                                <input type="text" placeholder="天數" id="inputOfflineDaysOuter">
-                                <span class="suffix">天</span>
-                            </div>
-                        </div>
-
-                        <div class="form-group" data-filter-id="agentId">
-                            <div class="input-with-inline-label">
-                                <span class="inline-label">代理Id：</span>
-                                <input type="text" placeholder="代理Id" id="inputAgentIdOuter">
-                            </div>
-                        </div>
-
-                        <div class="form-group" data-filter-id="vipLevel">
-                            <div class="input-with-inline-label">
-                                <span class="inline-label">VIP會員等級：</span>
-                                <input type="text" placeholder="VIP會員等級" id="inputVipLevelOuter">
-                            </div>
-                        </div>
-
-                        <div class="form-group" data-filter-id="loginIp">
-                            <div class="input-with-inline-label">
-                                <span class="inline-label">登录IP：</span>
-                                <input type="text" placeholder="登录IP" id="inputIpOuter">
-                            </div>
-                        </div>
-
-                        <div class="form-group" data-filter-id="depositAmount">
-                            <div class="input-with-inline-label">
-                                <span class="inline-label">存款金額大於：</span>
-                                <input type="text" placeholder="金額" id="inputDepositOuter">
-                            </div>
-                        </div>
-
+                <div class="toolbar-right">
+                    <button class="btn btn-primary">新增會員</button>
+                    <button class="btn btn-outline">資料驗證</button>
+                    <!-- 批量操作下拉選單 -->
+                    <div class="batch-dropdown-container">
+                        <button class="btn btn-outline" id="btnBatchOperations">批量操作 <i
+                                class="ph ph-caret-down"></i></button>
+                        <ul class="batch-dropdown-menu" id="batchOperationsMenu">
+                            <li>更新用戶餘額</li>
+                            <li>更新用戶</li>
+                            <li>更新用戶狀態</li>
+                            <li>代理變更</li>
+                            <li>更新最大提款次數</li>
+                        </ul>
                     </div>
-
-                    <div class="filter-actions-row">
-                        <div class="account-input-group">
-                            <div class="account-type-dropdown" id="accountTypeDropdown">
-                                <div class="dropdown-selected" id="accountTypeSelected">
-                                    <i class="ph-fill ph-snowflake"></i> <span id="accountTypeText">帳號 (精確匹配)</span> <i
-                                        class="ph ph-caret-down"></i>
-                                </div>
-                                <ul class="dropdown-menu" id="accountTypeMenu"
-                                    style="max-height: 250px; overflow-y: auto;">
-                                    <li data-value="exact" class="active"><span>帳號 (精確匹配)</span> <span
-                                            class="type-badge">Exact</span></li>
-                                    <li data-value="fuzzy"><span>帳號 (模糊匹配)</span> <span class="type-badge">Fuzzy</span>
-                                    </li>
-                                    <li data-value="multi"><span>帳號 (多帳號篩選)</span> <span class="type-badge">Multi</span>
-                                    </li>
-                                    <li data-value="quickLogin"><span>快速登录帐号</span> <span
-                                            class="type-badge">Quick</span></li>
-                                    <li data-value="uid"><span>用户ID</span> <span class="type-badge">ID</span></li>
-                                    <li data-value="inviteCode"><span>邀请码</span> <span class="type-badge">Code</span>
-                                    </li>
-                                    <li data-value="nickname"><span>用户昵称</span> <span class="type-badge">Nick</span>
-                                    </li>
-                                    <li data-value="realName"><span>真实姓名</span> <span class="type-badge">Name</span>
-                                    </li>
-                                    <li data-value="email"><span>邮箱</span> <span class="type-badge">Email</span></li>
-                                    <li data-value="phone"><span>手机号</span> <span class="type-badge">Phone</span></li>
-                                    <li data-value="remark"><span>回访备注</span> <span class="type-badge">Note</span></li>
-                                    <li data-value="googleCode"><span>谷歌验证码</span> <span
-                                            class="type-badge">Google</span></li>
-                                </ul>
-                            </div>
-                            <input type="text" id="inputAccount" placeholder="請輸入精確帳號">
-                        </div>
-                        <button class="btn btn-outline" id="openAdvancedFilter" style="display: none;">
-                            <i class="ph ph-sliders-horizontal"></i> 進階篩選條件 <span class="badge"
-                                id="advancedBadge">0</span>
-                        </button>
-                        <button class="btn btn-primary" id="btnSearch">
-                            <i class="ph ph-magnifying-glass"></i> 搜尋
-                        </button>
-                        <button class="btn btn-outline" id="btnReset">
-                            <i class="ph ph-arrow-counter-clockwise"></i> 重置
-                        </button>
-                        <button class="btn btn-outline btn-icon-only" id="btnCustomizeFilter" title="自訂篩選欄位">
-                            <i class="ph ph-faders"></i>
-                        </button>
+                    <div class="topbar-divider"></div>
+                    <!-- 導出數據下拉選單 -->
+                    <div class="export-dropdown-container">
+                        <button class="btn btn-outline" id="btnExportData">導出數據 <i
+                                class="ph ph-caret-down"></i></button>
+                        <ul class="export-dropdown-menu" id="exportDataMenu">
+                            <li>已篩選用戶</li>
+                            <li>用戶數據</li>
+                        </ul>
                     </div>
-                </section>
-
-                <!-- 列表區塊 -->
-                <section class="table-card">
-                    <!-- 將篩選區塊與表格群組在同一個 div，方便未來整體移動 -->
-                    <div class="table-and-filter-group">
-                        <div class="current-filters">
-                            <div class="filter-tags" id="filterTagsContainer">
-                                <!-- Dynamic filter tags will be rendered here -->
-                            </div>
-                            <!-- 分頁區塊 (極簡版) -->
-                            <div class="pagination-container" style="gap: 8px;">
-                                <div class="pagination-size-wrapper">
-                                    <select id="selectPageSize" class="page-size-select" style="padding: 2px 6px; font-size: 12px; height: 24px;">
-                                        <option value="10">10 條/頁</option>
-                                        <option value="20" selected>20 條/頁</option>
-                                        <option value="50">50 條/頁</option>
-                                        <option value="100">100 條/頁</option>
-                                    </select>
-                                </div>
-                                <div class="pagination-pages" id="paginationPagesContainer" style="display: flex; align-items: center; gap: 4px;">
-                                    <button class="btn-page" id="btnPrevPage" disabled style="padding: 2px 6px; font-size: 12px; height: 24px; min-width: 24px;"><i class="ph ph-caret-left"></i></button>
-                                    <span id="pageNumbersList" style="font-size: 12px; color: var(--text-main); margin: 0 4px; font-weight: 500;"></span>
-                                    <button class="btn-page" id="btnNextPage" disabled style="padding: 2px 6px; font-size: 12px; height: 24px; min-width: 24px;"><i class="ph ph-caret-right"></i></button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="table-wrapper">
-                            <table id="userTable">
-                                <thead id="userTableHeader">
-                                    <!-- Mock headers rendered dynamically by script.js -->
-                                </thead>
-                                <tbody id="userTableBody">
-                                    <!-- Mock rows will be rendered dynamically by JavaScript -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-
-                </section>
-            </div>
-
-            <!-- 底部固定數據統計欄 (Bottom Summary Stats Bar) -->
-            <div class="bottom-stats-bar" id="bottomStatsBar">
-                <button class="stats-toggle-btn" id="btnToggleStats" title="展開/收起統計">
-                    <i class="ph ph-caret-down"></i>
-                </button>
-                <div class="bottom-stats-left">
-                    <div class="stat-item">
-                        <span class="stat-label">用戶餘額寶總額</span>
-                        <span class="stat-value"><strong>$ 15,057.43</strong> <span class="stat-unit">T</span></span>
-                    </div>
-                    <div class="stat-divider"></div>
-                    <div class="stat-item">
-                        <span class="stat-label">用戶總金額</span>
-                        <span class="stat-value"><strong>$ 20,417,771</strong></span>
-                    </div>
-                    <div class="stat-divider"></div>
-                    <div class="stat-item">
-                        <span class="stat-label">三方遊戲總餘額總額 <i class="ph ph-info" title="參考值"></i></span>
-                        <span class="stat-value"><strong>$ 620,847</strong></span>
-                    </div>
-                    <div class="stat-divider"></div>
-                    <div class="stat-item">
-                        <span class="stat-label">註冊</span>
-                        <span class="stat-value text-indigo"><strong>15</strong> <span class="stat-unit">人</span></span>
-                    </div>
-                    <div class="stat-divider"></div>
-                    <div class="stat-item">
-                        <span class="stat-label">有效首充</span>
-                        <span class="stat-value text-emerald"><strong>1</strong> <span class="stat-unit">人</span></span>
-                    </div>
-                </div>
-                <div class="bottom-stats-right">
-                    <span class="stats-exclude-badge">數據已排除測試帳號</span>
                 </div>
             </div>
-        </main>
+
+            <!-- Anchor to detect scroll threshold for sticky filter card -->
+            <div id="filter-scroll-anchor" style="height: 1px; margin-bottom: -1px;"></div>
+            <!-- 搜尋過濾區塊 -->
+            <section class="filter-card">
+                <div class="filter-row">
+                    <div class="form-group" data-filter-id="status">
+                        <div class="custom-select-single" id="dropdownStatus">
+                            <div class="select-selected">
+                                <span class="inline-label">狀態：</span>
+                                <span class="selected-val">正常</span>
+                                <i class="ph ph-caret-down"></i>
+                            </div>
+                            <ul class="select-options">
+                                <li data-value="" class="active">所有</li>
+                                <li data-value="正常">正常</li>
+                                <li data-value="冻结">冻结</li>
+                                <li data-value="停用">停用</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="form-group" data-filter-id="level">
+                        <div class="custom-select-single" id="dropdownLevel">
+                            <div class="select-selected">
+                                <span class="inline-label">用戶層級：</span>
+                                <span class="selected-val">默認層</span>
+                                <i class="ph ph-caret-down"></i>
+                            </div>
+                            <ul class="select-options">
+                                <li data-value="" class="active">全部</li>
+                                <li data-value="普通會員">普通會員</li>
+                                <li data-value="VIP會員">VIP會員</li>
+                                <li data-value="黃金會員">黃金會員</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="form-group" data-filter-id="vip">
+                        <div class="custom-select-multi" id="dropdownVip">
+                            <div class="select-selected">
+                                <span class="inline-label">會員等級：</span>
+                                <span class="selected-val">請選擇</span>
+                                <i class="ph ph-caret-down"></i>
+                            </div>
+                            <ul class="select-options">
+                                <li data-value="普通会员"><input type="checkbox"> <span>普通会员</span></li>
+                                <li data-value="白银会员"><input type="checkbox"> <span>白银会员</span></li>
+                                <li data-value="黄金会员"><input type="checkbox"> <span>黄金会员</span></li>
+                                <li data-value="铂金会员"><input type="checkbox"> <span>铂金会员</span></li>
+                                <li data-value="钻石会员"><input type="checkbox"> <span>钻石会员</span></li>
+                                <li data-value="至尊会员"><input type="checkbox"> <span>至尊会员</span></li>
+                                <li data-value="管理员"><input type="checkbox"> <span>管理员</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="form-group" data-filter-id="other">
+                        <div class="custom-select-multi" id="dropdownOther">
+                            <div class="select-selected">
+                                <span class="inline-label">排除條件：</span>
+                                <span class="selected-val">測試帳號</span>
+                                <i class="ph ph-caret-down"></i>
+                            </div>
+                            <ul class="select-options">
+                                <li data-value="測試帳號" class="selected"><input type="checkbox" checked>
+                                    <span>測試帳號</span>
+                                </li>
+                                <li data-value="未充值玩家"><input type="checkbox"> <span>未充值玩家</span></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- 新增隱藏的過濾欄位 (自訂篩選觸發) -->
+                    <div class="form-group" data-filter-id="birthday">
+                        <div class="custom-select-single" id="dropdownBirthdayOuter">
+                            <div class="select-selected">
+                                <span class="inline-label">生日月份：</span>
+                                <span class="selected-val">全部</span>
+                                <i class="ph ph-caret-down"></i>
+                            </div>
+                            <ul class="select-options">
+                                <li data-value="" class="active">全部</li>
+                                <li data-value="1">1月</li>
+                                <li data-value="2">2月</li>
+                                <li data-value="3">3月</li>
+                                <li data-value="4">4月</li>
+                                <li data-value="5">5月</li>
+                                <li data-value="6">6月</li>
+                                <li data-value="7">7月</li>
+                                <li data-value="8">8月</li>
+                                <li data-value="9">9月</li>
+                                <li data-value="10">10月</li>
+                                <li data-value="11">11月</li>
+                                <li data-value="12">12月</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="form-group" data-filter-id="registerTime">
+                        <div class="date-range-container">
+                            <span class="inline-label">新增時間：</span>
+                            <input type="datetime-local" class="date-text" id="inputDateStartOuter"
+                                style="border:none; outline:none; background:transparent;">
+                            <span class="date-separator-line">~</span>
+                            <input type="datetime-local" class="date-text" id="inputDateEndOuter"
+                                style="border:none; outline:none; background:transparent;">
+                        </div>
+                    </div>
+
+                    <div class="form-group" data-filter-id="bankCard">
+                        <div class="input-with-inline-label">
+                            <span class="inline-label">綁定銀行卡：</span>
+                            <input type="text" placeholder="銀行卡號" id="inputBankCardOuter">
+                        </div>
+                    </div>
+
+                    <div class="form-group" data-filter-id="notLoginDays">
+                        <div class="input-with-suffix">
+                            <span class="inline-label">未登入天數 (大於)：</span>
+                            <input type="text" placeholder="天數" id="inputOfflineDaysOuter">
+                            <span class="suffix">天</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group" data-filter-id="agentId">
+                        <div class="input-with-inline-label">
+                            <span class="inline-label">代理Id：</span>
+                            <input type="text" placeholder="代理Id" id="inputAgentIdOuter">
+                        </div>
+                    </div>
+
+                    <div class="form-group" data-filter-id="vipLevel">
+                        <div class="input-with-inline-label">
+                            <span class="inline-label">VIP會員等級：</span>
+                            <input type="text" placeholder="VIP會員等級" id="inputVipLevelOuter">
+                        </div>
+                    </div>
+
+                    <div class="form-group" data-filter-id="loginIp">
+                        <div class="input-with-inline-label">
+                            <span class="inline-label">登录IP：</span>
+                            <input type="text" placeholder="登录IP" id="inputIpOuter">
+                        </div>
+                    </div>
+
+                    <div class="form-group" data-filter-id="depositAmount">
+                        <div class="input-with-inline-label">
+                            <span class="inline-label">存款金額大於：</span>
+                            <input type="text" placeholder="金額" id="inputDepositOuter">
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="filter-actions-row">
+                    <div class="account-input-group">
+                        <div class="account-type-dropdown" id="accountTypeDropdown">
+                            <div class="dropdown-selected" id="accountTypeSelected">
+                                <i class="ph-fill ph-snowflake"></i> <span id="accountTypeText">帳號 (精確匹配)</span> <i
+                                    class="ph ph-caret-down"></i>
+                            </div>
+                            <ul class="dropdown-menu" id="accountTypeMenu" style="max-height: 250px; overflow-y: auto;">
+                                <li data-value="exact" class="active"><span>帳號 (精確匹配)</span> <span
+                                        class="type-badge">Exact</span></li>
+                                <li data-value="fuzzy"><span>帳號 (模糊匹配)</span> <span class="type-badge">Fuzzy</span>
+                                </li>
+                                <li data-value="multi"><span>帳號 (多帳號篩選)</span> <span class="type-badge">Multi</span>
+                                </li>
+                                <li data-value="quickLogin"><span>快速登录帐号</span> <span class="type-badge">Quick</span>
+                                </li>
+                                <li data-value="uid"><span>用户ID</span> <span class="type-badge">ID</span></li>
+                                <li data-value="inviteCode"><span>邀请码</span> <span class="type-badge">Code</span>
+                                </li>
+                                <li data-value="nickname"><span>用户昵称</span> <span class="type-badge">Nick</span>
+                                </li>
+                                <li data-value="realName"><span>真实姓名</span> <span class="type-badge">Name</span>
+                                </li>
+                                <li data-value="email"><span>邮箱</span> <span class="type-badge">Email</span></li>
+                                <li data-value="phone"><span>手机号</span> <span class="type-badge">Phone</span></li>
+                                <li data-value="remark"><span>回访备注</span> <span class="type-badge">Note</span></li>
+                                <li data-value="googleCode"><span>谷歌验证码</span> <span class="type-badge">Google</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <input type="text" id="inputAccount" placeholder="請輸入精確帳號">
+                    </div>
+                    <button class="btn btn-outline" id="openAdvancedFilter" style="display: none;">
+                        <i class="ph ph-sliders-horizontal"></i> 進階篩選條件 <span class="badge" id="advancedBadge">0</span>
+                    </button>
+                    <button class="btn btn-primary" id="btnSearch">
+                        <i class="ph ph-magnifying-glass"></i> 搜尋
+                    </button>
+                    <button class="btn btn-outline" id="btnReset">
+                        <i class="ph ph-arrow-counter-clockwise"></i> 重置
+                    </button>
+                    <button class="btn btn-outline btn-icon-only" id="btnCustomizeFilter" title="自訂篩選欄位">
+                        <i class="ph ph-faders"></i>
+                    </button>
+                </div>
+            </section>
+
+            <!-- 列表區塊 -->
+            <section class="table-card">
+                <!-- 將篩選區塊與表格群組在同一個 div，方便未來整體移動 -->
+                <div class="table-and-filter-group">
+                    <div class="current-filters">
+                        <div class="filter-tags" id="filterTagsContainer">
+                            <!-- Dynamic filter tags will be rendered here -->
+                        </div>
+                        <!-- 分頁區塊 (極簡版) -->
+                        <div class="pagination-container" style="gap: 8px;">
+                            <div class="pagination-size-wrapper">
+                                <select id="selectPageSize" class="page-size-select"
+                                    style="padding: 2px 6px; font-size: 12px; height: 24px;">
+                                    <option value="10">10 條/頁</option>
+                                    <option value="20" selected>20 條/頁</option>
+                                    <option value="50">50 條/頁</option>
+                                    <option value="100">100 條/頁</option>
+                                </select>
+                            </div>
+                            <div class="pagination-pages" id="paginationPagesContainer"
+                                style="display: flex; align-items: center; gap: 4px;">
+                                <button class="btn-page" id="btnPrevPage" disabled
+                                    style="padding: 2px 6px; font-size: 12px; height: 24px; min-width: 24px;"><i
+                                        class="ph ph-caret-left"></i></button>
+                                <span id="pageNumbersList"
+                                    style="font-size: 12px; color: var(--text-main); margin: 0 4px; font-weight: 500;"></span>
+                                <button class="btn-page" id="btnNextPage" disabled
+                                    style="padding: 2px 6px; font-size: 12px; height: 24px; min-width: 24px;"><i
+                                        class="ph ph-caret-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table id="userTable">
+                            <thead id="userTableHeader">
+                                <!-- Mock headers rendered dynamically by script.js -->
+                            </thead>
+                            <tbody id="userTableBody">
+                                <!-- Mock rows will be rendered dynamically by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+
+            </section>
+        </div>
+
+        <!-- 底部固定數據統計欄 (Bottom Summary Stats Bar) -->
+        <div class="bottom-stats-bar" id="bottomStatsBar">
+            <button class="stats-toggle-btn" id="btnToggleStats" title="展開/收起統計">
+                <i class="ph ph-caret-down"></i>
+            </button>
+            <div class="bottom-stats-left">
+                <div class="stat-item">
+                    <span class="stat-label">用戶餘額寶總額</span>
+                    <span class="stat-value"><strong>$ 15,057.43</strong> <span class="stat-unit">T</span></span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="stat-label">用戶總金額</span>
+                    <span class="stat-value"><strong>$ 20,417,771</strong></span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="stat-label">三方遊戲總餘額總額 <i class="ph ph-info" title="參考值"></i></span>
+                    <span class="stat-value"><strong>$ 620,847</strong></span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="stat-label">註冊</span>
+                    <span class="stat-value text-indigo"><strong>15</strong> <span class="stat-unit">人</span></span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="stat-label">有效首充</span>
+                    <span class="stat-value text-emerald"><strong>1</strong> <span class="stat-unit">人</span></span>
+                </div>
+            </div>
+            <div class="bottom-stats-right">
+                <span class="stats-exclude-badge">數據已排除測試帳號</span>
+            </div>
+        </div>
+    </main>
     </div>
 
     <!-- 進階搜尋側邊欄 (Drawer) / 彈窗 (Modal) -->
@@ -835,7 +842,8 @@
                         </div>
 
                         <!-- 提現信息 分頁區塊 -->
-                        <div class="pagination-container" style="padding: 12px 0 0 0; border-top: none; background: transparent;">
+                        <div class="pagination-container"
+                            style="padding: 12px 0 0 0; border-top: none; background: transparent;">
                             <div class="pagination-info">
                                 共 <span>0</span> 條
                             </div>
@@ -846,12 +854,16 @@
                                 </select>
                             </div>
                             <div class="pagination-pages">
-                                <button class="btn-page" style="width: 28px; height: 28px;" disabled><i class="ph ph-caret-left"></i></button>
+                                <button class="btn-page" style="width: 28px; height: 28px;" disabled><i
+                                        class="ph ph-caret-left"></i></button>
                                 <div style="display: flex; gap: 4px;"></div>
-                                <button class="btn-page" style="width: 28px; height: 28px;" disabled><i class="ph ph-caret-right"></i></button>
+                                <button class="btn-page" style="width: 28px; height: 28px;" disabled><i
+                                        class="ph ph-caret-right"></i></button>
                             </div>
                             <div class="pagination-jump" style="font-size: 12px;">
-                                前往 <input type="number" min="1" max="1" value="1" style="height: 28px; width: 40px; text-align: center; font-size: 12px; margin: 0 4px; border: 1px solid var(--border-color); border-radius: 4px;"> 頁
+                                前往 <input type="number" min="1" max="1" value="1"
+                                    style="height: 28px; width: 40px; text-align: center; font-size: 12px; margin: 0 4px; border: 1px solid var(--border-color); border-radius: 4px;">
+                                頁
                             </div>
                         </div>
 
@@ -859,90 +871,103 @@
                 </div>
             </div>
         </div>
-    </main>
+        </main>
 
-    <script src="script.js"></script>
+        <script src="script.js"></script>
 
-    <!-- Custom Columns Drawer (Compact Mode) -->
-    <div class="advanced-filter-drawer" id="columnsDrawer">
-        <div class="drawer-header">
-            <h3>自訂欄位</h3>
-            <div style="display: flex; gap: 8px; align-items: center;">
-                <button class="btn btn-outline btn-sm" id="btnColumnsDrawerClose">關閉</button>
-                <button class="btn btn-primary btn-sm" id="btnColumnsDrawerSave">保存</button>
+        <!-- Custom Columns Drawer (Compact Mode) -->
+        <div class="advanced-filter-drawer" id="columnsDrawer">
+            <div class="drawer-header">
+                <h3>自訂欄位</h3>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button class="btn btn-outline btn-sm" id="btnColumnsDrawerClose">關閉</button>
+                    <button class="btn btn-primary btn-sm" id="btnColumnsDrawerSave">保存</button>
+                </div>
+            </div>
+            <div class="drawer-content" id="columnsDrawerContent">
+                <!-- Rendered via JS -->
             </div>
         </div>
-        <div class="drawer-content" id="columnsDrawerContent">
-            <!-- Rendered via JS -->
-        </div>
-    </div>
 
-    <!-- Subordinate Modal -->
-    <div class="modal-overlay" id="subordinateModal">
-        <div class="modal-content" style="width: 1000px; max-width: 95vw; background-color: var(--card-bg);">
-            <div class="modal-header">
-                <h3>下级会员</h3>
-                <button class="btn-icon btn-close-modal" id="btnSubordinateModalClose">
-                    <i class="ph ph-x"></i>
-                </button>
-            </div>
-            <div class="modal-body" style="padding: 20px;">
-                <div class="subordinate-toolbar" style="display: flex; gap: 8px; margin-bottom: 16px;">
-                    <div class="custom-select-single" style="width: 120px;">
-                        <div class="select-selected" style="border: 1px solid var(--border-color); border-radius: 4px; padding: 4px 8px; display: flex; justify-content: space-between; align-items: center; background: var(--bg-color);">
-                            <span class="selected-val">请选择</span>
-                            <i class="ph ph-caret-down"></i>
+        <!-- Subordinate Modal -->
+        <div class="modal-overlay" id="subordinateModal">
+            <div class="modal-content" style="width: 1000px; max-width: 95vw; background-color: var(--card-bg);">
+                <div class="modal-header">
+                    <h3>下级会员</h3>
+                    <button class="btn-icon btn-close-modal" id="btnSubordinateModalClose">
+                        <i class="ph ph-x"></i>
+                    </button>
+                </div>
+                <div class="modal-body" style="padding: 20px;">
+                    <div class="subordinate-toolbar" style="display: flex; gap: 8px; margin-bottom: 16px;">
+                        <div class="custom-select-single" style="width: 120px;">
+                            <div class="select-selected"
+                                style="border: 1px solid var(--border-color); border-radius: 4px; padding: 4px 8px; display: flex; justify-content: space-between; align-items: center; background: var(--bg-color);">
+                                <span class="selected-val">请选择</span>
+                                <i class="ph ph-caret-down"></i>
+                            </div>
                         </div>
+                        <input type="text" placeholder="下级账号"
+                            style="width: 200px; border: 1px solid var(--border-color); border-radius: 4px; padding: 4px 8px; background: var(--bg-color); color: var(--text-color);">
+                        <button class="btn btn-primary" style="padding: 4px 16px;">搜索</button>
                     </div>
-                    <input type="text" placeholder="下级账号" style="width: 200px; border: 1px solid var(--border-color); border-radius: 4px; padding: 4px 8px; background: var(--bg-color); color: var(--text-color);">
-                    <button class="btn btn-primary" style="padding: 4px 16px;">搜索</button>
-                </div>
-                <div class="table-container" style="overflow-x: auto; border: 1px solid var(--border-color); border-radius: 4px;">
-                    <table class="data-table" style="width: 100%; border-collapse: collapse; min-width: 800px;">
-                        <thead>
-                            <tr style="border-bottom: 1px solid var(--border-color); background: var(--bg-color);">
-                                <th style="padding: 12px 8px; text-align: center;">账号</th>
-                                <th style="padding: 12px 8px; text-align: center;">真实姓名</th>
-                                <th style="padding: 12px 8px; text-align: center;">注册时间</th>
-                                <th style="padding: 12px 8px; text-align: center;">状态</th>
-                                <th style="padding: 12px 8px; text-align: center;">存款金额</th>
-                                <th style="padding: 12px 8px; text-align: center;">取款金额</th>
-                                <th style="padding: 12px 8px; text-align: center;">最近登录</th>
-                                <th style="padding: 12px 8px; text-align: center;">查看详细</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr style="border-bottom: 1px solid var(--border-color);">
-                                <td style="padding: 12px 8px; text-align: center;">megan002</td>
-                                <td style="padding: 12px 8px; text-align: center;"></td>
-                                <td style="padding: 12px 8px; text-align: center;">2026-07-28 16:30:42</td>
-                                <td style="padding: 12px 8px; text-align: center;"><span class="badge badge-normal">正常</span></td>
-                                <td style="padding: 12px 8px; text-align: center;">0</td>
-                                <td style="padding: 12px 8px; text-align: center;">0</td>
-                                <td style="padding: 12px 8px; text-align: center;"></td>
-                                <td style="padding: 12px 8px; text-align: center;">
-                                    <a href="#" style="color: var(--primary-color); margin-right: 8px;">查看下级</a>
-                                    <a href="#" style="color: var(--primary-color);">返回最上级</a>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="pagination-container" style="display: flex; justify-content: flex-end; align-items: center; margin-top: 16px; font-size: 13px; gap: 12px;">
-                    <span class="page-info">共 1 条</span>
-                    <select style="border: 1px solid var(--border-color); border-radius: 4px; padding: 2px 4px; background: var(--bg-color); color: var(--text-color);">
-                        <option>10条/页</option>
-                    </select>
-                    <div style="display: flex; align-items: center; gap: 4px;">
-                        <button class="btn-icon" disabled style="background: none; border: none; cursor: not-allowed; color: var(--text-secondary);"><i class="ph ph-caret-left"></i></button>
-                        <button style="border: none; background: transparent; color: var(--primary-color); font-weight: 500;">1</button>
-                        <button class="btn-icon" disabled style="background: none; border: none; cursor: not-allowed; color: var(--text-secondary);"><i class="ph ph-caret-right"></i></button>
+                    <div class="table-container"
+                        style="overflow-x: auto; border: 1px solid var(--border-color); border-radius: 4px;">
+                        <table class="data-table" style="width: 100%; border-collapse: collapse; min-width: 800px;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid var(--border-color); background: var(--bg-color);">
+                                    <th style="padding: 12px 8px; text-align: center;">账号</th>
+                                    <th style="padding: 12px 8px; text-align: center;">真实姓名</th>
+                                    <th style="padding: 12px 8px; text-align: center;">注册时间</th>
+                                    <th style="padding: 12px 8px; text-align: center;">状态</th>
+                                    <th style="padding: 12px 8px; text-align: center;">存款金额</th>
+                                    <th style="padding: 12px 8px; text-align: center;">取款金额</th>
+                                    <th style="padding: 12px 8px; text-align: center;">最近登录</th>
+                                    <th style="padding: 12px 8px; text-align: center;">查看详细</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="border-bottom: 1px solid var(--border-color);">
+                                    <td style="padding: 12px 8px; text-align: center;">megan002</td>
+                                    <td style="padding: 12px 8px; text-align: center;"></td>
+                                    <td style="padding: 12px 8px; text-align: center;">2026-07-28 16:30:42</td>
+                                    <td style="padding: 12px 8px; text-align: center;"><span
+                                            class="badge badge-normal">正常</span></td>
+                                    <td style="padding: 12px 8px; text-align: center;">0</td>
+                                    <td style="padding: 12px 8px; text-align: center;">0</td>
+                                    <td style="padding: 12px 8px; text-align: center;"></td>
+                                    <td style="padding: 12px 8px; text-align: center;">
+                                        <a href="#" style="color: var(--primary-color); margin-right: 8px;">查看下级</a>
+                                        <a href="#" style="color: var(--primary-color);">返回最上级</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
-                    <span class="page-jump">前往 <input type="number" value="1" min="1" max="1" style="width: 40px; text-align: center; border: 1px solid var(--border-color); border-radius: 4px; padding: 2px 0; background: var(--bg-color); color: var(--text-color);"> 页</span>
+                    <div class="pagination-container"
+                        style="display: flex; justify-content: flex-end; align-items: center; margin-top: 16px; font-size: 13px; gap: 12px;">
+                        <span class="page-info">共 1 条</span>
+                        <select
+                            style="border: 1px solid var(--border-color); border-radius: 4px; padding: 2px 4px; background: var(--bg-color); color: var(--text-color);">
+                            <option>10条/页</option>
+                        </select>
+                        <div style="display: flex; align-items: center; gap: 4px;">
+                            <button class="btn-icon" disabled
+                                style="background: none; border: none; cursor: not-allowed; color: var(--text-secondary);"><i
+                                    class="ph ph-caret-left"></i></button>
+                            <button
+                                style="border: none; background: transparent; color: var(--primary-color); font-weight: 500;">1</button>
+                            <button class="btn-icon" disabled
+                                style="background: none; border: none; cursor: not-allowed; color: var(--text-secondary);"><i
+                                    class="ph ph-caret-right"></i></button>
+                        </div>
+                        <span class="page-jump">前往 <input type="number" value="1" min="1" max="1"
+                                style="width: 40px; text-align: center; border: 1px solid var(--border-color); border-radius: 4px; padding: 2px 0; background: var(--bg-color); color: var(--text-color);">
+                            页</span>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
 </body>
 

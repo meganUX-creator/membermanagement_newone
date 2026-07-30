@@ -220,6 +220,10 @@
                         <input type="checkbox" checked value="标签编辑纪录" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
                         <span>标签编辑纪录</span>
                     </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="查看会员在线充值提现统计" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                        <span>查看会员在线充值提现统计</span>
+                    </label>
                 </div>
             </nav>
         </aside>
@@ -307,6 +311,29 @@
     </div>
 
     <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const statsCheckbox = document.querySelector('input[value="查看会员在线充值提现统计"]');
+            const iframe = document.querySelector('iframe');
+            
+            function updateStatsBarVisibility() {
+                if (iframe && iframe.contentWindow && iframe.contentWindow.document) {
+                    const statsBar = iframe.contentWindow.document.getElementById('bottomStatsBar');
+                    if (statsBar) {
+                        statsBar.style.display = statsCheckbox.checked ? 'flex' : 'none';
+                    }
+                }
+            }
+
+            if (statsCheckbox) {
+                statsCheckbox.addEventListener('change', updateStatsBarVisibility);
+            }
+
+            if (iframe) {
+                iframe.addEventListener('load', updateStatsBarVisibility);
+            }
+        });
+    </script>
 </body>
 
 </html>
