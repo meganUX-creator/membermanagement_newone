@@ -174,10 +174,24 @@
                             </div>
                         </div>
 
+                        <div class="form-group" data-filter-id="agentId">
+                            <div class="input-with-inline-label">
+                                <span class="inline-label">代理Id：</span>
+                                <input type="text" placeholder="代理Id" id="inputAgentIdOuter">
+                            </div>
+                        </div>
+
+                        <div class="form-group" data-filter-id="vipLevel">
+                            <div class="input-with-inline-label">
+                                <span class="inline-label">VIP會員等級：</span>
+                                <input type="text" placeholder="VIP會員等級" id="inputVipLevelOuter">
+                            </div>
+                        </div>
+
                         <div class="form-group" data-filter-id="loginIp">
                             <div class="input-with-inline-label">
-                                <span class="inline-label">登入 IP 位址：</span>
-                                <input type="text" placeholder="登入 IP" id="inputIpOuter">
+                                <span class="inline-label">登录IP：</span>
+                                <input type="text" placeholder="登录IP" id="inputIpOuter">
                             </div>
                         </div>
 
@@ -381,8 +395,16 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>登入 IP 位址</label>
-                        <input type="text" id="inputIp" value="" placeholder="登入 IP">
+                        <label>代理Id</label>
+                        <input type="text" id="inputAgentId" value="" placeholder="代理Id">
+                    </div>
+                    <div class="form-group">
+                        <label>VIP會員等級</label>
+                        <input type="text" id="inputVipLevel" value="" placeholder="VIP會員等級">
+                    </div>
+                    <div class="form-group">
+                        <label>登录IP</label>
+                        <input type="text" id="inputIp" value="" placeholder="登录IP">
                     </div>
                     <div class="form-group">
                         <label>存款金額大於</label>
@@ -442,8 +464,16 @@
                         <span>未登入天數 (大於)</span>
                     </label>
                     <label class="checkbox-item">
+                        <input type="checkbox" value="agentId" checked>
+                        <span>代理Id</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="vipLevel" checked>
+                        <span>VIP會員等級</span>
+                    </label>
+                    <label class="checkbox-item">
                         <input type="checkbox" value="loginIp" checked>
-                        <span>登入 IP 位址</span>
+                        <span>登录IP</span>
                     </label>
                     <label class="checkbox-item">
                         <input type="checkbox" value="depositAmount" checked>
@@ -844,6 +874,73 @@
         </div>
         <div class="drawer-content" id="columnsDrawerContent">
             <!-- Rendered via JS -->
+        </div>
+    </div>
+
+    <!-- Subordinate Modal -->
+    <div class="modal-overlay" id="subordinateModal">
+        <div class="modal-content" style="width: 1000px; max-width: 95vw; background-color: var(--card-bg);">
+            <div class="modal-header">
+                <h3>下级会员</h3>
+                <button class="btn-icon btn-close-modal" id="btnSubordinateModalClose">
+                    <i class="ph ph-x"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 20px;">
+                <div class="subordinate-toolbar" style="display: flex; gap: 8px; margin-bottom: 16px;">
+                    <div class="custom-select-single" style="width: 120px;">
+                        <div class="select-selected" style="border: 1px solid var(--border-color); border-radius: 4px; padding: 4px 8px; display: flex; justify-content: space-between; align-items: center; background: var(--bg-color);">
+                            <span class="selected-val">请选择</span>
+                            <i class="ph ph-caret-down"></i>
+                        </div>
+                    </div>
+                    <input type="text" placeholder="下级账号" style="width: 200px; border: 1px solid var(--border-color); border-radius: 4px; padding: 4px 8px; background: var(--bg-color); color: var(--text-color);">
+                    <button class="btn btn-primary" style="padding: 4px 16px;">搜索</button>
+                </div>
+                <div class="table-container" style="overflow-x: auto; border: 1px solid var(--border-color); border-radius: 4px;">
+                    <table class="data-table" style="width: 100%; border-collapse: collapse; min-width: 800px;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid var(--border-color); background: var(--bg-color);">
+                                <th style="padding: 12px 8px; text-align: center;">账号</th>
+                                <th style="padding: 12px 8px; text-align: center;">真实姓名</th>
+                                <th style="padding: 12px 8px; text-align: center;">注册时间</th>
+                                <th style="padding: 12px 8px; text-align: center;">状态</th>
+                                <th style="padding: 12px 8px; text-align: center;">存款金额</th>
+                                <th style="padding: 12px 8px; text-align: center;">取款金额</th>
+                                <th style="padding: 12px 8px; text-align: center;">最近登录</th>
+                                <th style="padding: 12px 8px; text-align: center;">查看详细</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 12px 8px; text-align: center;">megan002</td>
+                                <td style="padding: 12px 8px; text-align: center;"></td>
+                                <td style="padding: 12px 8px; text-align: center;">2026-07-28 16:30:42</td>
+                                <td style="padding: 12px 8px; text-align: center;"><span class="badge badge-normal">正常</span></td>
+                                <td style="padding: 12px 8px; text-align: center;">0</td>
+                                <td style="padding: 12px 8px; text-align: center;">0</td>
+                                <td style="padding: 12px 8px; text-align: center;"></td>
+                                <td style="padding: 12px 8px; text-align: center;">
+                                    <a href="#" style="color: var(--primary-color); margin-right: 8px;">查看下级</a>
+                                    <a href="#" style="color: var(--primary-color);">返回最上级</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination-container" style="display: flex; justify-content: flex-end; align-items: center; margin-top: 16px; font-size: 13px; gap: 12px;">
+                    <span class="page-info">共 1 条</span>
+                    <select style="border: 1px solid var(--border-color); border-radius: 4px; padding: 2px 4px; background: var(--bg-color); color: var(--text-color);">
+                        <option>10条/页</option>
+                    </select>
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                        <button class="btn-icon" disabled style="background: none; border: none; cursor: not-allowed; color: var(--text-secondary);"><i class="ph ph-caret-left"></i></button>
+                        <button style="border: none; background: transparent; color: var(--primary-color); font-weight: 500;">1</button>
+                        <button class="btn-icon" disabled style="background: none; border: none; cursor: not-allowed; color: var(--text-secondary);"><i class="ph ph-caret-right"></i></button>
+                    </div>
+                    <span class="page-jump">前往 <input type="number" value="1" min="1" max="1" style="width: 40px; text-align: center; border: 1px solid var(--border-color); border-radius: 4px; padding: 2px 0; background: var(--bg-color); color: var(--text-color);"> 页</span>
+                </div>
+            </div>
         </div>
     </div>
 

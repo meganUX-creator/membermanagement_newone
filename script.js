@@ -429,7 +429,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 'accountType', group: '等級 & 團隊', label: '帳號類型', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="accountType">${user.accountType}</td>` },
         { id: 'userType', group: '等級 & 團隊', label: '會員類型', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="userType">${user.userType}</td>` },
         { id: 'inviteCode', group: '等級 & 團隊', label: '邀請碼', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="inviteCode">${user.inviteCode}</td>` },
-        { id: 'directTeam', group: '等級 & 團隊', label: '直屬下級/團隊數', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="directTeam">${user.directTeam}</td>` },
+        { id: 'directTeam', group: '等級 & 團隊', label: '直屬下級/團隊數', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="directTeam"><a href="#" class="subordinate-link" style="color: var(--primary-color); text-decoration: underline;" data-uid="${user.uid}">${user.directTeam}</a></td>` },
         { id: 'vipLevel', group: '等級 & 團隊', label: 'VIP等級', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="vipLevel">${user.vipLevel}</td>` },
         { id: 'vipGrowth', group: '等級 & 團隊', label: 'VIP成長值', sortable: true, checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="vipGrowth">${user.vipGrowth}</td>` },
         { id: 'creditValue', group: '信用 & 額度', label: '信用值', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="creditValue">${user.creditValue}</td>` },
@@ -813,6 +813,16 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             advancedCount++;
         }
+        const inputAgentId = document.getElementById('inputAgentId');
+        if (inputAgentId && inputAgentId.value.trim()) {
+            tags.push({ key: 'agentId', label: `代理Id: ${inputAgentId.value.trim()}`, type: 'input', element: inputAgentId });
+            advancedCount++;
+        }
+        const inputVipLevel = document.getElementById('inputVipLevel');
+        if (inputVipLevel && inputVipLevel.value.trim()) {
+            tags.push({ key: 'vipLevel', label: `VIP等級: ${inputVipLevel.value.trim()}`, type: 'input', element: inputVipLevel });
+            advancedCount++;
+        }
         if (inputQuickLogin.value.trim()) {
             tags.push({ key: 'quickLogin', label: `快速登入: ${inputQuickLogin.value.trim()}`, type: 'input', element: inputQuickLogin });
             advancedCount++;
@@ -851,6 +861,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Outer fields processing
+        const inputAgentIdOuter = document.getElementById('inputAgentIdOuter');
+        if (inputAgentIdOuter && inputAgentIdOuter.value.trim()) {
+            tags.push({ key: 'agentIdOuter', label: `代理Id: ${inputAgentIdOuter.value.trim()}`, type: 'input', element: inputAgentIdOuter });
+        }
+        const inputVipLevelOuter = document.getElementById('inputVipLevelOuter');
+        if (inputVipLevelOuter && inputVipLevelOuter.value.trim()) {
+            tags.push({ key: 'vipLevelOuter', label: `VIP等級: ${inputVipLevelOuter.value.trim()}`, type: 'input', element: inputVipLevelOuter });
+        }
         if (selectedBirthdayOuterVal) {
             tags.push({ key: 'birthdayOuter', label: `生日: ${selectedBirthdayOuterVal}月`, type: 'single-custom', element: dropdownBirthdayOuter, defaultValue: '', defaultText: '全部', valueVarSetter: (v) => selectedBirthdayOuterVal = v });
         }
@@ -931,6 +949,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const inputAccount = document.getElementById('inputAccount');
         if (inputAccount) inputAccount.value = '';
         // Reset advanced
+        const inputAgentId = document.getElementById('inputAgentId');
+        if (inputAgentId) inputAgentId.value = '';
+        const inputVipLevel = document.getElementById('inputVipLevel');
+        if (inputVipLevel) inputVipLevel.value = '';
         selectBirthday.value = '';
         inputDateStart.value = '';
         inputDateEnd.value = '';
@@ -945,6 +967,11 @@ document.addEventListener('DOMContentLoaded', () => {
         inputDeposit.value = '';
 
         // Reset outer fields
+        const inputAgentIdOuter = document.getElementById('inputAgentIdOuter');
+        if (inputAgentIdOuter) inputAgentIdOuter.value = '';
+        const inputVipLevelOuter = document.getElementById('inputVipLevelOuter');
+        if (inputVipLevelOuter) inputVipLevelOuter.value = '';
+        
         if (dropdownBirthdayOuter) {
             setSingleSelectValue(dropdownBirthdayOuter, '', '全部');
             selectedBirthdayOuterVal = '';
@@ -1007,6 +1034,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const inviteCodeVal = inputInviteCode.value.trim();
         const nicknameVal = inputNickname.value.trim().toLowerCase();
         const realNameVal = inputRealName.value.trim();
+        const inputAgentIdOuter = document.getElementById('inputAgentIdOuter');
+        const inputAgentId = document.getElementById('inputAgentId');
+        const agentIdVal = (inputAgentId ? inputAgentId.value.trim() : '') || (inputAgentIdOuter ? inputAgentIdOuter.value.trim() : '');
+        const inputVipLevelOuter = document.getElementById('inputVipLevelOuter');
+        const inputVipLevel = document.getElementById('inputVipLevel');
+        const vipLevelVal = (inputVipLevel ? inputVipLevel.value.trim() : '') || (inputVipLevelOuter ? inputVipLevelOuter.value.trim() : '');
         const bankCardVal = inputBankCard.value.trim();
         const offlineDaysVal = parseInt(inputOfflineDays.value.trim(), 10);
         const ipVal = inputIp.value.trim();
@@ -1054,6 +1087,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (inviteCodeVal && user.inviteCode !== inviteCodeVal) return false;
             if (nicknameVal && !user.nickname.toLowerCase().includes(nicknameVal)) return false;
             if (realNameVal && !user.realName.includes(realNameVal)) return false;
+            if (agentIdVal && user.agentId !== agentIdVal) return false;
+            if (vipLevelVal && user.vipLevel !== undefined && user.vipLevel.toString() !== vipLevelVal) return false;
             if (bankCardVal && !user.bankCard.includes(bankCardVal)) return false;
             if (!isNaN(offlineDaysVal) && user.offlineDays <= offlineDaysVal) return false;
             if (ipVal && !user.ip.includes(ipVal)) return false;
@@ -1336,7 +1371,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div><span class="info-label">帳號類型 :</span> ${user.accountType || '普通帳號'}</div>
                         <div><span class="info-label">會員類型 :</span> ${user.userType || '代理會員'}</div>
                         <div><span class="info-label">邀請碼 :</span> ${user.inviteCode || '-'}</div>
-                        <div><span class="info-label">直屬下級/團隊人數 :</span> ${user.directTeam || '0/0'}</div>
+                        <div><span class="info-label">直屬下級/團隊人數 :</span> <a href="#" class="subordinate-link" style="color: var(--primary-color); text-decoration: underline;" data-uid="${user.uid}">${user.directTeam || '0/0'}</a></div>
                         <div><span class="info-label">VIP會員等級 :</span> ${user.vipLevel || 0}</div>
                         <div><span class="info-label">VIP成長值 :</span> ${user.vipGrowth || 0}</div>
                     </td>`;
