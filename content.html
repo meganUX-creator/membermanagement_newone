@@ -28,18 +28,18 @@
                     </div>
                 </div>
                 <div class="toolbar-right">
-                    <button class="btn btn-primary">新增會員</button>
+                    <button class="btn btn-primary" id="btnAddMember">新增會員</button>
                     <button class="btn btn-outline">資料驗證</button>
                     <!-- 批量操作下拉選單 -->
                     <div class="batch-dropdown-container">
                         <button class="btn btn-outline" id="btnBatchOperations">批量操作 <i
                                 class="ph ph-caret-down"></i></button>
                         <ul class="batch-dropdown-menu" id="batchOperationsMenu">
-                            <li>更新用戶餘額</li>
-                            <li>更新用戶</li>
-                            <li>更新用戶狀態</li>
-                            <li>代理變更</li>
-                            <li>更新最大提款次數</li>
+                            <li id="batchItem-12">更新用戶餘額</li>
+                            <li id="batchItem-14">更新用戶</li>
+                            <li id="batchItem-24">更新用戶狀態</li>
+                            <li id="batchItem-43">代理變更</li>
+                            <li id="batchItem-44">更新最大提款次數</li>
                         </ul>
                     </div>
                     <div class="topbar-divider"></div>
@@ -969,6 +969,74 @@
             </div>
         </div>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const btnAddMember = document.getElementById('btnAddMember');
+            const batchContainer = document.querySelector('.batch-dropdown-container');
+            const exportContainer = document.querySelector('.export-dropdown-container');
+            
+            function updatePermissions() {
+                // 1. 新增會員按鈕 (trace 2)
+                if (btnAddMember) {
+                    const showAdd = localStorage.getItem('perm-2') !== 'false';
+                    btnAddMember.style.display = showAdd ? '' : 'none';
+                }
+                
+                // 2. 批量操作按鈕與下拉選單項目 (trace 12, 14, 24, 43, 44)
+                if (batchContainer) {
+                    const p12 = localStorage.getItem('perm-12') !== 'false';
+                    const p14 = localStorage.getItem('perm-14') !== 'false';
+                    const p24 = localStorage.getItem('perm-24') !== 'false';
+                    const p43 = localStorage.getItem('perm-43') !== 'false';
+                    const p44 = localStorage.getItem('perm-44') !== 'false';
+                    
+                    // 如果這五個權限有任何一個是開啟的，就顯示；否則隱藏整組
+                    const showBatch = p12 || p14 || p24 || p43 || p44;
+                    batchContainer.style.display = showBatch ? '' : 'none';
+                    
+                    // 個別控制下拉選單項目
+                    const item12 = document.getElementById('batchItem-12');
+                    if (item12) item12.style.display = p12 ? '' : 'none';
+                    
+                    const item14 = document.getElementById('batchItem-14');
+                    if (item14) item14.style.display = p14 ? '' : 'none';
+                    
+                    const item24 = document.getElementById('batchItem-24');
+                    if (item24) item24.style.display = p24 ? '' : 'none';
+                    
+                    const item43 = document.getElementById('batchItem-43');
+                    if (item43) item43.style.display = p43 ? '' : 'none';
+                    
+                    const item44 = document.getElementById('batchItem-44');
+                    if (item44) item44.style.display = p44 ? '' : 'none';
+                }
+                
+                // 3. 導出數據按鈕 (trace 13)
+                if (exportContainer) {
+                    const showExport = localStorage.getItem('perm-13') !== 'false';
+                    exportContainer.style.display = showExport ? '' : 'none';
+                }
+            }
+
+            // 初始設定
+            updatePermissions();
+            
+            // 監聽來自 index.html 的 postMessage (Works reliably on file:// protocol)
+            window.addEventListener('message', (e) => {
+                if (e.data && e.data.type === 'permission_change') {
+                    localStorage.setItem('perm-' + e.data.traceId, e.data.checked);
+                    updatePermissions();
+                    if (typeof window.renderTable === 'function') window.renderTable();
+                    if (typeof window.renderCompactActionMenu === 'function') window.renderCompactActionMenu();
+                } else if (e.data && e.data.type === 'stats_visibility') {
+                    const statsBar = document.getElementById('bottomStatsBar');
+                    if (statsBar) {
+                        statsBar.style.display = e.data.visible ? 'flex' : 'none';
+                    }
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>

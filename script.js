@@ -1,7 +1,94 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+    // Permission helper for row actions
+    function getTraceId(opName) {
+        const mapping = {
+            "編輯用戶": 3, "编辑用户": 3,
+            "查看詳情": 17, "查看详情": 17,
+            "額度修改": 9, "额度修改": 9,
+            "資金明細": 7, "资金明细": 7,
+            "注單明細": 8, "注单明细": 8,
+            "修改密碼": 35, "修改密码": 35,
+            
+            // 下級相關 (對應 trace 6: 返点设定)
+            "下級會員": 6, "下级会员": 6,
+            "下級報表": 6, "下级报表": 6,
+            "下級注單": 6, "下级注单": 6,
 
+            "支付層級": 4, "支付层级": 4,
+            "交易設定": 10, "交易设定": 10,
+            "代理变更": 11, "代理變更": 11,
+            "第三方游戏": 15, "第三方遊戲": 15,
+            "积分修改": 16, "積分修改": 16,
+            "稽核记录": 18, "稽核紀錄": 18,
+            "代理变更记录": 19, "代理變更紀錄": 19,
+            "回访备注": 21,
+            "隐藏资金明细": 22, "隱藏資金明細": 22,
+            "快速登录变更": 25, "快速登錄變更": 25,
+            "谷歌验证码": 31, "谷歌驗證碼": 31,
+            "链上地址": 33, "鏈上地址": 33,
+            "额度修改(链上充值)": 34,
+            "赔率设置": 38, "賠率設置": 38,
+            "校验用户任务": 45,
+            "编辑标签": 47, "編輯標籤": 47,
+            "用户标签编辑记录": 48, "編輯標籤紀錄": 48
+        };
+        return mapping[opName] || null;
+    }
 
+    function shouldShowOp(opName) {
+        const traceId = getTraceId(opName);
+        if (traceId === null) return true; // Show by default if not mapped
+        return localStorage.getItem('perm-' + traceId) !== 'false';
+    }
+
+    function hasPerm(traceId) {
+        let perm = localStorage.getItem('perm-' + traceId) !== 'false';
+        // Override logic: if trace 17 (查看会员详情) or trace 3 (修改会员) is checked,
+        // bypass specific permissions for certain detailed fields
+        const detailFields = [4, 6, 7, 17, 21, 47];
+        if (detailFields.includes(traceId)) {
+            const has17 = localStorage.getItem('perm-17') !== 'false';
+            const has3 = localStorage.getItem('perm-3') !== 'false';
+            if (has17 || has3) {
+                return true;
+            }
+        }
+        return perm;
+    }
+
+    function renderCompactActionMenu() {
+        const globalMenu = document.getElementById('globalCompactActionMenu');
+        if (!globalMenu) return;
+        const compactActionItems = [
+            "编辑用户", "查看详情", "额度修改", "资金明细", "注单明细", "修改密码", "下级会员", "下级报表", "下级注单",
+            "---",
+            "交易设定", "赔率设置", "积分修改", "代理变更", "第三方游戏", "稽核记录", "代理变更记录", "回访备注",
+            "隐藏资金明细", "快速登录变更", "校验用户任务", "谷歌验证码", "链上地址", "额度修改(链上充值)", "编辑标签", "用户标签编辑记录"
+        ];
+        
+        let filteredItems = compactActionItems.filter(item => item === '---' || shouldShowOp(item));
+        filteredItems = filteredItems.filter((item, idx, arr) => {
+            if (item === '---') {
+                if (idx === 0 || idx === arr.length - 1) return false;
+                if (arr[idx - 1] === '---') return false;
+            }
+            return true;
+        });
+
+        globalMenu.innerHTML = filteredItems.map(item => {
+            if (item === '---') return `<div class="divider" style="height:1px;background-color:#e5e7eb;margin:4px 0;"></div>`;
+            return `<a href="#" style="display:block;padding:8px 16px;color:#374151;text-decoration:none;font-size:13px;text-align:center;" onmouseover="this.style.backgroundColor='#f3f4f6';this.style.color='#3b82f6'" onmouseout="this.style.backgroundColor='transparent';this.style.color='#374151'">${item}</a>`;
+        }).join('');
+    }
+
+    // Listen to permission changes in sidebar
+    document.querySelectorAll('.permission-checkboxes input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('change', () => {
+            if (typeof renderTable === 'function') renderTable();
+            renderCompactActionMenu();
+        });
+    });
 
     // Drawer Elements
     const openBtn = document.getElementById('openAdvancedFilter');
@@ -376,6 +463,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Data State Rendering Helper ---
     function renderDataState(val, type = 'text') {
         if (val === '-' || val === null || val === undefined || val === '' || val === '無數據') {
+            if (type === 'phone') {
+                return `<span class="tag-unbound">未驗證</span>`;
+            }
             return `<span class="data-empty">-</span>`;
         }
         if (val === '未綁定' || val === '未驗證') {
@@ -417,35 +507,35 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 'online', group: '狀態', label: '在線', checkboxIndex: 1, render: (user) => `<td data-col="online"><span class="status-dot-icon" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${user.offlineDays === 0 ? '#10b981' : '#9ca3af'};"></span></td>` },
         { id: 'status', group: '狀態', label: '狀態', checkboxIndex: 1, render: (user) => `<td data-col="status"><span class="user-custom-tag ${user.status === '正常' ? 'tag-green' : user.status === '冻结' ? 'tag-blue' : 'tag-red'}">${user.status}</span></td>` },
         { id: 'avatar', group: '狀態', label: '頭像', checkboxIndex: 2, render: (user) => `<td data-col="avatar"><div class="avatar-cell" style="width:24px;height:24px;border-radius:50%;background:#3b82f6;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;margin:0 auto;">${user.account.charAt(0).toLowerCase()}</div></td>` },
-        { id: 'realName', group: '帳號', label: '真實姓名', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="realName">${renderDataState(user.realName)}</td>` },
-        { id: 'nickname', group: '帳號', label: '暱稱', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="nickname">${renderDataState(user.nickname)}</td>` },
+        { id: 'realName', group: '帳號', label: '真實姓名', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="realName">${hasPerm(37) ? renderDataState(user.realName) : '***'}</td>` },
+        { id: 'nickname', group: '帳號', label: '暱稱', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="nickname">${hasPerm(17) ? renderDataState(user.nickname) : 'ai***21'}</td>` },
         { id: 'agentId', group: '會員信息（詳細）', label: '代理', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="agentId">${renderDataState(user.agentId)}</td>` },
         { id: 'inviter', group: '會員信息（詳細）', label: '邀請人', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="inviter">${renderDataState(user.inviter)}</td>` },
         { id: 'registerMode', group: '會員信息（詳細）', label: '註冊模式', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="registerMode">${user.registerMode}</td>` },
-        { id: 'phone', group: '會員信息（詳細）', label: '手機號', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="phone">${renderDataState(user.phone, 'phone')}</td>` },
-        { id: 'payLevel', group: '等級 & 團隊', label: '支付層級', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="payLevel">${user.payLevel}</td>` },
+        { id: 'phone', group: '會員信息（詳細）', label: '手機號', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="phone">${hasPerm(36) ? renderDataState(user.phone, 'phone') : (user.phone && user.phone !== '-' ? '已驗證' : '未驗證')}</td>` },
+        { id: 'payLevel', group: '等級 & 團隊', label: '支付層級', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="payLevel">${hasPerm(4) ? user.payLevel : '***'}</td>` },
         { id: 'growth', group: '等級 & 團隊', label: '成長值', sortable: true, checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="growth">${user.growth}</td>` },
         { id: 'level', group: '等級 & 團隊', label: '等級', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="level">${user.level}</td>` },
         { id: 'accountType', group: '等級 & 團隊', label: '帳號類型', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="accountType">${user.accountType}</td>` },
         { id: 'userType', group: '等級 & 團隊', label: '會員類型', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="userType">${user.userType}</td>` },
         { id: 'inviteCode', group: '等級 & 團隊', label: '邀請碼', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="inviteCode">${user.inviteCode}</td>` },
-        { id: 'directTeam', group: '等級 & 團隊', label: '直屬下級/團隊數', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="directTeam"><a href="#" class="subordinate-link" style="color: var(--primary-color); text-decoration: underline;" data-uid="${user.uid}">${user.directTeam}</a></td>` },
+        { id: 'directTeam', group: '等級 & 團隊', label: '直屬下級/團隊數', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="directTeam"><a href="#" class="subordinate-link" style="color: var(--primary-color); text-decoration: underline;" data-uid="${user.uid}">${hasPerm(6) ? user.directTeam : '*/*'}</a></td>` },
         { id: 'vipLevel', group: '等級 & 團隊', label: 'VIP等級', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="vipLevel">${user.vipLevel}</td>` },
         { id: 'vipGrowth', group: '等級 & 團隊', label: 'VIP成長值', sortable: true, checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="vipGrowth">${user.vipGrowth}</td>` },
-        { id: 'creditValue', group: '信用 & 額度', label: '信用值', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="creditValue">${user.creditValue}</td>` },
+        { id: 'creditValue', group: '信用 & 額度', label: '信用值', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="creditValue">${hasPerm(7) ? user.creditValue : '***'}</td>` },
         { id: 'availableCredit', group: '信用 & 額度', label: '可用額度', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="availableCredit">${user.availableCredit}</td>` },
-        { id: 'commissionBal', group: '信用 & 額度', label: '佣金餘額', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-money ${user.commissionBal > 0 ? 'positive' : ''}" data-col="commissionBal">${user.commissionBal > 0 ? user.commissionBal : '0'}</td>` },
+        { id: 'commissionBal', group: '信用 & 額度', label: '佣金餘額', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-money ${hasPerm(7) && user.commissionBal > 0 ? 'positive' : ''}" data-col="commissionBal">${hasPerm(7) ? (user.commissionBal > 0 ? user.commissionBal : '0') : '***'}</td>` },
         { id: 'balanceBuy', group: '信用 & 額度', label: '餘額買', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-money ${user.balanceBuy > 0 ? 'highlight' : ''}" data-col="balanceBuy">${user.balanceBuy > 0 ? user.balanceBuy : '0'}</td>` },
-        { id: 'arrears', group: '信用 & 額度', label: '欠款', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-money ${user.arrears === '0' ? 'negative' : ''}" style="color:${user.arrears === '0' ? '#ef4444' : 'inherit'};" data-col="arrears">${renderDataState(user.arrears)}</td>` },
+        { id: 'arrears', group: '信用 & 額度', label: '欠款', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-money ${hasPerm(7) && user.arrears === '0' ? 'negative' : ''}" style="color:${hasPerm(7) && user.arrears === '0' ? '#ef4444' : 'inherit'};" data-col="arrears">${hasPerm(7) ? renderDataState(user.arrears) : '***'}</td>` },
         { id: 'interest', group: '信用 & 額度', label: '餘額買利息', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="interest">${user.interest}</td>` },
         { id: 'thirdBal', group: '信用 & 額度', label: '三方餘額', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="thirdBal"><div style="display:flex;align-items:center;">${user.thirdBal > 0 ? user.thirdBal : '0'} <i class="ph ph-arrows-clockwise refresh-icon-compact" data-uid="${user.uid}" title="刷新餘額"></i></div></td>` },
         { id: 'points', group: '信用 & 額度', label: '會員積分', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="points">${user.points}</td>` },
-        { id: 'deposit', group: '存取款', label: '存款總額', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money ${user.deposit > 0 ? 'highlight' : ''}" data-col="deposit">${user.deposit > 0 ? user.deposit : '0'}</td>` },
-        { id: 'withdraw', group: '存取款', label: '取款總額', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money" data-col="withdraw">${user.withdraw > 0 ? user.withdraw : '0'}</td>` },
-        { id: 'withdrawPre', group: '存取款', label: '提款扣金額', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-val" data-col="withdrawPre">${renderDataState(user.withdrawPre)}</td>` },
-        { id: 'adminDeduct', group: '存取款', label: '後台扣款總額', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-val" data-col="adminDeduct">${renderDataState(user.adminDeduct)}</td>` },
-        { id: 'depositCount', group: '存取款', label: '存款次數', checkboxIndex: 6, render: (user) => `<td class="cell-val" data-col="depositCount">${user.depositCount}</td>` },
-        { id: 'withdrawCount', group: '存取款', label: '取款次數', checkboxIndex: 6, render: (user) => `<td class="cell-val" data-col="withdrawCount">${user.withdrawCount}</td>` },
+        { id: 'deposit', group: '存取款', label: '存款總額', sortable: true, checkboxIndex: 6, requirePerm: 7, render: (user) => `<td class="cell-money ${user.deposit > 0 ? 'highlight' : ''}" data-col="deposit">${user.deposit > 0 ? user.deposit : '0'}</td>` },
+        { id: 'withdraw', group: '存取款', label: '取款總額', sortable: true, checkboxIndex: 6, requirePerm: 7, render: (user) => `<td class="cell-money" data-col="withdraw">${user.withdraw > 0 ? user.withdraw : '0'}</td>` },
+        { id: 'withdrawPre', group: '存取款', label: '提款扣金額', sortable: true, checkboxIndex: 6, requirePerm: 7, render: (user) => `<td class="cell-val" data-col="withdrawPre">${renderDataState(user.withdrawPre)}</td>` },
+        { id: 'adminDeduct', group: '存取款', label: '後台扣款總額', sortable: true, checkboxIndex: 6, requirePerm: 7, render: (user) => `<td class="cell-val" data-col="adminDeduct">${renderDataState(user.adminDeduct)}</td>` },
+        { id: 'depositCount', group: '存取款', label: '存款次數', checkboxIndex: 6, requirePerm: 7, render: (user) => `<td class="cell-val" data-col="depositCount">${user.depositCount}</td>` },
+        { id: 'withdrawCount', group: '存取款', label: '取款次數', checkboxIndex: 6, requirePerm: 7, render: (user) => `<td class="cell-val" data-col="withdrawCount">${user.withdrawCount}</td>` },
         { id: 'tags', group: '其他', label: '標籤', checkboxIndex: 7, render: (user) => {
             const tagStyles = {
                 '正常': 'tag-blue',
@@ -459,7 +549,8 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             let riskIndicatorHtml = '';
-            let visibleCount = user.tags.length;
+            let currentTags = hasPerm(47) ? user.tags : user.tags.filter(t => t === '異常風險');
+            let visibleCount = currentTags.length;
             let showGradientMore = false;
             let showGrayMore = false;
 
@@ -489,11 +580,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             let renderedTags = [];
-            for (let i = 0; i < user.tags.length; i++) {
+            for (let i = 0; i < currentTags.length; i++) {
                 if (i < visibleCount) {
-                    renderedTags.push(user.tags[i]);
+                    renderedTags.push(currentTags[i]);
                 } else if (!showGradientMore && !showGrayMore) {
-                    renderedTags.push(user.tags[i]);
+                    renderedTags.push(currentTags[i]);
                 }
             }
             
@@ -507,7 +598,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let tooltipHtml = '';
             if (showGradientMore || showGrayMore) {
-                let hiddenTagsHtml = user.tags.slice(visibleCount).map(tag => {
+                let hiddenTagsHtml = currentTags.slice(visibleCount).map(tag => {
                     let styleClass = tagStyles[tag] || 'tag-grey';
                     if (tag === '異常風險') {
                         return `<span class="user-custom-tag ${styleClass}"><i class="ph-fill ph-warning-circle" style="margin-right: 4px; font-size: 13px;"></i>${tag}</span>`;
@@ -518,8 +609,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (showGradientMore) {
-                let fourthTag = user.tags[visibleCount] || '標籤...';
-                let hiddenCount = user.tags.length - visibleCount;
+                let fourthTag = currentTags[visibleCount] || '標籤...';
+                let hiddenCount = currentTags.length - visibleCount;
                 tagsOutput += `
                     <div class="tag-more-container" style="position: relative; display: flex; align-items: center; margin-left: 0px;">
                         <span class="user-custom-tag tag-grey" style="color: #cbd5e1; border-color: #f8fafc; padding-right: 20px;">${fourthTag}</span>
@@ -546,10 +637,10 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 'date', group: '日期信息', label: '新增時間', sortable: true, checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="date">${user.date}</td>` },
         { id: 'lastLogin', group: '日期信息', label: '最後登錄', sortable: true, checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="lastLogin">${user.lastLogin}</td>` },
         { id: 'offlineDays', group: '日期信息', label: '離開天數', sortable: true, checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="offlineDays">${user.offlineDays}</td>` },
-        { id: 'ip', group: '日期信息', label: '登錄IP', checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="ip"><div class="ip-row" style="display: flex; align-items: center; gap: 4px;">${renderDataState(user.ip, 'ip')}</div></td>` },
-        { id: 'remark', group: '備註', label: '備註', checkboxIndex: 10, render: (user) => `<td class="cell-val" data-col="remark">${user.remark}</td>` },
-        { id: 'followRemark', group: '備註', label: '回訪備註', checkboxIndex: 10, render: (user) => `<td class="cell-val" data-col="followRemark">${user.followRemark}</td>` },
-        { id: 'note', group: '備註', label: '注', checkboxIndex: 10, render: (user) => `<td class="cell-val" data-col="note">${user.note}</td>` },
+        { id: 'ip', group: '日期信息', label: '登錄IP', checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="ip"><div class="ip-row" style="display: flex; align-items: center; gap: 4px;">${hasPerm(17) ? renderDataState(user.ip, 'ip') : '***.***.***.***'}</div></td>` },
+        { id: 'remark', group: '備註', label: '備註', checkboxIndex: 10, requirePerm: 21, render: (user) => `<td class="cell-val" data-col="remark">${user.remark}</td>` },
+        { id: 'followRemark', group: '備註', label: '回訪備註', checkboxIndex: 10, requirePerm: 21, render: (user) => `<td class="cell-val" data-col="followRemark">${user.followRemark}</td>` },
+        { id: 'note', group: '備註', label: '注', checkboxIndex: 10, requirePerm: 21, render: (user) => `<td class="cell-val" data-col="note">${user.note}</td>` },
         { id: 'action', group: '操作', label: '操作', render: (user) => {
             return `<td class="sticky-col-right" data-col="action" style="overflow:visible;text-align:center;vertical-align:middle;">
                 <div class="compact-action-container" style="display:inline-flex;align-items:center;justify-content:center;">
@@ -1012,6 +1103,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Render Table Data & Headers
     function renderTable() {
+        if (!userTableBody) return;
         const selectedVips = getMultiSelectValues(dropdownVip);
         const selectedOthers = getMultiSelectValues(dropdownOther);
         const inputAccount = document.getElementById('inputAccount');
@@ -1026,24 +1118,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const inputIpOuter = document.getElementById('inputIpOuter');
         const inputDepositOuter = document.getElementById('inputDepositOuter');
 
-        const birthdayVal = selectBirthday.value || (selectBirthdayOuter ? selectBirthdayOuter.value : '');
-        const dateStartVal = inputDateStart.value || (inputDateStartOuter ? inputDateStartOuter.value : '');
-        const dateEndVal = inputDateEnd.value || (inputDateEndOuter ? inputDateEndOuter.value : '');
-        const quickLoginVal = inputQuickLogin.value.trim();
-        const uidVal = inputUid.value.trim();
-        const inviteCodeVal = inputInviteCode.value.trim();
-        const nicknameVal = inputNickname.value.trim().toLowerCase();
-        const realNameVal = inputRealName.value.trim();
+        const birthdayVal = (selectBirthday ? selectBirthday.value : '') || (selectBirthdayOuter ? selectBirthdayOuter.value : '');
+        const dateStartVal = (inputDateStart ? inputDateStart.value : '') || (inputDateStartOuter ? inputDateStartOuter.value : '');
+        const dateEndVal = (inputDateEnd ? inputDateEnd.value : '') || (inputDateEndOuter ? inputDateEndOuter.value : '');
+        const quickLoginVal = inputQuickLogin ? inputQuickLogin.value.trim() : '';
+        const uidVal = inputUid ? inputUid.value.trim() : '';
+        const inviteCodeVal = inputInviteCode ? inputInviteCode.value.trim() : '';
+        const nicknameVal = inputNickname ? inputNickname.value.trim().toLowerCase() : '';
+        const realNameVal = inputRealName ? inputRealName.value.trim() : '';
         const inputAgentIdOuter = document.getElementById('inputAgentIdOuter');
         const inputAgentId = document.getElementById('inputAgentId');
         const agentIdVal = (inputAgentId ? inputAgentId.value.trim() : '') || (inputAgentIdOuter ? inputAgentIdOuter.value.trim() : '');
         const inputVipLevelOuter = document.getElementById('inputVipLevelOuter');
         const inputVipLevel = document.getElementById('inputVipLevel');
         const vipLevelVal = (inputVipLevel ? inputVipLevel.value.trim() : '') || (inputVipLevelOuter ? inputVipLevelOuter.value.trim() : '');
-        const bankCardVal = inputBankCard.value.trim();
-        const offlineDaysVal = parseInt(inputOfflineDays.value.trim(), 10);
-        const ipVal = inputIp.value.trim();
-        const depositVal = parseFloat(inputDeposit.value.trim());
+        const bankCardVal = inputBankCard ? inputBankCard.value.trim() : '';
+        const offlineDaysVal = inputOfflineDays && inputOfflineDays.value.trim() !== '' ? parseInt(inputOfflineDays.value.trim(), 10) : NaN;
+        const ipVal = inputIp ? inputIp.value.trim() : '';
+        const depositVal = inputDeposit && inputDeposit.value.trim() !== '' ? parseFloat(inputDeposit.value.trim()) : NaN;
 
         // Perform Filtering
         const filtered = mockUsers.filter(user => {
@@ -1164,7 +1256,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (currentTableMode === 'nested') {
                 let nestedHeaderHtml = `<th width="40" style="text-align: center;"><input type="checkbox" id="selectAllCheckbox"></th>`;
                 nestedColumnsConfig.forEach(col => {
-                    if (nestedColumnVisibility[col.id]) {
+                    let canShow = true;
+                    if (col.id === 'depositWithdraw' && !hasPerm(7)) canShow = false;
+                    if (col.id === 'remark' && !hasPerm(21)) canShow = false;
+                    
+                    if (nestedColumnVisibility[col.id] && canShow) {
                         nestedHeaderHtml += `<th>${col.label}</th>`;
                     }
                 });
@@ -1182,7 +1278,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const pinned = [];
                 const unpinned = [];
                 
-                const visibleColumnsConfig = compactColumnsConfig.filter(col => compactColumnVisibility[col.id]);
+                const visibleColumnsConfig = compactColumnsConfig.filter(col => compactColumnVisibility[col.id] && (!col.requirePerm || hasPerm(col.requirePerm)));
                 
                 visibleColumnsConfig.forEach(col => {
                     if (pinnedColumnIds.includes(col.id)) {
@@ -1355,40 +1451,40 @@ document.addEventListener('DOMContentLoaded', () => {
                     nestedRowHtml += `<td class="nested-cell-info">
                         <div><span class="info-label">用戶ID :</span> ${renderDataState(user.uid, 'copyable')}</div>
                         <div><span class="info-label">會員名 :</span> <a href="#" class="user-detail-link" data-uid="${user.uid}">${renderDataState(user.account, 'copyable')}</a></div>
-                        <div><span class="info-label">真實姓名 :</span> ${renderDataState(user.realName)}</div>
-                        <div><span class="info-label">用戶暱稱 :</span> ${renderDataState(user.nickname)}</div>
+                        <div><span class="info-label">真實姓名 :</span> ${hasPerm(37) ? renderDataState(user.realName) : '***'}</div>
+                        <div><span class="info-label">用戶暱稱 :</span> ${hasPerm(17) ? renderDataState(user.nickname) : 'ai***21'}</div>
                         <div><span class="info-label">代理 :</span> ${renderDataState(user.agentId)}</div>
                         <div><span class="info-label">邀請人 :</span> ${renderDataState(user.inviter)}</div>
                         <div><span class="info-label">註冊模式 :</span> ${user.registerMode || '一般註冊'}</div>
-                        <div><span class="info-label">手機號 :</span> ${renderDataState(user.phone, 'phone')}</div>
+                        <div><span class="info-label">手機號 :</span> ${hasPerm(36) ? renderDataState(user.phone, 'phone') : (user.phone && user.phone !== '-' ? '已驗證' : '未驗證')}</div>
                     </td>`;
                 }
                 if (nestedColumnVisibility['levelTeam']) {
                     nestedRowHtml += `<td class="nested-cell-info">
-                        <div><span class="info-label">支付層級 :</span> ${user.payLevel || '默認層'}</div>
+                        <div><span class="info-label">支付層級 :</span> ${hasPerm(4) ? (user.payLevel || '默認層') : '***'}</div>
                         <div><span class="info-label">成長值 :</span> ${user.growth || 0}</div>
                         <div><span class="info-label">等級 :</span> <strong class="${user.level === '黃金會員' ? 'level-gold' : ''}">${user.level}</strong></div>
                         <div><span class="info-label">帳號類型 :</span> ${user.accountType || '普通帳號'}</div>
                         <div><span class="info-label">會員類型 :</span> ${user.userType || '代理會員'}</div>
                         <div><span class="info-label">邀請碼 :</span> ${user.inviteCode || '-'}</div>
-                        <div><span class="info-label">直屬下級/團隊人數 :</span> <a href="#" class="subordinate-link" style="color: var(--primary-color); text-decoration: underline;" data-uid="${user.uid}">${user.directTeam || '0/0'}</a></div>
+                        <div><span class="info-label">直屬下級/團隊人數 :</span> <a href="#" class="subordinate-link" style="color: var(--primary-color); text-decoration: underline;" data-uid="${user.uid}">${hasPerm(6) ? (user.directTeam || '0/0') : '*/*'}</a></div>
                         <div><span class="info-label">VIP會員等級 :</span> ${user.vipLevel || 0}</div>
                         <div><span class="info-label">VIP成長值 :</span> ${user.vipGrowth || 0}</div>
                     </td>`;
                 }
                 if (nestedColumnVisibility['creditLimit']) {
                     nestedRowHtml += `<td class="nested-cell-info">
-                        <div><span class="info-label">信用值 :</span> ${user.creditValue || 0}</div>
+                        <div><span class="info-label">信用值 :</span> ${hasPerm(7) ? (user.creditValue || 0) : '***'}</div>
                         <div><span class="info-label">可用額度 :</span> ${user.availableCredit || 0}</div>
-                        <div><span class="info-label">佣金餘額 :</span> ${user.commissionBal || 0}</div>
+                        <div><span class="info-label">佣金餘額 :</span> ${hasPerm(7) ? (user.commissionBal || 0) : '***'}</div>
                         <div><span class="info-label">診額寶 :</span> ${user.balanceBuy || 0}</div>
-                        <div><span class="info-label">欠款 :</span> ${user.arrears || '-'}</div>
+                        <div><span class="info-label">欠款 :</span> ${hasPerm(7) ? (user.arrears || '-') : '***'}</div>
                         <div><span class="info-label">餘額寶利息 :</span> ${user.interest || 0}</div>
                         <div><span class="info-label">三方餘額 :</span> ${user.thirdBal || 0} <a href="#" class="refresh-link" style="color:#2563eb;font-size:12px;margin-left:4px;text-decoration:none;">刷新</a></div>
                         <div><span class="info-label">會員積分 :</span> ${user.points || 0}</div>
                     </td>`;
                 }
-                if (nestedColumnVisibility['depositWithdraw']) {
+                if (nestedColumnVisibility['depositWithdraw'] && hasPerm(7)) {
                     nestedRowHtml += `<td class="nested-cell-info">
                         <div><span class="info-label">存款總額 :</span> ${user.deposit || 0}</div>
                         <div><span class="info-label">取款總額 :</span> ${user.withdraw || 0}</div>
@@ -1400,7 +1496,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 if (nestedColumnVisibility['tags']) {
                     const tagStyles = { '正常': 'tag-blue', 'VIP 客戶': 'tag-blue', 'VIP': 'tag-blue', '活躍': 'tag-green', '高頻交易': 'tag-green', '大戶': 'tag-purple', '高消費': 'tag-purple', '異常風險': 'tag-red' };
-                    let nestedTagsOutput = user.tags.map(tag => {
+                    
+                    let currentTags = hasPerm(47) ? user.tags : user.tags.filter(t => t === '異常風險');
+                    let nestedTagsOutput = currentTags.map(tag => {
                         let styleClass = tagStyles[tag] || 'tag-grey';
                         if (tag === '異常風險') {
                             return `<span class="user-custom-tag ${styleClass}"><i class="ph-fill ph-warning-circle" style="margin-right: 4px; font-size: 13px;"></i>${tag}</span>`;
@@ -1426,11 +1524,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div><span class="info-label">離開天數 :</span> ${user.offlineDays}天</div>
                         <div><span class="info-label">登錄IP :</span></div>
                         <div class="ip-row" style="display: flex; align-items: center; gap: 4px;">
-                            ${renderDataState(user.ip, 'ip')}
+                            ${hasPerm(17) ? renderDataState(user.ip, 'ip') : '***.***.***.***'}
                         </div>
                     </td>`;
                 }
-                if (nestedColumnVisibility['remark']) {
+                if (nestedColumnVisibility['remark'] && hasPerm(21)) {
                     nestedRowHtml += `<td class="nested-cell-info">
                         <div><span class="info-label">備註 :</span> ${renderDataState(user.remark, 'longText')}</div>
                         <div><span class="info-label">回訪備註 :</span> ${renderDataState(user.followRemark, 'longText')}</div>
@@ -1440,35 +1538,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 nestedRowHtml += `<td style="text-align: center; padding: 12px 8px;">
                     <div class="operations-grid-3x3">
-                        <a href="#" class="op-link user-detail-link" data-uid="${user.uid}">編輯用戶</a>
-                        <a href="#" class="op-link user-detail-link" data-uid="${user.uid}">查看詳情</a>
-                        <a href="#" class="op-link">額度修改</a>
-                        <a href="#" class="op-link">資金明細</a>
-                        <a href="#" class="op-link">注單明細</a>
-                        <a href="#" class="op-link">修改密碼</a>
-                        <a href="#" class="op-link">下級會員</a>
-                        <a href="#" class="op-link">下級報表</a>
-                        <a href="#" class="op-link">下級注單</a>
+                        ${shouldShowOp("編輯用戶") ? `<a href="#" class="op-link user-detail-link" data-uid="${user.uid}">編輯用戶</a>` : ''}
+                        ${shouldShowOp("查看詳情") ? `<a href="#" class="op-link user-detail-link" data-uid="${user.uid}">查看詳情</a>` : ''}
+                        ${shouldShowOp("額度修改") ? `<a href="#" class="op-link">額度修改</a>` : ''}
+                        ${shouldShowOp("資金明細") ? `<a href="#" class="op-link">資金明細</a>` : ''}
+                        ${shouldShowOp("注單明細") ? `<a href="#" class="op-link">注單明細</a>` : ''}
+                        ${shouldShowOp("修改密碼") ? `<a href="#" class="op-link">修改密碼</a>` : ''}
+                        ${shouldShowOp("下級會員") ? `<a href="#" class="op-link">下級會員</a>` : ''}
+                        ${shouldShowOp("下級報表") ? `<a href="#" class="op-link">下級報表</a>` : ''}
+                        ${shouldShowOp("下級注單") ? `<a href="#" class="op-link">下級注單</a>` : ''}
                     </div>
                     <div class="more-op-dropdown-container">
                         <button class="btn-more-op-wide">更多...</button>
                         <ul class="more-op-dropdown-menu">
-                            <li>交易設定</li>
-                            <li>赔率设置</li>
-                            <li>积分修改</li>
-                            <li>代理变更</li>
-                            <li>第三方游戏</li>
-                            <li>稽核记录</li>
-                            <li>代理变更记录</li>
-                            <li>回访备注</li>
-                            <li>隐藏资金明细</li>
-                            <li>快速登录变更</li>
-                            <li>校验用户任务</li>
-                            <li>谷歌验证码</li>
-                            <li>链上地址</li>
-                            <li>额度修改(链上充值)</li>
-                            <li>编辑标签</li>
-                            <li>用户标签编辑记录</li>
+                            ${[
+                                '交易設定', '赔率设置', '积分修改', '代理变更', '第三方游戏',
+                                '稽核记录', '代理变更记录', '回访备注', '隐藏资金明细', '快速登录变更',
+                                '校验用户任务', '谷歌验证码', '链上地址', '额度修改(链上充值)', '编辑标签',
+                                '用户标签编辑记录'
+                            ].filter(shouldShowOp).map(op => `<li>${op}</li>`).join('')}
                         </ul>
                     </div>
                 </td>`;
@@ -1478,7 +1566,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const pinned = [];
                 const unpinned = [];
                 
-                const visibleColumnsConfig = compactColumnsConfig.filter(col => compactColumnVisibility[col.id]);
+                const visibleColumnsConfig = compactColumnsConfig.filter(col => compactColumnVisibility[col.id] && (!col.requirePerm || hasPerm(col.requirePerm)));
                 visibleColumnsConfig.forEach(col => {
                     if (pinnedColumnIds.includes(col.id)) pinned.push(col);
                     else unpinned.push(col);
@@ -2227,18 +2315,8 @@ if (!globalActionMenu) {
     globalActionMenu.id = 'globalCompactActionMenu';
     globalActionMenu.style.cssText = 'display:none;position:fixed;background:#fff;border:1px solid #e5e7eb;box-shadow:0 4px 12px rgba(0,0,0,0.15);border-radius:6px;z-index:999999;padding:8px 0;min-width:160px;white-space:nowrap;max-height:300px;overflow-y:auto;text-align:left;';
     
-    const compactActionItems = [
-        "编辑用户", "查看详情", "额度修改", "资金明细", "注单明细", "修改密码", "下级会员", "下级报表", "下级注单",
-        "---",
-        "交易设定", "赔率设置", "积分修改", "代理变更", "第三方游戏", "稽核记录", "代理变更记录", "回访备注",
-        "隐藏资金明细", "快速登录变更", "校验用户任务", "谷歌验证码", "链上地址", "额度修改(链上充值)", "编辑标签", "用户标签编辑记录"
-    ];
-    globalActionMenu.innerHTML = compactActionItems.map(item => {
-        if (item === '---') return `<div class="divider" style="height:1px;background-color:#e5e7eb;margin:4px 0;"></div>`;
-        return `<a href="#" style="display:block;padding:8px 16px;color:#374151;text-decoration:none;font-size:13px;text-align:center;" onmouseover="this.style.backgroundColor='#f3f4f6';this.style.color='#3b82f6'" onmouseout="this.style.backgroundColor='transparent';this.style.color='#374151'">${item}</a>`;
-    }).join('');
-    
     document.body.appendChild(globalActionMenu);
+    renderCompactActionMenu();
 
     let hideTimeout;
     const hideMenu = () => {
@@ -2321,5 +2399,8 @@ document.querySelectorAll('input[type="datetime-local"], input[type="date"]').fo
         }
     });
 });
+
+window.renderTable = renderTable;
+window.renderCompactActionMenu = renderCompactActionMenu;
 
 });

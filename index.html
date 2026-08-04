@@ -22,206 +22,362 @@
                     style="margin-left:auto; cursor:pointer; font-size:20px; color:var(--text-muted);"
                     title="收起/展開選單"></i>
             </div>
-            <nav class="sidebar-nav" style="padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
-                <div style="padding-bottom: 8px; border-bottom: 1px solid var(--border-color); margin-bottom: 4px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+            <nav class="sidebar-nav"
+                style="padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
+                <div
+                    style="padding-bottom: 8px; border-bottom: 1px solid var(--border-color); margin-bottom: 4px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
                     <i class="ph-fill ph-shield-check" style="color: var(--primary-color); font-size: 18px;"></i>
                     <span>權限開關</span>
                 </div>
-                <div class="permission-checkboxes" style="display: flex; flex-direction: column; gap: 12px; padding-bottom: 20px;">
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="查看会员列表" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                <div class="permission-actions" style="display: flex; gap: 8px; margin-bottom: 4px;">
+                    <button type="button" id="btnSelectAll" class="btn btn-secondary"
+                        style="flex: 1; height: 32px; font-size: 12px; padding: 0 8px; border-radius: 4px; border: 1px solid var(--border-color);">全選</button>
+                    <button type="button" id="btnDeselectAll" class="btn btn-outline"
+                        style="flex: 1; height: 32px; font-size: 12px; padding: 0 8px; border-radius: 4px; border: 1px solid var(--border-color);">取消全選</button>
+                </div>
+                <div class="permission-checkboxes"
+                    style="display: flex; flex-direction: column; gap: 12px; padding-bottom: 20px;">
+                    <!-- 查看会员列表 權限 trace 代碼: 1 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="查看会员列表"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="1">
                         <span>查看会员列表</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="新增会员" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 新增会员 權限 trace 代碼: 2 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="新增会员"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="2">
                         <span>新增会员</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="修改会员" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 修改会员 權限 trace 代碼: 3 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="修改会员"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="3">
                         <span>修改会员</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="支付層級" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 支付層級 權限 trace 代碼: 4 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="支付層級"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="4">
                         <span>支付層級</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="删除会员" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 删除会员 權限 trace 代碼: 5 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="删除会员"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="5">
                         <span>删除会员</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="返点设定" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 返点设定 權限 trace 代碼: 6 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="返点设定"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="6">
                         <span>返点设定</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="资金明细" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 资金明细 權限 trace 代碼: 7 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="资金明细"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="7">
                         <span>资金明细</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="注单明细" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 注单明细 權限 trace 代碼: 8 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="注单明细"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="8">
                         <span>注单明细</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="修改余额" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 修改余额 權限 trace 代碼: 9 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="修改余额"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="9">
                         <span>修改余额</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="交易设定" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 交易设定 權限 trace 代碼: 10 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="交易设定"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="10">
                         <span>交易设定</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="变更代理" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 变更代理 權限 trace 代碼: 11 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="变更代理"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="11">
                         <span>变更代理</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="批量更新用户余额" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>批量更新用户余额</span>
+                    <!-- 更新用户余额 權限 trace 代碼: 12 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="更新用户余额"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="12">
+                        <span>更新用户余额</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="导出用户数据" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 导出用户数据 權限 trace 代碼: 13 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="导出用户数据"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="13">
                         <span>导出用户数据</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="批量更新用户联系方式" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>批量更新用户联系方式</span>
+                    <!-- 更新用户联系方式 權限 trace 代碼: 14 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="更新用户联系方式"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="14">
+                        <span>更新用户联系方式</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="第三方游戏" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 第三方游戏 權限 trace 代碼: 15 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="第三方游戏"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="15">
                         <span>第三方游戏</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="积分调整" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 积分调整 權限 trace 代碼: 16 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="积分调整"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="16">
                         <span>积分调整</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="查看会员详情" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 查看会员详情 權限 trace 代碼: 17 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="查看会员详情"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="17">
                         <span>查看会员详情</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="清除稽核记录" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 清除稽核记录 權限 trace 代碼: 18 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="清除稽核记录"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="18">
                         <span>清除稽核记录</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="代理变更历程" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 代理变更历程 權限 trace 代碼: 19 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="代理变更历程"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="19">
                         <span>代理变更历程</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="查看会员联络资讯" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 查看会员联络资讯 權限 trace 代碼: 20 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="查看会员联络资讯"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="20">
                         <span>查看会员联络资讯</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="回访备注" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 回访备注 權限 trace 代碼: 21 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="回访备注"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="21">
                         <span>回访备注</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="隐藏资金明细" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 隐藏资金明细 權限 trace 代碼: 22 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="隐藏资金明细"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="22">
                         <span>隐藏资金明细</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="用户三方RTP配置" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 用户三方RTP配置 權限 trace 代碼: 23 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="用户三方RTP配置"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="23">
                         <span>用户三方RTP配置</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="批量更新用户状态" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>批量更新用户状态</span>
+                    <!-- 更新用户状态 權限 trace 代碼: 24 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="更新用户状态"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="24">
+                        <span>更新用户状态</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="快速登录变更" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 快速登录变更 權限 trace 代碼: 25 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="快速登录变更"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="25">
                         <span>快速登录变更</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="新增银行卡" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 新增银行卡 權限 trace 代碼: 26 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="新增银行卡"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="26">
                         <span>新增银行卡</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="会员信息审核" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 会员信息审核 權限 trace 代碼: 27 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="会员信息审核"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="27">
                         <span>会员信息审核</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="编辑代理下会员可玩游戏" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 编辑代理下会员可玩游戏 權限 trace 代碼: 28 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="编辑代理下会员可玩游戏"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="28">
                         <span>编辑代理下会员可玩游戏</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="修改银行卡" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 修改银行卡 權限 trace 代碼: 29 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="修改银行卡"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="29">
                         <span>修改银行卡</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="删除银行卡" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 删除银行卡 權限 trace 代碼: 30 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="删除银行卡"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="30">
                         <span>删除银行卡</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="会员谷歌验证码查看" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 会员谷歌验证码查看 權限 trace 代碼: 31 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="会员谷歌验证码查看"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="31">
                         <span>会员谷歌验证码查看</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="移除会员谷歌验证码" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 移除会员谷歌验证码 權限 trace 代碼: 32 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="移除会员谷歌验证码"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="32">
                         <span>移除会员谷歌验证码</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="用户钱包展示" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 用户钱包展示 權限 trace 代碼: 33 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="用户钱包展示"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="33">
                         <span>用户钱包展示</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="额度修改(链上充值)" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 额度修改(链上充值) 權限 trace 代碼: 34 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="额度修改(链上充值)"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="34">
                         <span>额度修改(链上充值)</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="會員敏感資訊（密碼）" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 會員敏感資訊（密碼） 權限 trace 代碼: 35 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="會員敏感資訊（密碼）"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="35">
                         <span>會員敏感資訊（密碼）</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="會員敏感資訊（手機）" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 會員敏感資訊（手機） 權限 trace 代碼: 36 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="會員敏感資訊（手機）"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="36">
                         <span>會員敏感資訊（手機）</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="會員敏感資訊（姓名）" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 會員敏感資訊（姓名） 權限 trace 代碼: 37 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="會員敏感資訊（姓名）"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="37">
                         <span>會員敏感資訊（姓名）</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="会员赔率设置-查看" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 会员赔率设置-查看 權限 trace 代碼: 38 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="会员赔率设置-查看"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="38">
                         <span>会员赔率设置-查看</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="会员赔率设置-保存" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 会员赔率设置-保存 權限 trace 代碼: 39 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="会员赔率设置-保存"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="39">
                         <span>会员赔率设置-保存</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="会员返水快捷设置" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 会员返水快捷设置 權限 trace 代碼: 40 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="会员返水快捷设置"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="40">
                         <span>会员返水快捷设置</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="会员设置最大赔付上限" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 会员设置最大赔付上限 權限 trace 代碼: 41 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="会员设置最大赔付上限"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="41">
                         <span>会员设置最大赔付上限</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="会员赔率设置-重置" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 会员赔率设置-重置 權限 trace 代碼: 42 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="会员赔率设置-重置"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="42">
                         <span>会员赔率设置-重置</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="批量代理变更" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>批量代理变更</span>
+                    <!-- 代理变更 權限 trace 代碼: 43 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="代理变更"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="43">
+                        <span>代理变更</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="批量更新最大提款次数" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>批量更新最大提款次数</span>
+                    <!-- 更新最大提款次数 權限 trace 代碼: 44 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="更新最大提款次数"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="44">
+                        <span>更新最大提款次数</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="校验用户任务" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 校验用户任务 權限 trace 代碼: 45 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="校验用户任务"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="45">
                         <span>校验用户任务</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="禁用銀行卡" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 禁用銀行卡 權限 trace 代碼: 46 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="禁用銀行卡"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="46">
                         <span>禁用銀行卡</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="编辑标签" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 编辑标签 權限 trace 代碼: 47 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="编辑标签"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="47">
                         <span>编辑标签</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="标签编辑纪录" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 标签编辑纪录 權限 trace 代碼: 48 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="标签编辑纪录"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="48">
                         <span>标签编辑纪录</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="查看会员在线充值提现统计" style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                    <!-- 查看会员在线充值提现统计 權限 trace 代碼: 49 -->
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="查看会员在线充值提现统计"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);" data-trace="49">
                         <span>查看会员在线充值提现统计</span>
                     </label>
                 </div>
@@ -304,7 +460,8 @@
                 </section>
             </div>
 
-            <div class="iframe-container" style="flex: 1; display: flex; flex-direction: column; height: 100%; overflow: hidden; background-color: var(--bg-body);">
+            <div class="iframe-container"
+                style="flex: 1; display: flex; flex-direction: column; height: 100%; overflow: hidden; background-color: var(--bg-body);">
                 <iframe src="content.html" style="width: 100%; height: 100%; border: none;"></iframe>
             </div>
         </main>
@@ -315,14 +472,68 @@
         document.addEventListener('DOMContentLoaded', () => {
             const statsCheckbox = document.querySelector('input[value="查看会员在线充值提现统计"]');
             const iframe = document.querySelector('iframe');
-            
+
             function updateStatsBarVisibility() {
-                if (iframe && iframe.contentWindow && iframe.contentWindow.document) {
-                    const statsBar = iframe.contentWindow.document.getElementById('bottomStatsBar');
-                    if (statsBar) {
-                        statsBar.style.display = statsCheckbox.checked ? 'flex' : 'none';
-                    }
+                if (iframe && iframe.contentWindow) {
+                    iframe.contentWindow.postMessage({
+                        type: 'stats_visibility',
+                        visible: statsCheckbox.checked
+                    }, '*');
                 }
+            }
+
+
+            // 監聽所有權限 checkbox，輸出 trace 代碼並寫入 localStorage
+            const permissionCheckboxes = document.querySelectorAll('.permission-checkboxes input[type="checkbox"]');
+
+            // 初始寫入
+            permissionCheckboxes.forEach(cb => {
+                const traceNum = cb.getAttribute('data-trace');
+                localStorage.setItem('perm-' + traceNum, cb.checked);
+            });
+
+            permissionCheckboxes.forEach(cb => {
+                cb.addEventListener('change', (e) => {
+                    const traceNum = e.target.getAttribute('data-trace');
+                    const name = e.target.value;
+                    const action = e.target.checked ? '勾選' : '取消勾選';
+                    console.log(`權限變更 trace [${traceNum}]: ${name} 已${action}`);
+                    localStorage.setItem('perm-' + traceNum, e.target.checked);
+
+                    // Use postMessage for cross-frame communication on file:// protocol
+                    if (iframe && iframe.contentWindow) {
+                        iframe.contentWindow.postMessage({
+                            type: 'permission_change',
+                            traceId: traceNum,
+                            checked: e.target.checked
+                        }, '*');
+                    }
+                });
+            });
+
+            const btnSelectAll = document.getElementById('btnSelectAll');
+            const btnDeselectAll = document.getElementById('btnDeselectAll');
+
+            if (btnSelectAll) {
+                btnSelectAll.addEventListener('click', () => {
+                    permissionCheckboxes.forEach(cb => {
+                        if (!cb.checked) {
+                            cb.checked = true;
+                            cb.dispatchEvent(new Event('change'));
+                        }
+                    });
+                });
+            }
+
+            if (btnDeselectAll) {
+                btnDeselectAll.addEventListener('click', () => {
+                    permissionCheckboxes.forEach(cb => {
+                        if (cb.checked) {
+                            cb.checked = false;
+                            cb.dispatchEvent(new Event('change'));
+                        }
+                    });
+                });
             }
 
             if (statsCheckbox) {
