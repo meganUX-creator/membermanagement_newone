@@ -84,9 +84,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Listen to permission changes in sidebar
     document.querySelectorAll('.permission-checkboxes input[type="checkbox"]').forEach(cb => {
-        cb.addEventListener('change', () => {
+        cb.addEventListener('change', (e) => {
             if (typeof renderTable === 'function') renderTable();
             renderCompactActionMenu();
+            
+            // Real-time toggle for trace 20 (Contact Info)
+            if (e.target.getAttribute('data-trace') === '20') {
+                const isChecked = e.target.checked;
+                const detailsContactInfoCard = document.getElementById('detailsContactInfoCard');
+                if (detailsContactInfoCard) {
+                    detailsContactInfoCard.style.display = isChecked ? '' : 'none';
+                }
+                const editContactInfoCard = document.getElementById('editContactInfoCard');
+                if (editContactInfoCard) {
+                    editContactInfoCard.style.display = isChecked ? '' : 'none';
+                }
+            }
+            
+            // Real-time toggle for trace 37 (Real Name)
+            if (e.target.getAttribute('data-trace') === '37') {
+                const isChecked = e.target.checked;
+                const detailsRealName = document.getElementById('detailsRealName');
+                if (detailsRealName) {
+                    const rawVal = detailsRealName.getAttribute('data-val');
+                    detailsRealName.textContent = isChecked ? (rawVal && rawVal !== '-' ? rawVal : '-') : '***';
+                }
+                const editFormRealName = document.getElementById('editFormRealName');
+                if (editFormRealName) {
+                    const rawVal = editFormRealName.getAttribute('data-val');
+                    if (isChecked) {
+                        editFormRealName.value = (rawVal && rawVal !== '-') ? rawVal : '';
+                        editFormRealName.disabled = false;
+                    } else {
+                        editFormRealName.value = '***';
+                        editFormRealName.disabled = true;
+                    }
+                }
+            }
         });
     });
 
@@ -411,14 +445,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function closeDrawer() {
-        drawer.classList.remove('active');
+        if (drawer) drawer.classList.remove('active');
         const columnsDrawer = document.getElementById('columnsDrawer');
         if (columnsDrawer) columnsDrawer.classList.remove('active');
         const userEditDrawer = document.getElementById('userEditDrawer');
         if (userEditDrawer) userEditDrawer.classList.remove('active');
         const agentChangeRecordDrawer = document.getElementById('agentChangeRecordDrawer');
         if (agentChangeRecordDrawer) agentChangeRecordDrawer.classList.remove('active');
-        overlay.classList.remove('active');
+        const userDetailsDrawer = document.getElementById('userDetailsDrawer');
+        if (userDetailsDrawer) {
+            userDetailsDrawer.classList.remove('active');
+            const expandPanel = document.getElementById('detailsExpandPanel');
+            setTimeout(() => {
+                userDetailsDrawer.style.width = '960px';
+                if (expandPanel) expandPanel.style.display = 'none';
+            }, 300);
+        }
+        
+        if (overlay) overlay.classList.remove('active');
     }
 
     if (openBtn) openBtn.addEventListener('click', openDrawer);
@@ -1116,6 +1160,441 @@ document.addEventListener('DOMContentLoaded', () => {
         renderTable();
     });
 
+    window.openUserDetailsDrawer = function(uid) {
+        const userDetailsDrawer = document.getElementById('userDetailsDrawer');
+        if (!userDetailsDrawer) return;
+        
+        const user = mockUsers.find(u => u.uid === uid) || mockUsers[0];
+        
+        // Header
+        const avatar = document.getElementById('detailsHeaderAvatar');
+        if (avatar) avatar.textContent = user.account.charAt(0).toUpperCase();
+        
+        const accountSpan = document.getElementById('detailsHeaderAccount');
+        if (accountSpan) accountSpan.textContent = user.account;
+        
+        const typeSpan = document.getElementById('detailsHeaderUserType');
+        if (typeSpan) typeSpan.textContent = user.userType || '代理會員';
+        
+        const levelSpan = document.getElementById('detailsHeaderUserLevel');
+        if (levelSpan) levelSpan.textContent = user.level || '普通會員';
+        
+        const statusBadge = document.getElementById('detailsHeaderStatusBadge');
+        if (statusBadge) {
+            if (user.status === '正常') {
+                statusBadge.style.backgroundColor = '#dcfce7';
+                statusBadge.style.color = '#16a34a';
+                statusBadge.innerHTML = `<div style="width: 6px; height: 6px; border-radius: 50%; background-color: #16a34a;"></div>目前狀態：正常`;
+            } else if (user.status === '停用') {
+                statusBadge.style.backgroundColor = '#fee2e2';
+                statusBadge.style.color = '#dc2626';
+                statusBadge.innerHTML = `<div style="width: 6px; height: 6px; border-radius: 50%; background-color: #dc2626;"></div>目前狀態：停用`;
+            } else {
+                statusBadge.style.backgroundColor = '#fef3c7';
+                statusBadge.style.color = '#d97706';
+                statusBadge.innerHTML = `<div style="width: 6px; height: 6px; border-radius: 50%; background-color: #d97706;"></div>目前狀態：${user.status}`;
+            }
+        }
+        
+        // Tab 1: 會員信息
+        const detailsBasic = document.getElementById('detailsBasic');
+        if (detailsBasic) {
+            detailsBasic.innerHTML = `
+            <div style="border: 1px solid var(--border-color); border-radius: 8px; background: #ffffff; margin-bottom: 24px; padding: 24px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 40px; height: 40px; background-color: #e0f2fe; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #0284c7; font-size: 20px;">
+                            <i class="ph ph-identification-card"></i>
+                        </div>
+                        <h4 style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b;">基本資料</h4>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 20px;">
+                    <div style="display: flex; align-items: center;">
+                        <span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">頭像:</span>
+                        <div style="width: 48px; height: 48px; background: #e2e8f0; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #94a3b8;">
+                            <i class="ph ph-user"></i>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">用戶暱稱:</span>
+                        <span style="color: #475569; font-size: 14px; font-family: monospace;">${user.account.substring(0,2)}***${user.account.substring(user.account.length-2)}</span>
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">帳號:</span>
+                        <span style="color: #475569; font-size: 14px; font-family: monospace;">${user.account}</span>
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">真實姓名:</span>
+                        <span id="detailsRealName" data-val="${user.realName}" style="color: #475569; font-size: 14px;">${hasPerm(37) ? (user.realName && user.realName !== '-' ? user.realName : '-') : '***'}</span>
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">出生年月日:</span>
+                        <span style="color: #475569; font-size: 14px; font-family: monospace;">${user.birthday || '1995-08-18'}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="detailsContactInfoCard" style="border: 1px solid var(--border-color); border-radius: 8px; background: #ffffff; margin-bottom: 24px; padding: 24px; ${hasPerm(20) ? '' : 'display: none;'}">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 40px; height: 40px; background-color: #ede9fe; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #8b5cf6; font-size: 20px;">
+                            <i class="ph ph-phone-call"></i>
+                        </div>
+                        <h4 style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b;">聯絡方式</h4>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">電話:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">${user.phone}</span></div>
+                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">email:</span><span style="font-size: 14px; color: #475569;">${user.account}@example.com</span></div>
+                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">QQ:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">88392019</span></div>
+                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">微信:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">wx_${user.account}</span></div>
+                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">Zalo:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">+84${user.phone.substring(2)}</span></div>
+                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">WhatsApp:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">+84${user.phone.substring(2)}</span></div>
+                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">Telegram:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">@${user.account}_tg</span></div>
+                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">Facebook:</span><span style="font-size: 14px; color: #475569;">fb.me/${user.account}</span></div>
+                </div>
+            </div>
+
+            <div style="border: 1px solid var(--border-color); border-radius: 8px; background: #ffffff; padding: 24px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 40px; height: 40px; background-color: #fef3c7; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #d97706; font-size: 20px;">
+                            <i class="ph ph-notebook"></i>
+                        </div>
+                        <h4 style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b;">備註</h4>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 20px;">
+                    <div style="display: flex; align-items: center;">
+                        <span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">備注:</span>
+                        <span style="color: #475569; font-size: 14px;">${user.remark || '暫無備註'}</span>
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">回訪備注:</span>
+                        <span style="color: #475569; font-size: 14px;">暫無回訪備註</span>
+                    </div>
+                </div>
+            </div>`;
+        }
+        
+        // Tab 2: 提現信息
+        const detailsWithdraw = document.getElementById('detailsWithdraw');
+        if (detailsWithdraw) {
+            detailsWithdraw.innerHTML = `
+            <div style="border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; background: #ffffff;">
+                <table style="width: 100%; border-collapse: collapse; text-align: center; font-size: 14px;">
+                    <thead>
+                        <tr style="background-color: #f8fafc; color: var(--text-secondary); border-bottom: 1px solid var(--border-color);">
+                            <th style="padding: 16px; font-weight: 600;">出款類型</th>
+                            <th style="padding: 16px; font-weight: 600;">卡號/錢包/支付寶帳號</th>
+                            <th style="padding: 16px; font-weight: 600;">銀行/幣種</th>
+                            <th style="padding: 16px; font-weight: 600;">銀行地址/備註</th>
+                        </tr>
+                    </thead>
+                </table>
+                <div style="padding: 64px 0; text-align: center; color: #94a3b8; font-size: 14px;">暫無數據</div>
+            </div>`;
+        }
+
+        // Tab 3: 最後登錄
+        const detailsLogin = document.getElementById('detailsLogin');
+        if (detailsLogin) {
+            detailsLogin.innerHTML = `
+            <div style="background: #ffffff;">
+                <div style="display: grid; grid-template-columns: 160px 1fr; border-bottom: 1px solid var(--border-color);">
+                    <div style="padding: 16px 24px; color: var(--text-muted); font-size: 14px; display: flex; align-items: center; justify-content: flex-end;">登錄IP:</div>
+                    <div style="padding: 16px 24px; font-size: 14px; font-family: monospace; display: flex; align-items: center; gap: 8px;">
+                        54.150.111.152 <span style="color: #94a3b8; font-family: sans-serif; font-size: 13px;">(Japan, Tokyo, Tokyo (日本東京都東京))</span> <i class="ph ph-copy" style="color: #94a3b8; cursor: pointer;"></i>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 160px 1fr; border-bottom: 1px solid var(--border-color);">
+                    <div style="padding: 16px 24px; color: var(--text-muted); font-size: 14px; display: flex; align-items: center; justify-content: flex-end;">登錄時間:</div>
+                    <div style="padding: 16px 24px; font-size: 14px; font-family: monospace; display: flex; align-items: center; gap: 8px;">
+                        2026-07-28 16:30:42 <i class="ph ph-copy" style="color: #94a3b8; cursor: pointer;"></i>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 160px 1fr; border-bottom: 1px solid var(--border-color);">
+                    <div style="padding: 16px 24px; color: var(--text-muted); font-size: 14px; display: flex; align-items: center; justify-content: flex-end;">設備號:</div>
+                    <div style="padding: 16px 24px; font-size: 14px; font-family: monospace; display: flex; align-items: center; gap: 8px;">
+                        ee5868d85af7f68cf088a6780ff8882a <i class="ph ph-copy" style="color: #94a3b8; cursor: pointer;"></i>
+                    </div>
+                </div>
+                
+                <div id="rowIpLoginCount" style="display: grid; grid-template-columns: 160px 1fr; border-bottom: 1px solid var(--border-color); transition: all 0.2s;">
+                    <div style="padding: 16px 24px; color: var(--text-muted); font-size: 14px; display: flex; align-items: center; justify-content: flex-end;">同IP登錄人數:</div>
+                    <div style="padding: 16px 24px; font-size: 14px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <a href="#" onclick="openDetailedContentDrawer(event, 'ip')" style="font-size: 18px; font-weight: 600; color: #3b82f6; text-decoration: underline;">4,703 <i class="ph ph-arrow-square-out" style="font-size: 16px;"></i></a>
+                        </div>
+                        <div id="btnIpExpand" style="display: none;">
+                            <button class="btn btn-primary" onclick="openDetailedContentDrawer(event, 'ip')" style="background-color: #6366f1; border: none; border-radius: 16px; padding: 4px 12px; font-size: 13px;">展開中 &gt;</button>
+                        </div>
+                        <div id="hintIpExpand" style="font-size: 13px; color: #94a3b8; display: none;"></div>
+                    </div>
+                </div>
+                
+                <div id="rowDeviceLoginCount" style="display: grid; grid-template-columns: 160px 1fr; border-bottom: 1px solid var(--border-color); transition: all 0.2s;">
+                    <div style="padding: 16px 24px; color: var(--text-muted); font-size: 14px; display: flex; align-items: center; justify-content: flex-end;">同設備登錄人數:</div>
+                    <div style="padding: 16px 24px; font-size: 14px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <a href="#" onclick="openDetailedContentDrawer(event, 'device')" style="font-size: 18px; font-weight: 600; color: #3b82f6; text-decoration: underline;">28 <i class="ph ph-arrow-square-out" style="font-size: 16px;"></i></a>
+                        </div>
+                        <div id="btnDeviceExpand" style="display: none;">
+                            <button class="btn btn-primary" onclick="openDetailedContentDrawer(event, 'device')" style="background-color: #6366f1; border: none; border-radius: 16px; padding: 4px 12px; font-size: 13px;">展開中 &gt;</button>
+                        </div>
+                        <div id="hintDeviceExpand" style="font-size: 13px; color: #94a3b8; display: none;"></div>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        // Tab 4: 註冊IP
+        const detailsReg = document.getElementById('detailsReg');
+        if (detailsReg) {
+            detailsReg.innerHTML = `
+            <div style="background: #ffffff;">
+                <div style="display: grid; grid-template-columns: 160px 1fr; border-bottom: 1px solid var(--border-color);">
+                    <div style="padding: 16px 24px; color: var(--text-muted); font-size: 14px; display: flex; align-items: center; justify-content: flex-end;">註冊IP:</div>
+                    <div style="padding: 16px 24px; font-size: 14px; font-family: monospace; display: flex; align-items: center; gap: 8px;">
+                        54.150.111.152 <span style="color: #94a3b8; font-family: sans-serif; font-size: 13px;">(日本東京都東京)</span> <i class="ph ph-copy" style="color: #94a3b8; cursor: pointer;"></i>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 160px 1fr; border-bottom: 1px solid var(--border-color);">
+                    <div style="padding: 16px 24px; color: var(--text-muted); font-size: 14px; display: flex; align-items: center; justify-content: flex-end;">設備號:</div>
+                    <div style="padding: 16px 24px; font-size: 14px; font-family: monospace; display: flex; align-items: center; gap: 8px;">
+                        ee5868d85af7f68cf088a6780ff8882a <i class="ph ph-copy" style="color: #94a3b8; cursor: pointer;"></i>
+                    </div>
+                </div>
+                
+                <div id="rowRegIpLoginCount" style="display: grid; grid-template-columns: 160px 1fr; border-bottom: 1px solid var(--border-color); transition: all 0.2s;">
+                    <div style="padding: 16px 24px; color: var(--text-muted); font-size: 14px; display: flex; align-items: center; justify-content: flex-end;">同IP註冊人數:</div>
+                    <div style="padding: 16px 24px; font-size: 14px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <a href="#" onclick="openDetailedContentDrawer(event, 'reg_ip')" style="font-size: 18px; font-weight: 600; color: #3b82f6; text-decoration: underline;">3,412 <i class="ph ph-arrow-square-out" style="font-size: 16px;"></i></a>
+                        </div>
+                        <div id="btnRegIpExpand" style="display: none;">
+                            <button class="btn btn-primary" onclick="openDetailedContentDrawer(event, 'reg_ip')" style="background-color: #6366f1; border: none; border-radius: 16px; padding: 4px 12px; font-size: 13px;">展開中 &gt;</button>
+                        </div>
+                        <div id="hintRegIpExpand" style="font-size: 13px; color: #94a3b8; display: none;"></div>
+                    </div>
+                </div>
+                
+                <div id="rowRegDeviceLoginCount" style="display: grid; grid-template-columns: 160px 1fr; border-bottom: 1px solid var(--border-color); transition: all 0.2s;">
+                    <div style="padding: 16px 24px; color: var(--text-muted); font-size: 14px; display: flex; align-items: center; justify-content: flex-end;">同設備註冊人數:</div>
+                    <div style="padding: 16px 24px; font-size: 14px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <a href="#" onclick="openDetailedContentDrawer(event, 'reg_device')" style="font-size: 18px; font-weight: 600; color: #3b82f6; text-decoration: underline;">18 <i class="ph ph-arrow-square-out" style="font-size: 16px;"></i></a>
+                        </div>
+                        <div id="btnRegDeviceExpand" style="display: none;">
+                            <button class="btn btn-primary" onclick="openDetailedContentDrawer(event, 'reg_device')" style="background-color: #6366f1; border: none; border-radius: 16px; padding: 4px 12px; font-size: 13px;">展開中 &gt;</button>
+                        </div>
+                        <div id="hintRegDeviceExpand" style="font-size: 13px; color: #94a3b8; display: none;"></div>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        // Default open the first tab
+        const basicTabBtn = document.querySelector('.user-details-tab-item[data-target="detailsBasic"]');
+        if (basicTabBtn) basicTabBtn.click();
+
+        userDetailsDrawer.classList.add('active');
+        if (overlay) overlay.classList.add('active');
+    };
+
+    
+    window.openDetailedContentDrawer = function(e, type) {
+        e.preventDefault();
+        const userDetailsDrawer = document.getElementById('userDetailsDrawer');
+        const expandPanel = document.getElementById('detailsExpandPanel');
+        const contentDiv = document.getElementById('detailsExpandContent');
+        
+        if (!userDetailsDrawer || !expandPanel || !contentDiv) return;
+        
+        // Expand width
+        userDetailsDrawer.style.width = '1660px'; // 960 + 700
+        expandPanel.style.display = 'flex';
+        
+        // Render table
+        if (type === 'ip') {
+            contentDiv.innerHTML = `
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+                    <thead>
+                        <tr style="background-color: #f8fafc; color: var(--text-secondary); border-bottom: 1px solid var(--border-color);">
+                            <th style="padding: 12px 16px; font-weight: 600;">登錄用戶</th>
+                            <th style="padding: 12px 16px; font-weight: 600;">最後登錄詳情</th>
+                            <th style="padding: 12px 16px; font-weight: 600;">IP</th>
+                            <th style="padding: 12px 16px; font-weight: 600;">IP信息</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${['megan002', 'player_888', 'vip_king99', 'lucky_star7', 'test_user_01', 'dragon_99', 'win_master'].map((u, i) => `
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 16px;">${u}</td>
+                                <td style="padding: 16px; font-family: monospace;">2026-07-28<br>${String(16 - i).padStart(2, '0')}:${String(30 - i*2).padStart(2, '0')}:${String(42 + i*3).padStart(2, '0')}</td>
+                                <td style="padding: 16px; font-family: monospace; color: #475569;">54.150.111.152 <i class="ph ph-copy" style="color: #94a3b8; cursor: pointer;"></i></td>
+                                <td style="padding: 16px; color: #64748b;"><i class="ph-fill ph-map-pin"></i> Japan, Tokyo,<br>Tokyo</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        } else if (type === 'device') {
+            contentDiv.innerHTML = `
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+                    <thead>
+                        <tr style="background-color: #f8fafc; color: var(--text-secondary); border-bottom: 1px solid var(--border-color);">
+                            <th style="padding: 12px 16px; font-weight: 600;">登錄用戶</th>
+                            <th style="padding: 12px 16px; font-weight: 600;">註冊時間</th>
+                            <th style="padding: 12px 16px; font-weight: 600;">設備號</th>
+                            <th style="padding: 12px 16px; font-weight: 600;">IP信息</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 16px;">megan002</td>
+                            <td style="padding: 16px; font-family: monospace;">2026-05-10<br>10:12:00</td>
+                            <td style="padding: 16px; font-family: monospace; color: #475569;">ee5868d85af7f68cf088a... <i class="ph ph-copy" style="color: #94a3b8; cursor: pointer;"></i></td>
+                            <td style="padding: 16px; color: #64748b;"><i class="ph-fill ph-map-pin"></i> Japan, Tokyo,<br>Tokyo</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 16px;">sub_acc_01</td>
+                            <td style="padding: 16px; font-family: monospace;">2026-06-12<br>09:15:30</td>
+                            <td style="padding: 16px; font-family: monospace; color: #475569;">ee5868d85af7f68cf088a... <i class="ph ph-copy" style="color: #94a3b8; cursor: pointer;"></i></td>
+                            <td style="padding: 16px; color: #64748b;"><i class="ph-fill ph-map-pin"></i> Japan, Osaka</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 16px;">sub_acc_02</td>
+                            <td style="padding: 16px; font-family: monospace;">2026-06-18<br>11:04:12</td>
+                            <td style="padding: 16px; font-family: monospace; color: #475569;">ee5868d85af7f68cf088a... <i class="ph ph-copy" style="color: #94a3b8; cursor: pointer;"></i></td>
+                            <td style="padding: 16px; color: #64748b;"><i class="ph-fill ph-map-pin"></i> Japan, Tokyo</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 16px;">sub_acc_03</td>
+                            <td style="padding: 16px; font-family: monospace;">2026-07-01<br>16:45:00</td>
+                            <td style="padding: 16px; font-family: monospace; color: #475569;">ee5868d85af7f68cf088a... <i class="ph ph-copy" style="color: #94a3b8; cursor: pointer;"></i></td>
+                            <td style="padding: 16px; color: #64748b;"><i class="ph-fill ph-map-pin"></i> Japan,<br>Yokohama</td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+        } else if (type === 'reg_ip') {
+            contentDiv.innerHTML = `
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+                    <thead>
+                        <tr style="background-color: #f8fafc; color: var(--text-secondary); border-bottom: 1px solid var(--border-color);">
+                            <th style="padding: 12px 16px; font-weight: 600;">登錄</th>
+                            <th style="padding: 12px 16px; font-weight: 600;">註冊時間</th>
+                            <th style="padding: 12px 16px; font-weight: 600;">IP</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 16px;">megan002</td>
+                            <td style="padding: 16px; font-family: monospace;">2026-05-10 10:12:00</td>
+                            <td style="padding: 16px; font-family: monospace; color: #475569;">54.150.111.152 <i class="ph ph-copy" style="color: #94a3b8; cursor: pointer;"></i></td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 16px;">reg_bot_01</td>
+                            <td style="padding: 16px; font-family: monospace;">2026-05-10 10:14:20</td>
+                            <td style="padding: 16px; font-family: monospace; color: #475569;">54.150.111.152 <i class="ph ph-copy" style="color: #94a3b8; cursor: pointer;"></i></td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 16px;">reg_bot_02</td>
+                            <td style="padding: 16px; font-family: monospace;">2026-05-10 10:15:11</td>
+                            <td style="padding: 16px; font-family: monospace; color: #475569;">54.150.111.152 <i class="ph ph-copy" style="color: #94a3b8; cursor: pointer;"></i></td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 16px;">user_japan_1</td>
+                            <td style="padding: 16px; font-family: monospace;">2026-05-09 18:30:00</td>
+                            <td style="padding: 16px; font-family: monospace; color: #475569;">54.150.111.152 <i class="ph ph-copy" style="color: #94a3b8; cursor: pointer;"></i></td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+        } else if (type === 'reg_device') {
+            contentDiv.innerHTML = `
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+                    <thead>
+                        <tr style="background-color: #f8fafc; color: var(--text-secondary); border-bottom: 1px solid var(--border-color);">
+                            <th style="padding: 12px 16px; font-weight: 600;">登錄</th>
+                            <th style="padding: 12px 16px; font-weight: 600;">註冊時間</th>
+                            <th style="padding: 12px 16px; font-weight: 600;">設備號</th>
+                            <th style="padding: 12px 16px; font-weight: 600;">IP信息</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 16px;">megan002</td>
+                            <td style="padding: 16px; font-family: monospace;">2026-05-10<br>10:12:00</td>
+                            <td style="padding: 16px; font-family: monospace; color: #475569;">ee5868d85af7f68cf088a... <i class="ph ph-copy" style="color: #94a3b8; cursor: pointer;"></i></td>
+                            <td style="padding: 16px; color: #64748b;"><i class="ph-fill ph-map-pin"></i> 日本東京都<br>東京</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 16px;">clone_device_01</td>
+                            <td style="padding: 16px; font-family: monospace;">2026-05-10<br>10:20:00</td>
+                            <td style="padding: 16px; font-family: monospace; color: #475569;">ee5868d85af7f68cf088a... <i class="ph ph-copy" style="color: #94a3b8; cursor: pointer;"></i></td>
+                            <td style="padding: 16px; color: #64748b;"><i class="ph-fill ph-map-pin"></i> 日本東京都<br>東京</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 16px;">clone_device_02</td>
+                            <td style="padding: 16px; font-family: monospace;">2026-05-10<br>10:22:45</td>
+                            <td style="padding: 16px; font-family: monospace; color: #475569;">ee5868d85af7f68cf088a... <i class="ph ph-copy" style="color: #94a3b8; cursor: pointer;"></i></td>
+                            <td style="padding: 16px; color: #64748b;"><i class="ph-fill ph-map-pin"></i> 日本東京都<br>東京</td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+        }
+    };
+
+    const btnDetailsExpandClose = document.getElementById('btnDetailsExpandClose');
+    if (btnDetailsExpandClose) {
+        btnDetailsExpandClose.addEventListener('click', () => {
+            const userDetailsDrawer = document.getElementById('userDetailsDrawer');
+            const expandPanel = document.getElementById('detailsExpandPanel');
+            if (userDetailsDrawer) userDetailsDrawer.style.width = '960px';
+            if (expandPanel) {
+                setTimeout(() => { 
+                    expandPanel.style.display = 'none'; 
+                    userDetailsDrawer.style.maxWidth = '90vw';
+                }, 300);
+            }
+            
+            const rowIp = document.getElementById('rowIpLoginCount');
+            const rowDevice = document.getElementById('rowDeviceLoginCount');
+            const btnIp = document.getElementById('btnIpExpand');
+            const btnDevice = document.getElementById('btnDeviceExpand');
+            const hintIp = document.getElementById('hintIpExpand');
+            const hintDevice = document.getElementById('hintDeviceExpand');
+            if (rowIp) { rowIp.style.background = 'transparent'; rowIp.style.borderColor = 'transparent'; }
+            if (rowDevice) { rowDevice.style.background = 'transparent'; rowDevice.style.borderColor = 'transparent'; }
+            if (btnIp) btnIp.style.display = 'none';
+            if (btnDevice) btnDevice.style.display = 'none';
+            if (hintIp) hintIp.style.display = 'block';
+            if (hintDevice) hintDevice.style.display = 'block';
+        });
+    }
+
+    // When the user details drawer is closed entirely, we should also reset the width
+    const btnUserDetailsCloseOrig = document.getElementById('btnUserDetailsClose');
+    if (btnUserDetailsCloseOrig) {
+        btnUserDetailsCloseOrig.addEventListener('click', () => {
+             const userDetailsDrawer = document.getElementById('userDetailsDrawer');
+             const expandPanel = document.getElementById('detailsExpandPanel');
+             if (userDetailsDrawer) {
+                 userDetailsDrawer.classList.remove('active');
+                 // Reset after animation
+                 setTimeout(() => {
+                     userDetailsDrawer.style.width = '960px';
+                     if (expandPanel) expandPanel.style.display = 'none';
+                 }, 300);
+             }
+        });
+    }
+
+
     window.openAgentChangeRecordDrawer = function(uid) {
         const agentChangeRecordDrawer = document.getElementById('agentChangeRecordDrawer');
         if (!agentChangeRecordDrawer) return;
@@ -1715,7 +2194,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const userCell = tr ? tr.querySelector('.user-detail-link') : null;
                 const uid = userCell ? userCell.getAttribute('data-uid') : null;
                 
-                if (text === '查看詳情' || text === '編輯用戶') {
+                if (text === '查看詳情' || text === '查看详情') {
+                    if (uid) window.openUserDetailsDrawer(uid);
+                } else if (text === '編輯用戶' || text === '编辑用户') {
                     if (uid) openUserEditModal(uid);
                 } else if (text === '代理變更紀錄' || text === '代理变更记录') {
                     window.openAgentChangeRecordDrawer(uid);
@@ -2197,6 +2678,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Tab Switching inside User Details Drawer
+    document.querySelectorAll('.user-details-tab-item').forEach(tabBtn => {
+        tabBtn.addEventListener('click', () => {
+            document.querySelectorAll('.user-details-tab-item').forEach(b => b.classList.remove('active'));
+            tabBtn.classList.add('active');
+            const targetId = tabBtn.getAttribute('data-target');
+            document.querySelectorAll('.details-tab-content-panel').forEach(panel => {
+                if (panel.id === targetId) {
+                    panel.style.display = 'block';
+                } else {
+                    panel.style.display = 'none';
+                }
+            });
+        });
+    });
+
     function openUserEditModal(uid) {
         if (!userEditDrawer) return;
         const user = (mockUsers || []).find(u => u.uid === uid) || (mockUsers && mockUsers[0]);
@@ -2235,12 +2732,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const userTypeRadios = document.querySelectorAll('input[name="editUserType"]');
         userTypeRadios.forEach(r => r.checked = (r.value === user.userType));
 
+        // Trace [20] contact info permission for edit drawer
+        const editContactInfoCard = document.getElementById('editContactInfoCard');
+        if (editContactInfoCard) {
+            editContactInfoCard.style.display = hasPerm(20) ? '' : 'none';
+        }
+
         const statusRadios = document.querySelectorAll('input[name="editStatus"]');
         statusRadios.forEach(r => r.checked = (r.value === user.status));
 
         // Inputs
         const realNameIn = document.getElementById('editFormRealName');
-        if (realNameIn) realNameIn.value = user.realName !== '-' ? user.realName : '';
+        if (realNameIn) {
+            realNameIn.setAttribute('data-val', user.realName !== '-' ? user.realName : '');
+            if (hasPerm(37)) {
+                realNameIn.value = user.realName !== '-' ? user.realName : '';
+                realNameIn.disabled = false;
+            } else {
+                realNameIn.value = '***';
+                realNameIn.disabled = true;
+            }
+        }
 
         const nicknameIn = document.getElementById('editFormNickname');
         if (nicknameIn) nicknameIn.value = user.nickname !== '-' ? user.nickname : '';
@@ -2291,17 +2803,39 @@ document.addEventListener('DOMContentLoaded', () => {
                     tr.style.height = '42px';
                     tr.style.borderBottom = '1px solid #e2e8f0';
                     tr.innerHTML = `
-                        <td style="padding: 8px 12px; white-space: nowrap;"><span class="pill-badge purple">${acc.type}</span></td>
-                        <td style="padding: 8px 12px; color: #334155; font-size: 13px; white-space: nowrap;">${acc.account}</td>
-                        <td style="padding: 8px 12px; color: #334155; font-size: 13px; white-space: nowrap;">${acc.bank}</td>
-                        <td style="padding: 8px 12px; color: #334155; font-size: 13px; white-space: nowrap;">${acc.address}</td>
-                        <td style="padding: 8px 12px; white-space: nowrap;">
-                            <span class="pill-badge green">${acc.status}</span>
+                        <td style="padding: 12px; white-space: nowrap;">
+                            <select class="form-select" style="width: 100%; min-width: 120px; height: 36px; padding: 0 8px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 13px; outline: none;">
+                                <option value="支付宝" ${acc.type === '支付宝' ? 'selected' : ''}>支付宝</option>
+                                <option value="c2cWallet" ${acc.type === 'c2cWallet' ? 'selected' : ''}>c2cWallet</option>
+                                <option value="虚拟币" ${acc.type === '虚拟币' ? 'selected' : ''}>虚拟币</option>
+                                <option value="ewallet" ${acc.type === 'ewallet' ? 'selected' : ''}>ewallet</option>
+                                <option value="银行卡" ${acc.type === '银行卡' ? 'selected' : ''}>银行卡</option>
+                            </select>
                         </td>
-                        <td style="padding: 8px 12px; font-size: 13px; white-space: nowrap;">
+                        <td style="padding: 12px;">
+                            <input type="text" class="form-input" style="width: 100%; height: 36px; padding: 0 12px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 13px; outline: none; box-sizing: border-box;" value="${acc.account}">
+                        </td>
+                        <td style="padding: 12px; white-space: nowrap;">
+                            <select class="form-select" style="width: 100%; min-width: 120px; height: 36px; padding: 0 8px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 13px; outline: none;">
+                                <option value="${acc.bank}" selected>${acc.bank}</option>
+                                <option value="Alipay">Alipay</option>
+                                <option value="88PAY">88PAY</option>
+                                <option value="BSC-USDT">BSC-USDT</option>
+                                <option value="testCryptoBank">testCryptoBank</option>
+                                <option value="CAKE BY VPBAN">CAKE BY VPBAN</option>
+                            </select>
+                        </td>
+                        <td style="padding: 12px;">
+                            <input type="text" class="form-input" style="width: 100%; height: 36px; padding: 0 12px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 13px; outline: none; box-sizing: border-box;" value="${acc.address || ''}">
+                        </td>
+                        <td style="padding: 12px; white-space: nowrap; text-align: center;">
+                            <span style="display: inline-block; background-color: #f0fdf4; color: #16a34a; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 500;">啟用</span>
+                        </td>
+                        <td style="padding: 12px; white-space: nowrap; text-align: center;">
                             <div style="display: flex; gap: 8px; justify-content: center;">
-                                <button class="btn-icon" title="編輯" style="color: #3b82f6; background: transparent; border: none; cursor: pointer; font-size: 16px;"><i class="ph ph-pencil-simple"></i></button>
-                                <button class="btn-icon" title="刪除" style="color: #ef4444; background: transparent; border: none; cursor: pointer; font-size: 16px;"><i class="ph ph-trash"></i></button>
+                                <button type="button" class="btn btn-sm btn-danger" style="padding: 6px 12px; background-color: #f87171; border-color: #f87171; border-radius: 4px; color: white; border: 1px solid transparent; cursor: pointer; font-size: 13px;">刪除</button>
+                                <button type="button" class="btn btn-sm btn-primary" style="padding: 6px 12px; background-color: #3b82f6; border-color: #3b82f6; border-radius: 4px; color: white; border: 1px solid transparent; cursor: pointer; font-size: 13px;">儲存</button>
+                                <button type="button" class="btn btn-sm btn-outline" style="padding: 6px 12px; background-color: white; border: 1px solid #e2e8f0; border-radius: 4px; color: #475569; cursor: pointer; font-size: 13px;">禁用</button>
                             </div>
                         </td>
                     `;
@@ -2335,7 +2869,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (link) {
             e.preventDefault();
             const uid = link.getAttribute('data-uid');
-            openUserEditModal(uid);
+            const text = link.textContent.trim();
+            if (text === '查看詳情' || text === '查看详情') {
+                if (window.openUserDetailsDrawer) window.openUserDetailsDrawer(uid);
+            } else {
+                openUserEditModal(uid);
+            }
         }
     });
 
@@ -2345,6 +2884,15 @@ document.addEventListener('DOMContentLoaded', () => {
         btnUserEditSave.addEventListener('click', () => {
             showToast('用戶詳情已更新！');
             closeUserEditDrawer();
+        });
+    }
+
+    const btnUserDetailsClose = document.getElementById('btnUserDetailsClose');
+    if (btnUserDetailsClose) {
+        btnUserDetailsClose.addEventListener('click', () => {
+            const userDetailsDrawer = document.getElementById('userDetailsDrawer');
+            if (userDetailsDrawer) userDetailsDrawer.classList.remove('active');
+            if (overlay) overlay.classList.remove('active');
         });
     }
 
@@ -2488,7 +3036,9 @@ if (!globalActionMenu) {
             const text = target.textContent.trim();
             const uid = globalActionMenu.getAttribute('data-uid');
             
-            if (text === '查看詳情' || text === '查看详情' || text === '編輯用戶' || text === '编辑用户') {
+            if (text === '查看詳情' || text === '查看详情') {
+                if (uid && window.openUserDetailsDrawer) window.openUserDetailsDrawer(uid);
+            } else if (text === '編輯用戶' || text === '编辑用户') {
                 if (uid) openUserEditModal(uid);
             } else if (text === '代理變更紀錄' || text === '代理变更记录') {
                 if (window.openAgentChangeRecordDrawer) {
@@ -2550,6 +3100,60 @@ if (btnToggleStats && bottomStatsBar) {
     btnToggleStats.addEventListener('click', () => {
         bottomStatsBar.classList.toggle('collapsed');
         document.body.classList.toggle('stats-collapsed');
+    });
+}
+
+// Add Withdraw Account Logic
+const btnAddWithdrawAccount = document.getElementById('btnAddWithdrawAccount');
+if (btnAddWithdrawAccount) {
+    btnAddWithdrawAccount.addEventListener('click', () => {
+        const withdrawTbody = document.getElementById('editFormWithdrawInfoTableBody');
+        if (withdrawTbody) {
+            // Remove the 'no data' row if it exists
+            if (withdrawTbody.querySelector('tr td[colspan="6"]')) {
+                withdrawTbody.innerHTML = '';
+            }
+
+            const tr = document.createElement('tr');
+            tr.style.height = '42px';
+            tr.style.borderBottom = '1px solid #e2e8f0';
+            tr.innerHTML = `
+                <td style="padding: 12px; white-space: nowrap;">
+                    <select class="form-select" style="width: 100%; min-width: 120px; height: 36px; padding: 0 8px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 13px; outline: none;">
+                        <option value="支付宝">支付宝</option>
+                        <option value="c2cWallet">c2cWallet</option>
+                        <option value="虚拟币">虚拟币</option>
+                        <option value="ewallet">ewallet</option>
+                        <option value="银行卡">银行卡</option>
+                    </select>
+                </td>
+                <td style="padding: 12px;">
+                    <input type="text" class="form-input" style="width: 100%; height: 36px; padding: 0 12px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 13px; outline: none; box-sizing: border-box;" value="">
+                </td>
+                <td style="padding: 12px; white-space: nowrap;">
+                    <select class="form-select" style="width: 100%; min-width: 120px; height: 36px; padding: 0 8px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 13px; outline: none;">
+                        <option value="Alipay">Alipay</option>
+                        <option value="88PAY">88PAY</option>
+                        <option value="BSC-USDT">BSC-USDT</option>
+                        <option value="testCryptoBank">testCryptoBank</option>
+                        <option value="CAKE BY VPBAN">CAKE BY VPBAN</option>
+                    </select>
+                </td>
+                <td style="padding: 12px;">
+                    <input type="text" class="form-input" style="width: 100%; height: 36px; padding: 0 12px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 13px; outline: none; box-sizing: border-box;" value="">
+                </td>
+                <td style="padding: 12px; white-space: nowrap; text-align: center;">
+                    <span style="display: inline-block; background-color: #f0fdf4; color: #16a34a; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 500;">啟用</span>
+                </td>
+                <td style="padding: 12px; white-space: nowrap; text-align: center;">
+                    <div style="display: flex; gap: 8px; justify-content: center;">
+                        <button type="button" class="btn btn-sm btn-danger" style="padding: 6px 12px; background-color: #f87171; border-color: #f87171; border-radius: 4px; color: white; border: 1px solid transparent; cursor: pointer; font-size: 13px;" onclick="this.closest('tr').remove();">刪除</button>
+                        <button type="button" class="btn btn-sm btn-primary" style="padding: 6px 12px; background-color: #3b82f6; border-color: #3b82f6; border-radius: 4px; color: white; border: 1px solid transparent; cursor: pointer; font-size: 13px;">儲存</button>
+                    </div>
+                </td>
+            `;
+            withdrawTbody.appendChild(tr);
+        }
     });
 }
 

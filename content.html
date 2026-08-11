@@ -339,6 +339,79 @@
                 <span class="stats-exclude-badge">數據已排除測試帳號</span>
             </div>
         </div>
+    </div>
+
+    <!-- 查看詳情右側抽屜 (User Details Drawer) -->
+    <div class="user-edit-drawer" id="userDetailsDrawer" style="flex-direction: row; transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
+        <!-- Main Left Panel -->
+        <div style="flex: 1; display: flex; flex-direction: column; min-width: 600px; background: #ffffff;">
+            <div class="drawer-header"
+                style="padding: 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: flex-start; background: #ffffff;">
+                <div style="display: flex; gap: 16px; align-items: center;">
+                    <div id="detailsHeaderAvatar" class="icon-container indigo" style="width: 48px; height: 48px; font-size: 24px; border-radius: 12px; font-weight: bold; background-color: #6366f1; color: white;">U</div>
+                    <div>
+                        <h3 style="margin:0 0 8px 0; font-size:20px; font-weight:600; color:var(--text-color);">查看詳情 · <span id="detailsHeaderAccount">user_account</span></h3>
+                        <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #64748b;">
+                            <span id="detailsHeaderUserType">代理會員</span> · <span id="detailsHeaderUserLevel">VIP會員</span>
+                            <span id="detailsHeaderStatusBadge" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 12px; background-color: #fee2e2; color: #dc2626; font-size: 12px; margin-left: 8px;"><div style="width: 6px; height: 6px; border-radius: 50%; background-color: #dc2626;"></div>目前狀態：停用</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <button class="btn-icon btn-close-modal" id="btnUserDetailsClose"
+                        style="margin-left: 12px; border:none; background:transparent; font-size:24px; cursor:pointer; color: #94a3b8;">
+                        <i class="ph ph-x"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 頁籤導覽 (Tabs) -->
+            <div class="user-edit-tabs"
+                style="display: flex; gap: 24px; border-bottom: 1px solid var(--border-color); padding: 0 24px; background: #ffffff;">
+                <button type="button" class="user-edit-tab-item user-details-tab-item active" data-target="detailsBasic">會員信息</button>
+                <button type="button" class="user-edit-tab-item user-details-tab-item" data-target="detailsWithdraw">提現信息</button>
+                <button type="button" class="user-edit-tab-item user-details-tab-item" data-target="detailsLogin">最後登錄</button>
+                <button type="button" class="user-edit-tab-item user-details-tab-item" data-target="detailsReg">註冊IP</button>
+            </div>
+
+            <div class="drawer-body user-details-form-body"
+                style="padding: 24px; overflow-y: auto; height: calc(100vh - 120px);">
+                <!-- Tab 1: 會員信息 (Basic Info) -->
+                <div class="details-tab-content-panel active" id="detailsBasic">
+                    <!-- rendered via JS -->
+                </div>
+                
+                <!-- Tab 2: 提現信息 (Withdraw Info) -->
+                <div class="details-tab-content-panel" id="detailsWithdraw" style="display: none;">
+                    <!-- rendered via JS -->
+                </div>
+
+                <!-- Tab 3: 最後登錄 (Last Login) -->
+                <div class="details-tab-content-panel" id="detailsLogin" style="display: none;">
+                    <!-- rendered via JS -->
+                </div>
+
+                <!-- Tab 4: 註冊IP (Registration IP) -->
+                <div class="details-tab-content-panel" id="detailsReg" style="display: none;">
+                    <!-- rendered via JS -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Expandable Right Panel -->
+        <div id="detailsExpandPanel" style="width: 700px; min-width: 700px; border-left: 1px solid var(--border-color); background: #f8fafc; display: none; flex-direction: column;">
+            <div class="drawer-header" style="background: #0f172a; color: white; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 18px; font-weight: 500;">詳細內容</h3>
+                <button id="btnDetailsExpandClose" style="background: transparent; border: none; color: #94a3b8; cursor: pointer; font-size: 20px; display: flex; align-items: center;">
+                    <i class="ph ph-x"></i>
+                </button>
+            </div>
+            <div id="detailsExpandContent" style="padding: 24px; overflow-y: auto; flex: 1;">
+                <!-- Table rendered via JS -->
+            </div>
+        </div>
+    </div>
+    
     </main>
     </div>
 
@@ -590,7 +663,7 @@
                     </div>
 
                     <!-- Card 2: 聯絡方式 -->
-                    <div class="edit-card">
+                    <div class="edit-card" id="editContactInfoCard">
                         <div class="edit-card-header">
                             <div class="edit-card-title-wrap">
                                 <div class="icon-container indigo" style="background-color: #f5f3ff; color: #7c3aed;"><i class="ph ph-phone"></i></div>
@@ -648,17 +721,12 @@
                                 <div class="icon-container indigo"><i class="ph ph-credit-card"></i></div>
                                 <h4 class="edit-card-title">提現信息</h4>
                             </div>
-                            <button type="button" class="btn btn-primary btn-sm" style="background-color: #6366f1; border-color: #6366f1; border-radius: 8px; padding: 4px 16px;"><i class="ph ph-plus" style="margin-right: 4px;"></i>添加</button>
+                            <button id="btnAddWithdrawAccount" type="button" class="btn btn-primary btn-sm" style="background-color: #6366f1; border-color: #6366f1; border-radius: 8px; padding: 4px 16px;"><i class="ph ph-plus" style="margin-right: 4px;"></i>添加</button>
                         </div>
                         <!-- Re-using existing table structure with minor tweaks -->
                         <div class="withdraw-info-section"
                         style="margin-top: 24px; border-top: 1px solid var(--border-color); padding-top: 20px;">
-                        <div
-                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                            <h4 style="color: #ef4444; font-size: 14px; font-weight: 600; margin: 0;">提現信息</h4>
-                            <button type="button" class="btn btn-primary btn-sm"
-                                style="padding: 4px 16px; background-color: #3b82f6; border-color: #3b82f6; border-radius: 4px;">添加</button>
-                        </div>
+
 
                         <div class="sub-table-wrap"
                             style="border: 1px solid #e2e8f0; border-radius: 4px; overflow: hidden;">
