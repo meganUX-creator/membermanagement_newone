@@ -1188,7 +1188,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const getAuditButtons = (isAudited) => {
             return `<span class="audit-buttons-container" style="display: flex; align-items: center; margin-left: 12px;">
                 ${isAudited ? 
-                    `<button class="btn btn-sm" onclick="if(confirm('確定要重置此項資料嗎？')) showToast('已重置')" style="padding: 2px 8px; font-size: 12px; background: transparent; color: #3b82f6; border: none; cursor: pointer;">重置</button>` :
+                    `<button onclick="if(confirm('確定要重置此項資料嗎？')) showToast('已重置')" style="padding: 2px 8px; font-size: 12px; background: transparent; color: #3b82f6; border: none; box-shadow: none; cursor: pointer;">重置</button>` :
                     `<button class="btn btn-sm" onclick="showToast('已通過審核')" style="padding: 2px 8px; font-size: 12px; background: transparent; color: #3b82f6; border: 1px solid #3b82f6; border-radius: 4px; margin-right: 8px; cursor: pointer;">通過</button>
                      <button class="btn btn-sm" onclick="showToast('已拒絕審核')" style="padding: 2px 8px; font-size: 12px; background: transparent; color: #ef4444; border: 1px solid #ef4444; border-radius: 4px; cursor: pointer;">拒絕</button>`
                 }
@@ -1197,7 +1197,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const getResetBtn = (hasData) => {
             // Only show reset if data exists and user has the audit permission (trace 27)
-            return hasData && hasPerm(27) ? `<button class="btn btn-sm" onclick="if(confirm('確定要重置此項資料嗎？')) showToast('已重置')" style="padding: 0 8px; font-size: 12px; background: transparent; color: #3b82f6; border: none; cursor: pointer; margin-left: 8px;">重置</button>` : '';
+            return hasData && hasPerm(27) ? `<button onclick="if(confirm('確定要重置此項資料嗎？')) showToast('已重置')" style="padding: 0 8px; font-size: 12px; background: transparent; color: #3b82f6; border: none; box-shadow: none; cursor: pointer; margin-left: 8px;">重置</button>` : '';
         };
 
         // Header
