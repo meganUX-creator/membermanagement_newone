@@ -2224,19 +2224,26 @@ document.addEventListener('DOMContentLoaded', () => {
                         ${shouldShowOp("下級會員") ? `<a href="#" class="op-link">下級會員</a>` : ''}
                         ${shouldShowOp("下級報表") ? `<a href="#" class="op-link">下級報表</a>` : ''}
                         ${shouldShowOp("下級注單") ? `<a href="#" class="op-link">下級注單</a>` : ''}
-                    </div>
-                    <div class="more-op-dropdown-container">
-                        <button class="btn-more-op-wide">更多...</button>
-                        <ul class="more-op-dropdown-menu">
-                            ${[
-                                '交易設定', '赔率设置', '积分修改', '代理变更', '第三方游戏',
-                                '稽核记录', '代理变更记录', '回访备注', '隐藏资金明细', '快速登录变更',
-                                '校验用户任务', '谷歌验证码', '链上地址', '额度修改(链上充值)', '编辑标签',
-                                '用户标签编辑记录'
-                            ].filter(shouldShowOp).map(op => `<li>${op}</li>`).join('')}
-                        </ul>
-                    </div>
-                </td>`;
+                    </div>`;
+                    
+                    const moreOps = [
+                        '交易設定', '赔率设置', '积分修改', '代理变更', '第三方游戏',
+                        '稽核记录', '代理变更记录', '回访备注', '隐藏资金明细', '快速登录变更',
+                        '校验用户任务', '谷歌验证码', '链上地址', '额度修改(链上充值)', '编辑标签',
+                        '用户标签编辑记录'
+                    ].filter(shouldShowOp);
+
+                    if (moreOps.length > 0) {
+                        nestedRowHtml += `
+                        <div class="more-op-dropdown-container">
+                            <button class="btn-more-op-wide">更多...</button>
+                            <ul class="more-op-dropdown-menu">
+                                ${moreOps.map(op => `<li>${op}</li>`).join('')}
+                            </ul>
+                        </div>`;
+                    }
+                    
+                    nestedRowHtml += `</td>`;
                 tr.innerHTML = nestedRowHtml;
             } else {
                 // Compact Mode Layout
