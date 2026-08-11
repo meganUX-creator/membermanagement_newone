@@ -121,6 +121,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
+            
+            // Real-time toggle for trace 27 (Audit Info)
+            if (e.target.getAttribute('data-trace') === '27') {
+                const isChecked = e.target.checked;
+                const detailsAuditTabBtn = document.getElementById('detailsAuditTabBtn');
+                if (detailsAuditTabBtn) {
+                    detailsAuditTabBtn.style.display = isChecked ? '' : 'none';
+                    // If unchecked while active, switch back to basic tab
+                    if (!isChecked && detailsAuditTabBtn.classList.contains('active')) {
+                        const basicTabBtn = document.querySelector('.user-details-tab-item[data-target="detailsBasic"]');
+                        if (basicTabBtn) basicTabBtn.click();
+                    }
+                }
+            }
         });
     });
 
@@ -777,7 +791,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const baseMockUsers = [
         { uid: "1239361225", account: "mingv0717001", realName: "-", nickname: "mi***01", agentId: "dl", inviter: "-", registerMode: "一般註冊", phone: "末綁定", payLevel: "默認層", growth: 0, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "-", directTeam: "0/0", vipLevel: 0, vipGrowth: 0, creditValue: 0, availableCredit: 0, commissionBal: 0, balanceBuy: 0, arrears: "-", interest: 0, thirdBal: 0, points: 0, deposit: 0, withdraw: 0, withdrawPre: "-", adminDeduct: "-", depositCount: 0, withdrawCount: 0, tags: ["VIP 客戶", "高頻交易", "大戶", "標籤四", "標籤五", "標籤六"], status: "冻结", date: "2023-01-01 12:00:00", lastLogin: "2023-01-10 15:30:00", offlineDays: 9, ip: "192.168.1.1", remark: "-", followRemark: "-", note: "-" },
         { uid: "1239361224", account: "albertvn021", realName: "-", nickname: "al***21", agentId: "nnest123556", inviter: "nnest123556", registerMode: "一般註冊", phone: "未驗證", payLevel: "默認層", growth: 0, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "06077790", directTeam: "0/0", vipLevel: 0, vipGrowth: 0, creditValue: 0, availableCredit: 0, commissionBal: 0, balanceBuy: 0, arrears: "-", interest: 0, thirdBal: 0, points: 0, deposit: 0, withdraw: 0, withdrawPre: "-", adminDeduct: "-", depositCount: 0, withdrawCount: 0, tags: ["異常風險", "VIP 客戶", "標籤三", "標籤四", "標籤五"], status: "停用", date: "2023-01-02 10:00:00", lastLogin: "2023-01-11 09:20:00", offlineDays: 9, ip: "192.168.1.2", remark: "-", followRemark: "-", note: "-" },
-        { uid: "1239361223", account: "vip_king", realName: "李娜", nickname: "鄭姐", agentId: "AG888", inviter: "nnest123556", registerMode: "一般註冊", phone: "13812348888", payLevel: "默認層", growth: 1250, level: "鑽石會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "INV02", directTeam: "12/8", vipLevel: 3, vipGrowth: 6800, creditValue: 500, availableCredit: 2000, commissionBal: 680, balanceBuy: 8750, arrears: "0", interest: 120, thirdBal: 320, points: 450, deposit: 3200, withdraw: 1500, withdrawPre: "-", adminDeduct: "-", depositCount: 8, withdrawCount: 4, tags: ["正常", "活躍", "高消費", "標籤四", "標籤五"], status: "冻结", date: "2023-01-05 14:15:00", lastLogin: "2023-01-15 18:45:00", offlineDays: 0, ip: "192.168.1.3", remark: "-", followRemark: "-", note: "-" },
+        { uid: "1239361223", account: "vip_king", realName: "李娜", realNameAudited: true, birthdayAudited: true, nickname: "鄭姐", agentId: "AG888", inviter: "nnest123556", registerMode: "一般註冊", phone: "13812348888", payLevel: "默認層", growth: 1250, level: "鑽石會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "INV02", directTeam: "12/8", vipLevel: 3, vipGrowth: 6800, creditValue: 500, availableCredit: 2000, commissionBal: 680, balanceBuy: 8750, arrears: "0", interest: 120, thirdBal: 320, points: 450, deposit: 3200, withdraw: 1500, withdrawPre: "-", adminDeduct: "-", depositCount: 8, withdrawCount: 4, tags: ["正常", "活躍", "高消費", "標籤四", "標籤五"], status: "冻结", date: "2023-01-05 14:15:00", lastLogin: "2023-01-15 18:45:00", offlineDays: 0, ip: "192.168.1.3", remark: "-", followRemark: "-", note: "-" },
         { uid: "1239361226", account: "test_user_1", realName: "王大明", nickname: "wang123", agentId: "dl", inviter: "nnest123556", registerMode: "後台新增", phone: "0912345678", payLevel: "默認層", growth: 0, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "CODE100", directTeam: "0/0", vipLevel: 0, vipGrowth: 0, creditValue: 500, availableCredit: 0, commissionBal: 0, balanceBuy: 0, arrears: "0", interest: 0, thirdBal: 150, points: 0, deposit: 0, withdraw: 0, withdrawPre: "-", adminDeduct: "-", depositCount: 0, withdrawCount: 0, tags: ["新註冊"], status: "停用", date: "2023-02-01 10:00:00", lastLogin: "2023-03-01 15:30:00", offlineDays: 30, ip: "192.168.2.10", remark: "大戶需關注", followRemark: "-", note: "-" },
         { uid: "1239361227", account: "test_user_2", realName: "林小華", nickname: "lin456", agentId: "AG888", inviter: "-", registerMode: "一般註冊", phone: "0987654321", payLevel: "默認層", growth: 150, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "-", directTeam: "1/1", vipLevel: 1, vipGrowth: 50, creditValue: 0, availableCredit: 1000, commissionBal: 15, balanceBuy: 300, arrears: "0", interest: 2, thirdBal: 0, points: 25, deposit: 2000, withdraw: 500, withdrawPre: "-", adminDeduct: "-", depositCount: 1, withdrawCount: 1, tags: ["新註冊"], status: "停用", date: "2023-02-02 10:00:00", lastLogin: "2023-03-02 15:30:00", offlineDays: 1, ip: "192.168.1.100", remark: "-", followRemark: "-", note: "-" },
         { uid: "1239361228", account: "test_user_3", realName: "-", nickname: "tu***02", agentId: "nnest123556", inviter: "nnest123556", registerMode: "一般註冊", phone: "13912341002", payLevel: "默認層", growth: 300, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "CODE102", directTeam: "2/2", vipLevel: 2, vipGrowth: 100, creditValue: 500, availableCredit: 2000, commissionBal: 30, balanceBuy: 600, arrears: "0", interest: 4, thirdBal: 0, points: 50, deposit: 4000, withdraw: 1000, withdrawPre: "-", adminDeduct: "-", depositCount: 2, withdrawCount: 2, tags: ["新註冊"], status: "冻结", date: "2023-02-03 10:00:00", lastLogin: "2023-03-03 15:30:00", offlineDays: 2, ip: "192.168.2.12", remark: "-", followRemark: "-", note: "-" },
@@ -1164,8 +1178,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const userDetailsDrawer = document.getElementById('userDetailsDrawer');
         if (!userDetailsDrawer) return;
         
+        const detailsAuditTabBtn = document.getElementById('detailsAuditTabBtn');
+        if (detailsAuditTabBtn) {
+            detailsAuditTabBtn.style.display = hasPerm(27) ? '' : 'none';
+        }
+        
         const user = mockUsers.find(u => u.uid === uid) || mockUsers[0];
         
+        const getAuditButtons = (isAudited) => {
+            return `<span class="audit-buttons-container" style="display: flex; align-items: center; margin-left: 12px;">
+                ${isAudited ? 
+                    `<button class="btn btn-sm" onclick="showToast('已重置')" style="padding: 2px 8px; font-size: 12px; background: transparent; color: #64748b; border: 1px solid #cbd5e1; border-radius: 4px; cursor: pointer;">重置</button>` :
+                    `<button class="btn btn-sm" onclick="showToast('已通過審核')" style="padding: 2px 8px; font-size: 12px; background: transparent; color: #3b82f6; border: 1px solid #3b82f6; border-radius: 4px; margin-right: 8px; cursor: pointer;">通過</button>
+                     <button class="btn btn-sm" onclick="showToast('已拒絕審核')" style="padding: 2px 8px; font-size: 12px; background: transparent; color: #ef4444; border: 1px solid #ef4444; border-radius: 4px; cursor: pointer;">拒絕</button>`
+                }
+            </span>`;
+        };
+
         // Header
         const avatar = document.getElementById('detailsHeaderAvatar');
         if (avatar) avatar.textContent = user.account.charAt(0).toUpperCase();
@@ -1277,6 +1306,56 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>`;
         }
+        
+        // Tab 1.5: 會員審核 (Member Audit)
+        const detailsAudit = document.getElementById('detailsAudit');
+        if (detailsAudit) {
+            detailsAudit.innerHTML = `
+            <div style="border: 1px solid var(--border-color); border-radius: 8px; background: #ffffff; margin-bottom: 24px; padding: 24px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 40px; height: 40px; background-color: #e0f2fe; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #0284c7; font-size: 20px;">
+                            <i class="ph ph-shield-check"></i>
+                        </div>
+                        <h4 style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b;">基本資料審核</h4>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 20px;">
+                    <div style="display: flex; align-items: center;">
+                        <span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">真實姓名:</span>
+                        <span style="color: #475569; font-size: 14px;">${hasPerm(37) ? (user.realName && user.realName !== '-' ? user.realName : '-') : '***'}</span>
+                        ${getAuditButtons(user.realNameAudited)}
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">出生年月日:</span>
+                        <span style="color: #475569; font-size: 14px; font-family: monospace;">${user.birthday || '1995-08-18'}</span>
+                        ${getAuditButtons(user.birthdayAudited)}
+                    </div>
+                </div>
+            </div>
+
+            <div style="border: 1px solid var(--border-color); border-radius: 8px; background: #ffffff; margin-bottom: 24px; padding: 24px; ${hasPerm(20) ? '' : 'display: none;'}">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 40px; height: 40px; background-color: #ede9fe; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #8b5cf6; font-size: 20px;">
+                            <i class="ph ph-phone-call"></i>
+                        </div>
+                        <h4 style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b;">聯絡方式審核</h4>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">電話:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">${user.phone}</span>${getAuditButtons(user.phoneAudited)}</div>
+                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">email:</span><span style="font-size: 14px; color: #475569;">${user.account}@example.com</span>${getAuditButtons(user.emailAudited)}</div>
+                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">QQ:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">88392019</span>${getAuditButtons(user.qqAudited)}</div>
+                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">微信:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">wx_${user.account}</span>${getAuditButtons(user.wechatAudited)}</div>
+                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">Zalo:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">+84${user.phone.substring(2)}</span>${getAuditButtons(user.zaloAudited)}</div>
+                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">WhatsApp:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">+84${user.phone.substring(2)}</span>${getAuditButtons(user.whatsappAudited)}</div>
+                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">Telegram:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">@${user.account}_tg</span>${getAuditButtons(user.telegramAudited)}</div>
+                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">Facebook:</span><span style="font-size: 14px; color: #475569;">fb.me/${user.account}</span>${getAuditButtons(user.facebookAudited)}</div>
+                </div>
+            </div>`;
+        }
+
         
         // Tab 2: 提現信息
         const detailsWithdraw = document.getElementById('detailsWithdraw');
