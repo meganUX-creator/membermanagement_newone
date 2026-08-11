@@ -1311,48 +1311,90 @@ document.addEventListener('DOMContentLoaded', () => {
         const detailsAudit = document.getElementById('detailsAudit');
         if (detailsAudit) {
             detailsAudit.innerHTML = `
-            <div style="border: 1px solid var(--border-color); border-radius: 8px; background: #ffffff; margin-bottom: 24px; padding: 24px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <div style="width: 40px; height: 40px; background-color: #e0f2fe; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #0284c7; font-size: 20px;">
-                            <i class="ph ph-shield-check"></i>
-                        </div>
-                        <h4 style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b;">基本資料審核</h4>
-                    </div>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr; gap: 20px;">
-                    <div style="display: flex; align-items: center;">
-                        <span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">真實姓名:</span>
-                        <span style="color: #475569; font-size: 14px;">${hasPerm(37) ? (user.realName && user.realName !== '-' ? user.realName : '-') : '***'}</span>
-                        ${getAuditButtons(user.realNameAudited)}
-                    </div>
-                    <div style="display: flex; align-items: center;">
-                        <span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">出生年月日:</span>
-                        <span style="color: #475569; font-size: 14px; font-family: monospace;">${user.birthday || '1995-08-18'}</span>
-                        ${getAuditButtons(user.birthdayAudited)}
-                    </div>
-                </div>
-            </div>
-
-            <div style="border: 1px solid var(--border-color); border-radius: 8px; background: #ffffff; margin-bottom: 24px; padding: 24px; ${hasPerm(20) ? '' : 'display: none;'}">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <div style="width: 40px; height: 40px; background-color: #ede9fe; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #8b5cf6; font-size: 20px;">
-                            <i class="ph ph-phone-call"></i>
-                        </div>
-                        <h4 style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b;">聯絡方式審核</h4>
-                    </div>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">電話:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">${user.phone}</span>${getAuditButtons(user.phoneAudited)}</div>
-                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">email:</span><span style="font-size: 14px; color: #475569;">${user.account}@example.com</span>${getAuditButtons(user.emailAudited)}</div>
-                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">QQ:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">88392019</span>${getAuditButtons(user.qqAudited)}</div>
-                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">微信:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">wx_${user.account}</span>${getAuditButtons(user.wechatAudited)}</div>
-                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">Zalo:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">+84${user.phone.substring(2)}</span>${getAuditButtons(user.zaloAudited)}</div>
-                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">WhatsApp:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">+84${user.phone.substring(2)}</span>${getAuditButtons(user.whatsappAudited)}</div>
-                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">Telegram:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">@${user.account}_tg</span>${getAuditButtons(user.telegramAudited)}</div>
-                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">Facebook:</span><span style="font-size: 14px; color: #475569;">fb.me/${user.account}</span>${getAuditButtons(user.facebookAudited)}</div>
-                </div>
+            <div style="border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; background: #ffffff;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
+                    <thead>
+                        <tr style="background-color: #f8fafc; color: var(--text-secondary); border-bottom: 1px solid var(--border-color);">
+                            <th style="padding: 16px; font-weight: 600;">變更項目</th>
+                            <th style="padding: 16px; font-weight: 600;">修改前</th>
+                            <th style="padding: 16px; font-weight: 600;">修改後</th>
+                            <th style="padding: 16px; font-weight: 600;">申請時間</th>
+                            <th style="padding: 16px; font-weight: 600; text-align: center;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 16px; color: #475569;">真實姓名</td>
+                            <td style="padding: 16px; color: #94a3b8;">未填寫</td>
+                            <td style="padding: 16px; color: #1e293b;">${hasPerm(37) ? (user.realName && user.realName !== '-' ? user.realName : '-') : '***'}</td>
+                            <td style="padding: 16px; color: #64748b;">2023-10-25 14:30:00</td>
+                            <td style="padding: 16px; text-align: center;">${getAuditButtons(user.realNameAudited)}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 16px; color: #475569;">出生年月日</td>
+                            <td style="padding: 16px; color: #94a3b8;">未填寫</td>
+                            <td style="padding: 16px; color: #1e293b;">${user.birthday || '1995-08-18'}</td>
+                            <td style="padding: 16px; color: #64748b;">2023-10-25 14:30:00</td>
+                            <td style="padding: 16px; text-align: center;">${getAuditButtons(user.birthdayAudited)}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-color); ${hasPerm(20) ? '' : 'display: none;'}">
+                            <td style="padding: 16px; color: #475569;">電話</td>
+                            <td style="padding: 16px; color: #94a3b8;">未填寫</td>
+                            <td style="padding: 16px; color: #1e293b;">${user.phone}</td>
+                            <td style="padding: 16px; color: #64748b;">2023-10-25 14:35:12</td>
+                            <td style="padding: 16px; text-align: center;">${getAuditButtons(user.phoneAudited)}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-color); ${hasPerm(20) ? '' : 'display: none;'}">
+                            <td style="padding: 16px; color: #475569;">email</td>
+                            <td style="padding: 16px; color: #94a3b8;">old_${user.account}@example.com</td>
+                            <td style="padding: 16px; color: #1e293b;">${user.account}@example.com</td>
+                            <td style="padding: 16px; color: #64748b;">2023-10-25 14:35:12</td>
+                            <td style="padding: 16px; text-align: center;">${getAuditButtons(user.emailAudited)}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-color); ${hasPerm(20) ? '' : 'display: none;'}">
+                            <td style="padding: 16px; color: #475569;">QQ</td>
+                            <td style="padding: 16px; color: #94a3b8;">未填寫</td>
+                            <td style="padding: 16px; color: #1e293b;">88392019</td>
+                            <td style="padding: 16px; color: #64748b;">2023-10-26 09:12:00</td>
+                            <td style="padding: 16px; text-align: center;">${getAuditButtons(user.qqAudited)}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-color); ${hasPerm(20) ? '' : 'display: none;'}">
+                            <td style="padding: 16px; color: #475569;">微信</td>
+                            <td style="padding: 16px; color: #94a3b8;">未填寫</td>
+                            <td style="padding: 16px; color: #1e293b;">wx_${user.account}</td>
+                            <td style="padding: 16px; color: #64748b;">2023-10-26 09:12:00</td>
+                            <td style="padding: 16px; text-align: center;">${getAuditButtons(user.wechatAudited)}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-color); ${hasPerm(20) ? '' : 'display: none;'}">
+                            <td style="padding: 16px; color: #475569;">Zalo</td>
+                            <td style="padding: 16px; color: #94a3b8;">未填寫</td>
+                            <td style="padding: 16px; color: #1e293b;">+84${user.phone.substring(2)}</td>
+                            <td style="padding: 16px; color: #64748b;">2023-10-26 09:12:00</td>
+                            <td style="padding: 16px; text-align: center;">${getAuditButtons(user.zaloAudited)}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-color); ${hasPerm(20) ? '' : 'display: none;'}">
+                            <td style="padding: 16px; color: #475569;">WhatsApp</td>
+                            <td style="padding: 16px; color: #94a3b8;">未填寫</td>
+                            <td style="padding: 16px; color: #1e293b;">+84${user.phone.substring(2)}</td>
+                            <td style="padding: 16px; color: #64748b;">2023-10-26 09:12:00</td>
+                            <td style="padding: 16px; text-align: center;">${getAuditButtons(user.whatsappAudited)}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-color); ${hasPerm(20) ? '' : 'display: none;'}">
+                            <td style="padding: 16px; color: #475569;">Telegram</td>
+                            <td style="padding: 16px; color: #94a3b8;">未填寫</td>
+                            <td style="padding: 16px; color: #1e293b;">@${user.account}_tg</td>
+                            <td style="padding: 16px; color: #64748b;">2023-10-26 09:12:00</td>
+                            <td style="padding: 16px; text-align: center;">${getAuditButtons(user.telegramAudited)}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-color); ${hasPerm(20) ? '' : 'display: none;'}">
+                            <td style="padding: 16px; color: #475569;">Facebook</td>
+                            <td style="padding: 16px; color: #94a3b8;">未填寫</td>
+                            <td style="padding: 16px; color: #1e293b;">fb.me/${user.account}</td>
+                            <td style="padding: 16px; color: #64748b;">2023-10-26 09:12:00</td>
+                            <td style="padding: 16px; text-align: center;">${getAuditButtons(user.facebookAudited)}</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>`;
         }
 
