@@ -1189,8 +1189,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return `<span class="audit-buttons-container" style="display: flex; align-items: center; margin-left: 12px;">
                 ${isAudited ? 
                     `<button onclick="if(confirm('確定要重置此項資料嗎？')) showToast('已重置')" style="padding: 2px 8px; font-size: 12px; background: transparent; color: #3b82f6; border: none; box-shadow: none; cursor: pointer;">重置</button>` :
-                    `<button class="btn btn-sm" onclick="showToast('已通過審核')" style="padding: 2px 8px; font-size: 12px; background: transparent; color: #3b82f6; border: 1px solid #3b82f6; border-radius: 4px; margin-right: 8px; cursor: pointer;">通過</button>
-                     <button class="btn btn-sm" onclick="showToast('已拒絕審核')" style="padding: 2px 8px; font-size: 12px; background: transparent; color: #ef4444; border: 1px solid #ef4444; border-radius: 4px; cursor: pointer;">拒絕</button>`
+                    `<button class="btn btn-sm" onclick="handleAuditAction(this, '已通過審核')" style="padding: 2px 8px; font-size: 12px; background: transparent; color: #3b82f6; border: 1px solid #3b82f6; border-radius: 4px; margin-right: 8px; cursor: pointer;">通過</button>
+                     <button class="btn btn-sm" onclick="handleAuditAction(this, '已拒絕審核')" style="padding: 2px 8px; font-size: 12px; background: transparent; color: #ef4444; border: 1px solid #ef4444; border-radius: 4px; cursor: pointer;">拒絕</button>`
                 }
             </span>`;
         };
@@ -3046,6 +3046,19 @@ window.showToast = function(message) {
         toast.style.transition = 'opacity 0.3s ease';
         setTimeout(() => toast.remove(), 300);
     }, 2000);
+}
+
+window.handleAuditAction = function(btn, message) {
+    if (message) showToast(message);
+    
+    // Find the row and remove it
+    const row = btn.closest('tr');
+    if (row) {
+        row.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        row.style.opacity = '0';
+        row.style.transform = 'translateX(-10px)';
+        setTimeout(() => row.remove(), 300);
+    }
 }
 
 // IP Event Delegation
