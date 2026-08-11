@@ -369,6 +369,7 @@
             <div class="user-edit-tabs"
                 style="display: flex; gap: 24px; border-bottom: 1px solid var(--border-color); padding: 0 24px; background: #ffffff;">
                 <button type="button" class="user-edit-tab-item user-details-tab-item active" data-target="detailsBasic">會員信息</button>
+                <button type="button" id="detailsAuditTabBtn" class="user-edit-tab-item user-details-tab-item" data-target="detailsAudit" style="display: none;">會員審核</button>
                 <button type="button" class="user-edit-tab-item user-details-tab-item" data-target="detailsWithdraw">提現信息</button>
                 <button type="button" class="user-edit-tab-item user-details-tab-item" data-target="detailsLogin">最後登錄</button>
                 <button type="button" class="user-edit-tab-item user-details-tab-item" data-target="detailsReg">註冊IP</button>
@@ -378,6 +379,11 @@
                 style="padding: 24px; overflow-y: auto; height: calc(100vh - 120px);">
                 <!-- Tab 1: 會員信息 (Basic Info) -->
                 <div class="details-tab-content-panel active" id="detailsBasic">
+                    <!-- rendered via JS -->
+                </div>
+
+                <!-- Tab 1.5: 會員審核 (Member Audit) -->
+                <div class="details-tab-content-panel" id="detailsAudit" style="display: none;">
                     <!-- rendered via JS -->
                 </div>
                 
@@ -669,7 +675,6 @@
                                 <div class="icon-container indigo" style="background-color: #f5f3ff; color: #7c3aed;"><i class="ph ph-phone"></i></div>
                                 <h4 class="edit-card-title">聯絡方式</h4>
                             </div>
-                            <span class="edit-card-subtitle">電話 · 郵箱 · 即時通訊</span>
                         </div>
                         <div class="edit-form-grid">
                             <div class="edit-form-group">
