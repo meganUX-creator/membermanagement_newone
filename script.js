@@ -3025,7 +3025,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 // Toast Function
-function showToast(message) {
+window.showToast = function(message) {
     const toast = document.createElement('div');
     toast.textContent = message;
     toast.style.position = 'fixed';
