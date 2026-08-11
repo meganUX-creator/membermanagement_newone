@@ -1195,6 +1195,11 @@ document.addEventListener('DOMContentLoaded', () => {
             </span>`;
         };
 
+        const getResetBtn = (hasData) => {
+            // Only show reset if data exists and user has the audit permission (trace 27)
+            return hasData && hasPerm(27) ? `<button class="btn btn-sm" onclick="showToast('已重置')" style="padding: 2px 8px; font-size: 12px; background: transparent; color: #64748b; border: 1px solid #cbd5e1; border-radius: 4px; cursor: pointer; margin-left: 8px;">重置</button>` : '';
+        };
+
         // Header
         const avatar = document.getElementById('detailsHeaderAvatar');
         if (avatar) avatar.textContent = user.account.charAt(0).toUpperCase();
@@ -1256,10 +1261,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div style="display: flex; align-items: center;">
                         <span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">真實姓名:</span>
                         <span id="detailsRealName" data-val="${user.realName}" style="color: #475569; font-size: 14px;">${hasPerm(37) ? (user.realName && user.realName !== '-' ? user.realName : '-') : '***'}</span>
+                        ${getResetBtn(user.realName && user.realName !== '-')}
                     </div>
                     <div style="display: flex; align-items: center;">
                         <span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">出生年月日:</span>
                         <span style="color: #475569; font-size: 14px; font-family: monospace;">${user.birthday || '1995-08-18'}</span>
+                        ${getResetBtn(!!user.birthday || true)}
                     </div>
                 </div>
             </div>
@@ -1274,14 +1281,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">電話:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">${user.phone}</span></div>
-                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">email:</span><span style="font-size: 14px; color: #475569;">${user.account}@example.com</span></div>
-                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">QQ:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">88392019</span></div>
-                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">微信:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">wx_${user.account}</span></div>
-                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">Zalo:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">+84${user.phone.substring(2)}</span></div>
-                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">WhatsApp:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">+84${user.phone.substring(2)}</span></div>
-                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">Telegram:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">@${user.account}_tg</span></div>
-                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">Facebook:</span><span style="font-size: 14px; color: #475569;">fb.me/${user.account}</span></div>
+                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">電話:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">${user.phone}</span>${getResetBtn(!!user.phone)}</div>
+                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">email:</span><span style="font-size: 14px; color: #475569;">${user.account}@example.com</span>${getResetBtn(!!user.account)}</div>
+                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">QQ:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">88392019</span>${getResetBtn(true)}</div>
+                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">微信:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">wx_${user.account}</span>${getResetBtn(true)}</div>
+                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">Zalo:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">+84${user.phone.substring(2)}</span>${getResetBtn(true)}</div>
+                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">WhatsApp:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">+84${user.phone.substring(2)}</span>${getResetBtn(true)}</div>
+                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">Telegram:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">@${user.account}_tg</span>${getResetBtn(true)}</div>
+                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">Facebook:</span><span style="font-size: 14px; color: #475569;">fb.me/${user.account}</span>${getResetBtn(true)}</div>
                 </div>
             </div>
 
