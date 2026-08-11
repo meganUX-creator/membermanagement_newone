@@ -230,6 +230,9 @@
                                 <li data-value="realName"><span>真实姓名</span> <span class="type-badge">Name</span>
                                 </li>
                                 <li data-value="email"><span>邮箱</span> <span class="type-badge">Email</span></li>
+                                <li data-value="zalo"><span>Zalo</span> <span class="type-badge">Zalo</span></li>
+                                <li data-value="whatsapp"><span>WhatsApp</span> <span class="type-badge">WA</span></li>
+                                <li data-value="telegram"><span>Telegram</span> <span class="type-badge">TG</span></li>
                                 <li data-value="phone"><span>手机号</span> <span class="type-badge">Phone</span></li>
                                 <li data-value="remark"><span>回访备注</span> <span class="type-badge">Note</span></li>
                                 <li data-value="googleCode"><span>谷歌验证码</span> <span class="type-badge">Google</span>
@@ -495,17 +498,25 @@
         </div>
     </div>
 
-    <!-- 編輯用戶詳情右側抽屜 (Edit User Details Drawer) -->
+    <!-- 修改用戶詳情右側抽屜 (Edit User Details Drawer) -->
     <div class="user-edit-drawer" id="userEditDrawer">
         <div class="drawer-header"
-            style="padding: 16px 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: #ffffff;">
-            <h3 id="userEditDrawerTitle" style="margin:0; font-size:18px; font-weight:600; color:var(--text-color);">
-                編輯用戶詳情</h3>
-            <div style="display: flex; gap: 8px; align-items: center;">
-                <button class="btn btn-outline btn-sm" id="btnUserEditCancel">取消</button>
-                <button class="btn btn-primary btn-sm" id="btnUserEditSave">保存修改</button>
+            style="padding: 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: flex-start; background: #ffffff;">
+            <div style="display: flex; gap: 16px; align-items: center;">
+                <div id="headerAvatar" class="icon-container indigo" style="width: 48px; height: 48px; font-size: 24px; border-radius: 12px; font-weight: bold; background-color: #6366f1; color: white;">U</div>
+                <div>
+                    <h3 style="margin:0 0 8px 0; font-size:20px; font-weight:600; color:var(--text-color);">修改用戶詳情 · <span id="headerAccount">test_user_1</span></h3>
+                    <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #64748b;">
+                        <span id="headerUserType">代理會員</span> · <span id="headerUserLevel">VIP會員</span>
+                        <span id="headerStatusBadge" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 12px; background-color: #fee2e2; color: #dc2626; font-size: 12px; margin-left: 8px;"><div style="width: 6px; height: 6px; border-radius: 50%; background-color: #dc2626;"></div>目前狀態：停用</span>
+                    </div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <button class="btn btn-outline" id="btnUserEditCancel" style="border-radius: 8px; padding: 8px 20px; font-weight: 500; height: 40px;">取消</button>
+                <button class="btn btn-primary" id="btnUserEditSave" style="background-color: #6366f1; border-color: #6366f1; border-radius: 8px; padding: 8px 20px; font-weight: 500; height: 40px;">保存修改</button>
                 <button class="btn-icon btn-close-modal" id="btnUserEditClose"
-                    style="margin-left: 4px; border:none; background:transparent; font-size:18px; cursor:pointer;">
+                    style="margin-left: 12px; border:none; background:transparent; font-size:24px; cursor:pointer; color: #94a3b8;">
                     <i class="ph ph-x"></i>
                 </button>
             </div>
@@ -521,284 +532,126 @@
         <div class="drawer-body user-edit-form-body"
             style="padding: 24px; overflow-y: auto; height: calc(100vh - 120px);">
             <!-- Tab 1: 基本信息 (Basic Info) -->
+            
             <div class="tab-content-panel active" id="tabContentBasic">
-                <form id="userEditForm" class="user-edit-form">
-                    <!-- 頭像 -->
-                    <div class="form-row">
-                        <label class="form-label">頭像 :</label>
-                        <div class="form-control-wrap avatar-upload-wrap">
-                            <div class="user-modal-avatar" id="modalUserAvatar">m</div>
-                            <button type="button" class="btn btn-outline btn-sm">更換頭像</button>
+                <form id="userEditForm" class="user-edit-form" style="display: flex; flex-direction: column;">
+                    
+                    <!-- Card 1: 帳戶概況 -->
+                    <div class="edit-card">
+                        <div class="edit-card-header">
+                            <div class="edit-card-title-wrap">
+                                <div class="icon-container indigo" style="background-color: #e0e7ff; color: #4f46e5;"><i class="ph ph-user"></i></div>
+                                <h4 class="edit-card-title">帳戶概況</h4>
+                            </div>
+                            <span class="edit-card-subtitle">帳號 · 狀態 · 會員類型 · 等級</span>
                         </div>
-                    </div>
-                    <!-- 账号 -->
-                    <div class="form-row">
-                        <label class="form-label">账号 :</label>
-                        <div class="form-control-wrap">
-                            <span class="form-static-text" id="editFormAccount">-</span>
-                        </div>
-                    </div>
-                    <!-- 会员类型 -->
-                    <div class="form-row">
-                        <label class="form-label">会员类型 :</label>
-                        <div class="form-control-wrap radio-group">
-                            <label><input type="radio" name="editUserType" value="代理會員" checked> 代理會員</label>
-                            <label><input type="radio" name="editUserType" value="普通會員"> 普通會員</label>
-                        </div>
-                    </div>
-                    <!-- 状态 -->
-                    <div class="form-row">
-                        <label class="form-label">狀態 :</label>
-                        <div class="form-control-wrap radio-group">
-                            <label><input type="radio" name="editStatus" value="正常" checked> 正常</label>
-                            <label><input type="radio" name="editStatus" value="冻结"> 冻结</label>
-                            <label><input type="radio" name="editStatus" value="停用"> 停用</label>
-                        </div>
-                    </div>
-                    <!-- 真实姓名 -->
-                    <div class="form-row">
-                        <label class="form-label">真实姓名 :</label>
-                        <div class="form-control-wrap">
-                            <input type="text" id="editFormRealName" class="form-input">
-                        </div>
-                    </div>
-                    <!-- 用户昵称 -->
-                    <div class="form-row">
-                        <label class="form-label">用户昵称 :</label>
-                        <div class="form-control-wrap">
-                            <input type="text" id="editFormNickname" class="form-input">
-                        </div>
-                    </div>
-                    <!-- 出生年月日 -->
-                    <div class="form-row">
-                        <label class="form-label">出生年月日 :</label>
-                        <div class="form-control-wrap">
-                            <input type="date" id="editFormBirthday" class="form-input">
-                        </div>
-                    </div>
-                    <!-- 支付层级 -->
-                    <div class="form-row">
-                        <label class="form-label">支付层级 :</label>
-                        <div class="form-control-wrap">
-                            <select id="editFormPayLevel" class="form-select">
-                                <option value="默認層">默認層</option>
-                                <option value="VIP層">VIP層</option>
-                            </select>
-                        </div>
-                    </div>
-                    <!-- 用户等级 -->
-                    <div class="form-row">
-                        <label class="form-label">用户等级 :</label>
-                        <div class="form-control-wrap">
-                            <select id="editFormLevel" class="form-select">
-                                <option value="普通會員">普通會員</option>
-                                <option value="黃金會員">黃金會員</option>
-                                <option value="VIP會員">VIP會員</option>
-                                <option value="鑽石會員">鑽石會員</option>
-                            </select>
-                        </div>
-                    </div>
-                    <!-- 国家 -->
-                    <div class="form-row">
-                        <label class="form-label">国家 :</label>
-                        <div class="form-control-wrap">
-                            <input type="text" id="editFormCountry" class="form-input" value="VN">
-                        </div>
-                    </div>
-                    <!-- 币种 -->
-                    <div class="form-row">
-                        <label class="form-label">币种 :</label>
-                        <div class="form-control-wrap">
-                            <input type="text" id="editFormCurrency" class="form-input" value="VND">
-                        </div>
-                    </div>
-                    <!-- 电话 -->
-                    <div class="form-row">
-                        <label class="form-label">电话 :</label>
-                        <div class="form-control-wrap input-with-btn">
-                            <input type="text" id="editFormPhone" class="form-input">
-                            <button type="button" class="btn btn-primary btn-sm">校验</button>
-                        </div>
-                    </div>
-                    <!-- email -->
-                    <div class="form-row">
-                        <label class="form-label">email :</label>
-                        <div class="form-control-wrap">
-                            <input type="email" id="editFormEmail" class="form-input">
-                        </div>
-                    </div>
-                    <!-- QQ -->
-                    <div class="form-row">
-                        <label class="form-label">QQ :</label>
-                        <div class="form-control-wrap">
-                            <input type="text" id="editFormQQ" class="form-input">
-                        </div>
-                    </div>
-                    <!-- 微信 -->
-                    <div class="form-row">
-                        <label class="form-label">微信 :</label>
-                        <div class="form-control-wrap">
-                            <input type="text" id="editFormWechat" class="form-input">
-                        </div>
-                    </div>
-                    <!-- zalo -->
-                    <div class="form-row">
-                        <label class="form-label">zalo :</label>
-                        <div class="form-control-wrap">
-                            <input type="text" id="editFormZalo" class="form-input">
-                        </div>
-                    </div>
-                    <!-- whatsapp -->
-                    <div class="form-row">
-                        <label class="form-label">whatsapp :</label>
-                        <div class="form-control-wrap">
-                            <input type="text" id="editFormWhatsapp" class="form-input">
-                        </div>
-                    </div>
-                    <!-- telegram -->
-                    <div class="form-row">
-                        <label class="form-label">telegram :</label>
-                        <div class="form-control-wrap">
-                            <input type="text" id="editFormTelegram" class="form-input">
-                        </div>
-                    </div>
-                    <!-- facebook -->
-                    <div class="form-row">
-                        <label class="form-label">facebook :</label>
-                        <div class="form-control-wrap">
-                            <input type="text" id="editFormFacebook" class="form-input">
-                        </div>
-                    </div>
-                    <!-- 第三方登录渠道 -->
-                    <div class="form-row">
-                        <label class="form-label">FACEBOOK 第三方登录渠道 :</label>
-                        <div class="form-control-wrap">
-                            <span class="tag-badge-grey">尚未绑定</span>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <label class="form-label">GOOGLE 第三方登录渠道 :</label>
-                        <div class="form-control-wrap">
-                            <span class="tag-badge-grey">尚未绑定</span>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <label class="form-label">TELEGRAM 第三方登录渠道 :</label>
-                        <div class="form-control-wrap">
-                            <span class="tag-badge-grey">尚未绑定</span>
-                        </div>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Tab 2: 會員設置 (Member Settings - Matching Uploaded Screenshot) -->
-            <div class="tab-content-panel" id="tabContentSettings" style="display: none;">
-                <div class="member-settings-container" style="display: flex; flex-direction: column; gap: 16px;">
-                    <!-- 1. 提現費率 -->
-                    <div class="setting-item-row" style="display: flex; align-items: center; min-height: 38px;">
-                        <label class="setting-item-label"
-                            style="width: 250px; text-align: right; padding-right: 16px; font-size: 13px; color: #475569;">提現費率:</label>
-                        <div style="display: flex; align-items: center;">
-                            <input type="text" id="settingWithdrawFee" class="form-input" style="width: 280px;">
-                            <span
-                                style="color: #ef4444; font-size: 13px; margin-left: 12px; font-weight: 500;">支持三位小數</span>
+                        <div class="edit-form-grid">
+                            <div class="edit-form-group" style="grid-column: 1 / -1;">
+                                <label>帳號</label>
+                                <input type="text" class="form-input" id="editFormAccountInput" value="test_user_1" disabled style="background-color: #f8fafc; border-style: dashed; color: #475569; font-weight: 500;">
+                            </div>
+                            <div class="edit-form-group">
+                                <label>會員類型</label>
+                                <div class="radio-pill-group">
+                                    <label class="radio-pill"><input type="radio" name="editUserType" value="代理會員" checked><i class="ph ph-check-circle"></i><span>代理會員</span></label>
+                                    <label class="radio-pill"><input type="radio" name="editUserType" value="普通會員"><i class="ph ph-circle"></i><span>普通會員</span></label>
+                                </div>
+                            </div>
+                            <div class="edit-form-group">
+                                <label>帳戶狀態</label>
+                                <div class="radio-pill-group">
+                                    <label class="radio-pill"><input type="radio" name="editStatus" value="正常" checked><i class="ph ph-check-circle"></i><span>正常</span></label>
+                                    <label class="radio-pill color-red"><input type="radio" name="editStatus" value="冻结"><i class="ph ph-circle"></i><span>冻结</span></label>
+                                    <label class="radio-pill color-red"><input type="radio" name="editStatus" value="停用"><i class="ph ph-circle"></i><span>停用</span></label>
+                                </div>
+                            </div>
+                            <div class="edit-form-group"><label>用戶暱稱</label><input type="text" id="editFormNickname" class="form-input"></div>
+                            <div class="edit-form-group"><label>真實姓名</label><input type="text" id="editFormRealName" class="form-input"></div>
+                            <div class="edit-form-group"><label>出生年月日</label><input type="date" id="editFormBirthday" class="form-input"></div>
+                            <div class="edit-form-group">
+                                <label>用戶等級</label>
+                                <select id="editFormLevel" class="form-select">
+                                    <option value="普通會員">普通會員</option>
+                                    <option value="黃金會員">黃金會員</option>
+                                    <option value="VIP會員">VIP會員</option>
+                                    <option value="鑽石會員">鑽石會員</option>
+                                </select>
+                            </div>
+                            <div class="edit-form-group">
+                                <label>支付層級</label>
+                                <select id="editFormPayLevel" class="form-select">
+                                    <option value="默認層">默認層</option>
+                                    <option value="VIP層">VIP層</option>
+                                </select>
+                            </div>
+                            <div class="edit-form-group"><label>國家</label><input type="text" id="editFormCountry" class="form-input" value="VN"></div>
+                            <div class="edit-form-group"><label>幣種</label><input type="text" id="editFormCurrency" class="form-input" value="VND"></div>
                         </div>
                     </div>
 
-                    <!-- 2. 備註 -->
-                    <div class="setting-item-row" style="display: flex; align-items: flex-start; min-height: 38px;">
-                        <label class="setting-item-label"
-                            style="width: 250px; text-align: right; padding-right: 16px; font-size: 13px; color: #475569; padding-top: 6px;">備註:</label>
-                        <div style="flex-grow: 1;">
-                            <textarea id="editFormRemark" class="form-textarea" rows="3"
-                                style="width: 100%; max-width: 380px;"></textarea>
+                    <!-- Card 2: 聯絡方式 -->
+                    <div class="edit-card">
+                        <div class="edit-card-header">
+                            <div class="edit-card-title-wrap">
+                                <div class="icon-container indigo" style="background-color: #f5f3ff; color: #7c3aed;"><i class="ph ph-phone"></i></div>
+                                <h4 class="edit-card-title">聯絡方式</h4>
+                            </div>
+                            <span class="edit-card-subtitle">電話 · 郵箱 · 即時通訊</span>
+                        </div>
+                        <div class="edit-form-grid">
+                            <div class="edit-form-group">
+                                <label>電話</label>
+                                <div style="display: flex; gap: 8px;">
+                                    <input type="text" id="editFormPhone" class="form-input" style="flex: 1;" placeholder="0912345678">
+                                    <button type="button" class="btn btn-primary" style="background-color: #6366f1; border-color: #6366f1; border-radius: 8px; padding: 0 16px;">校驗</button>
+                                </div>
+                            </div>
+                            <div class="edit-form-group"><label>email</label><input type="text" id="editFormEmail" class="form-input"></div>
+                            <div class="edit-form-group"><label>QQ</label><input type="text" id="editFormQQ" class="form-input"></div>
+                            <div class="edit-form-group"><label>微信</label><input type="text" id="editFormWechat" class="form-input"></div>
+                            <div class="edit-form-group"><label>Zalo</label><input type="text" id="editFormZalo" class="form-input"></div>
+                            <div class="edit-form-group"><label>WhatsApp</label><input type="text" id="editFormWhatsapp" class="form-input"></div>
+                            <div class="edit-form-group"><label>Telegram</label><input type="text" id="editFormTelegram" class="form-input"></div>
+                            <div class="edit-form-group"><label>Facebook</label><input type="text" id="editFormFacebook" class="form-input"></div>
                         </div>
                     </div>
 
-                    <!-- 3. 停止第三方返水 -->
-                    <div class="setting-item-row" style="display: flex; align-items: center; min-height: 38px;">
-                        <label class="setting-item-label"
-                            style="width: 250px; text-align: right; padding-right: 16px; font-size: 13px; color: #475569;">停止第三方返水:</label>
-                        <div>
-                            <input type="checkbox" id="settingStopThirdRebate"
-                                style="width: 16px; height: 16px; cursor: pointer;">
+                    <!-- Card 3: 第三方登入綁定 -->
+                    <div class="edit-card">
+                        <div class="edit-card-header" style="margin-bottom: 16px;">
+                            <div class="edit-card-title-wrap">
+                                <div class="icon-container blue" style="background-color: #f8fafc; border: 1px solid #e2e8f0; color: #4f46e5;"><i class="ph ph-coffee"></i></div>
+                                <h4 class="edit-card-title">第三方登入綁定</h4>
+                            </div>
+                        </div>
+                        <div class="edit-form-grid">
+                            <div class="edit-form-group">
+                                <label>Facebook 登入</label>
+                                <div style="height: 40px; border-radius: 8px; border: 1px dashed #cbd5e1; background-color: #f8fafc; color: #94a3b8; display: flex; align-items: center; justify-content: center; font-size: 14px;">尚未綁定</div>
+                            </div>
+                            <div class="edit-form-group">
+                                <label>Google 登入</label>
+                                <div style="height: 40px; border-radius: 8px; border: 1px dashed #cbd5e1; background-color: #f8fafc; color: #94a3b8; display: flex; align-items: center; justify-content: center; font-size: 14px;">尚未綁定</div>
+                            </div>
+                            <div class="edit-form-group">
+                                <label>Telegram 登入</label>
+                                <div style="height: 40px; border-radius: 8px; border: 1px dashed #cbd5e1; background-color: #f8fafc; color: #94a3b8; display: flex; align-items: center; justify-content: center; font-size: 14px;">尚未綁定</div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- 4. 限制轉入第三方 -->
-                    <div class="setting-item-row" style="display: flex; align-items: center; min-height: 38px;">
-                        <label class="setting-item-label"
-                            style="width: 250px; text-align: right; padding-right: 16px; font-size: 13px; color: #475569;">限制轉入第三方:</label>
-                        <div>
-                            <input type="checkbox" id="settingLimitThirdTransfer"
-                                style="width: 16px; height: 16px; cursor: pointer;">
+                    <!-- Card 4: 提現信息 -->
+                    
+                    <div class="edit-card">
+                        <div class="edit-card-header" style="margin-bottom: 0;">
+                            <div class="edit-card-title-wrap">
+                                <div class="icon-container indigo"><i class="ph ph-credit-card"></i></div>
+                                <h4 class="edit-card-title">提現信息</h4>
+                            </div>
+                            <button type="button" class="btn btn-primary btn-sm" style="background-color: #6366f1; border-color: #6366f1; border-radius: 8px; padding: 4px 16px;"><i class="ph ph-plus" style="margin-right: 4px;"></i>添加</button>
                         </div>
-                    </div>
-
-                    <!-- 5. 停止彩票返水 -->
-                    <div class="setting-item-row" style="display: flex; align-items: center; min-height: 38px;">
-                        <label class="setting-item-label"
-                            style="width: 250px; text-align: right; padding-right: 16px; font-size: 13px; color: #475569;">停止彩票返水:</label>
-                        <div>
-                            <input type="checkbox" id="settingStopLotteryRebate"
-                                style="width: 16px; height: 16px; cursor: pointer;">
-                        </div>
-                    </div>
-
-                    <!-- 6. 邀請碼註冊 -->
-                    <div class="setting-item-row" style="display: flex; align-items: center; min-height: 38px;">
-                        <label class="setting-item-label"
-                            style="width: 250px; text-align: right; padding-right: 16px; font-size: 13px; color: #475569; display: flex; align-items: center; justify-content: flex-end; gap: 4px;">
-                            邀請碼註冊 <i class="ph-fill ph-question" style="color: #3b82f6; font-size: 14px;"
-                                title="邀請碼註冊設定"></i>:
-                        </label>
-                        <div>
-                            <input type="checkbox" id="settingInviteCodeRegister" checked
-                                style="width: 16px; height: 16px; cursor: pointer;">
-                        </div>
-                    </div>
-
-                    <!-- 7. 當天最大提款次數 -->
-                    <div class="setting-item-row" style="display: flex; align-items: center; min-height: 38px;">
-                        <label class="setting-item-label"
-                            style="width: 250px; text-align: right; padding-right: 16px; font-size: 13px; color: #475569;">當天最大提款次數(未設置即不限制):</label>
-                        <div>
-                            <input type="text" id="settingMaxWithdrawCount" class="form-input" style="width: 280px;">
-                        </div>
-                    </div>
-
-                    <!-- 8. 當天最大充值返利次數 -->
-                    <div class="setting-item-row" style="display: flex; align-items: center; min-height: 38px;">
-                        <label class="setting-item-label"
-                            style="width: 250px; text-align: right; padding-right: 16px; font-size: 13px; color: #475569;">當天最大充值返利次數:</label>
-                        <div>
-                            <input type="text" id="settingMaxDepositRebateCount" class="form-input"
-                                style="width: 280px;">
-                        </div>
-                    </div>
-
-                    <!-- 9. 停止成長值和等級更新 -->
-                    <div class="setting-item-row" style="display: flex; align-items: center; min-height: 38px;">
-                        <label class="setting-item-label"
-                            style="width: 250px; text-align: right; padding-right: 16px; font-size: 13px; color: #475569;">停止成長值和等級更新:</label>
-                        <div>
-                            <input type="checkbox" id="settingStopGrowthUpdate"
-                                style="width: 16px; height: 16px; cursor: pointer;">
-                        </div>
-                    </div>
-
-                    <!-- 10. 能否修改下級賠率 -->
-                    <div class="setting-item-row" style="display: flex; align-items: center; min-height: 38px;">
-                        <label class="setting-item-label"
-                            style="width: 250px; text-align: right; padding-right: 16px; font-size: 13px; color: #475569;">能否修改下級賠率:</label>
-                        <div>
-                            <input type="checkbox" id="settingAllowSubOdds"
-                                style="width: 16px; height: 16px; cursor: pointer;">
-                        </div>
-                    </div>
-
-                    <!-- 11. 提現信息 Section (Matching Image Table) -->
-                    <div class="withdraw-info-section"
+                        <!-- Re-using existing table structure with minor tweaks -->
+                        <div class="withdraw-info-section"
                         style="margin-top: 24px; border-top: 1px solid var(--border-color); padding-top: 20px;">
                         <div
                             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
@@ -815,27 +668,27 @@
                                     <tr
                                         style="background-color: #ffffff; border-bottom: 1px solid #e2e8f0; height: 42px;">
                                         <th
-                                            style="padding: 8px 12px; color: #475569; font-weight: 500; border-right: 1px solid #f1f5f9;">
+                                            style="padding: 8px 12px; color: #475569; font-weight: 500; white-space: nowrap;">
                                             出款類型</th>
                                         <th
-                                            style="padding: 8px 12px; color: #475569; font-weight: 500; border-right: 1px solid #f1f5f9;">
-                                            卡號/錢包/支付寶帳號</th>
+                                            style="padding: 8px 12px; color: #475569; font-weight: 500; white-space: nowrap;">
+                                            卡號 / 錢包 / 支付寶帳號</th>
                                         <th
-                                            style="padding: 8px 12px; color: #475569; font-weight: 500; border-right: 1px solid #f1f5f9;">
-                                            銀行/幣種</th>
+                                            style="padding: 8px 12px; color: #475569; font-weight: 500; white-space: nowrap;">
+                                            銀行 / 幣種</th>
                                         <th
-                                            style="padding: 8px 12px; color: #475569; font-weight: 500; border-right: 1px solid #f1f5f9;">
-                                            銀行地址/備註</th>
+                                            style="padding: 8px 12px; color: #475569; font-weight: 500; white-space: nowrap;">
+                                            銀行地址 / 備注</th>
                                         <th
-                                            style="padding: 8px 12px; color: #475569; font-weight: 500; border-right: 1px solid #f1f5f9;">
+                                            style="padding: 8px 12px; color: #475569; font-weight: 500; white-space: nowrap;">
                                             狀態</th>
-                                        <th style="padding: 8px 12px; color: #475569; font-weight: 500;">操作</th>
+                                        <th style="padding: 8px 12px; color: #475569; font-weight: 500; white-space: nowrap;">操作</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="editFormWithdrawInfoTableBody">
                                     <tr style="height: 60px;">
                                         <td colspan="6" style="text-align: center; color: #94a3b8; font-size: 13px;">
-                                            -</td>
+                                            暂无数据</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -866,9 +719,138 @@
                                 頁
                             </div>
                         </div>
-
+                        </div>
                     </div>
+                </form>
+            </div>
+
+            
+            <!-- Tab 2: 會員設置 (Member Settings) -->
+            <div class="tab-content-panel" id="tabContentSettings" style="display: none;">
+                <div class="member-settings-container" style="display: flex; flex-direction: column;">
+                    
+                    <!-- Card 1: 費率與備註 -->
+                    <div class="edit-card">
+                        <div class="edit-card-header" style="margin-bottom: 16px;">
+                            <div class="edit-card-title-wrap">
+                                <div class="icon-container indigo" style="background-color: #f5f3ff; color: #7c3aed;"><i class="ph ph-currency-dollar"></i></div>
+                                <h4 class="edit-card-title">費率與備註</h4>
+                            </div>
+                        </div>
+                        <div class="edit-form-group" style="margin-bottom: 16px;">
+                            <label style="display: flex; align-items: center; gap: 4px;">提現費率 <i class="ph ph-question" style="color: #94a3b8; font-size: 14px;"></i></label>
+                            <input type="text" id="settingWithdrawFee" class="form-input" placeholder="例如：0.015（支持三位小數）">
+                        </div>
+                        <div class="edit-form-group">
+                            <label>備註</label>
+                            <textarea id="editFormRemark" class="form-textarea" rows="3" style="width: 100%; border-radius: 8px; border: 1px solid #cbd5e1; padding: 12px; font-size: 14px; outline: none; resize: vertical;" placeholder="大戶需關注"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: 權限與限制 -->
+                    <div class="edit-card">
+                        <div class="edit-card-header" style="margin-bottom: 16px;">
+                            <div class="edit-card-title-wrap">
+                                <div class="icon-container indigo" style="background-color: #f5f3ff; color: #7c3aed;"><i class="ph ph-lock-key"></i></div>
+                                <h4 class="edit-card-title">權限與限制</h4>
+                            </div>
+                            <span class="edit-card-subtitle">開啟即代表啟用該限制 / 功能</span>
+                        </div>
+                        <div style="display: flex; flex-direction: column;">
+                            <!-- Item 1 -->
+                            <div class="setting-switch-item">
+                                <div class="setting-switch-content">
+                                    <div class="setting-switch-title">停止第三方返水</div>
+                                    <div class="setting-switch-desc">開啟後，該用戶將不再享有第三方返水優惠</div>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="settingStopThirdRebate">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <!-- Item 2 -->
+                            <div class="setting-switch-item">
+                                <div class="setting-switch-content">
+                                    <div class="setting-switch-title">限制轉入第三方</div>
+                                    <div class="setting-switch-desc">開啟後，該用戶帳戶無法轉帳至第三方平台</div>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="settingLimitThirdTransfer">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <!-- Item 3 -->
+                            <div class="setting-switch-item">
+                                <div class="setting-switch-content">
+                                    <div class="setting-switch-title">停止彩票返水</div>
+                                    <div class="setting-switch-desc">開啟後，該用戶的彩票投注將不再計算返水</div>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="settingStopLotteryRebate">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <!-- Item 4 -->
+                            <div class="setting-switch-item">
+                                <div class="setting-switch-content">
+                                    <div class="setting-switch-title">邀請碼註冊 <i class="ph ph-question" style="color: #94a3b8; font-size: 14px;"></i></div>
+                                    <div class="setting-switch-desc">此用戶為透過邀請碼完成註冊</div>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="settingInviteReg" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <!-- Item 5 -->
+                            <div class="setting-switch-item">
+                                <div class="setting-switch-content">
+                                    <div class="setting-switch-title">停止成長值和等級更新</div>
+                                    <div class="setting-switch-desc">開啟後，該用戶的成長值與會員等級將被凍結</div>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="settingStopLevelUpdate">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <!-- Item 6 -->
+                            <div class="setting-switch-item">
+                                <div class="setting-switch-content">
+                                    <div class="setting-switch-title">能否修改下級賠率</div>
+                                    <div class="setting-switch-desc">開啟後，該代理可自行調整下級會員的賠率設定</div>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="settingCanEditSubOdds">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 3: 每日次數限制 -->
+                    <div class="edit-card">
+                        <div class="edit-card-header" style="margin-bottom: 16px;">
+                            <div class="edit-card-title-wrap">
+                                <div class="icon-container indigo" style="background-color: #f5f3ff; color: #7c3aed;"><i class="ph ph-chart-bar"></i></div>
+                                <h4 class="edit-card-title">每日次數限制</h4>
+                            </div>
+                        </div>
+                        <div class="edit-form-grid">
+                            <div class="edit-form-group">
+                                <label>當天最大提款次數</label>
+                                <input type="text" id="settingMaxWithdraw" class="form-input" placeholder="未設置即不限制">
+                                <span style="font-size: 12px; color: #94a3b8; margin-top: 4px;">留空代表不限制提款次數</span>
+                            </div>
+                            <div class="edit-form-group">
+                                <label>當天最大充值返利次數</label>
+                                <input type="text" id="settingMaxRebate" class="form-input" placeholder="未設置即不限制">
+                                <span style="font-size: 12px; color: #94a3b8; margin-top: 4px;">留空代表不限制充值返利次數</span>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
+            </div>
+</div>
             </div>
         </div>
         </main>
@@ -886,6 +868,46 @@
             </div>
             <div class="drawer-content" id="columnsDrawerContent">
                 <!-- Rendered via JS -->
+            </div>
+        </div>
+
+        <!-- 代理變更紀錄 Drawer -->
+        <div class="advanced-filter-drawer" id="agentChangeRecordDrawer">
+            <div class="drawer-header">
+                <h3>代理變更紀錄</h3>
+                <button class="btn-icon btn-close-modal" id="btnAgentChangeRecordClose">
+                    <i class="ph ph-x"></i>
+                </button>
+            </div>
+            <div class="drawer-content" style="padding: 24px; color: var(--text-main);">
+                <div style="border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; background: var(--card-bg);">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid var(--border-color); background-color: var(--bg-color); color: var(--text-secondary);">
+                                <th style="padding: 16px 12px; font-weight: 500;">變更前代理</th>
+                                <th style="padding: 16px 12px; font-weight: 500;">變更後代理</th>
+                                <th style="padding: 16px 12px; font-weight: 500;">操作者</th>
+                                <th style="padding: 16px 12px; font-weight: 500;">操作時間</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 16px 12px;">
+                                    <span style="background-color: rgba(128, 128, 128, 0.15); color: var(--text-color); padding: 4px 8px; border-radius: 6px; font-size: 13px; font-family: monospace;">d1</span>
+                                </td>
+                                <td style="padding: 16px 12px;">
+                                    <span style="background-color: rgba(128, 128, 128, 0.15); color: var(--text-color); padding: 4px 8px; border-radius: 6px; font-size: 13px; font-family: monospace;">aaaaaa1</span>
+                                </td>
+                                <td style="padding: 16px 12px;">
+                                    <span style="background-color: rgba(128, 128, 128, 0.15); color: var(--text-color); padding: 4px 8px; border-radius: 6px; font-size: 13px; font-family: monospace;">Wayne_test</span>
+                                </td>
+                                <td style="padding: 16px 12px;">
+                                    <span style="background-color: rgba(128, 128, 128, 0.15); color: var(--text-color); padding: 4px 8px; border-radius: 6px; font-size: 13px; font-family: monospace;">2026-08-11 09:25:24</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -1015,6 +1037,75 @@
                 if (exportContainer) {
                     const showExport = localStorage.getItem('perm-13') !== 'false';
                     exportContainer.style.display = showExport ? '' : 'none';
+                }
+
+                // 4. 動態搜尋欄位權限控制
+                // 獨立搜尋欄位 (Trace: 17, 3)
+                const p17 = localStorage.getItem('perm-17') !== 'false';
+                const p3 = localStorage.getItem('perm-3') !== 'false';
+                const showIndependentFields = p17 || p3;
+                const independentFields = ['birthday', 'bankCard', 'depositAmount', 'loginIp'];
+                independentFields.forEach(id => {
+                    // 表單群組 (搜尋欄位)
+                    const el = document.querySelector(`.form-group[data-filter-id="${id}"]`);
+                    if (el) el.style.display = showIndependentFields ? '' : 'none';
+
+                    // 自訂篩選維度彈窗內的選項
+                    const modalCheckbox = document.querySelector(`.checkbox-item input[value="${id}"]`);
+                    if (modalCheckbox) {
+                        const parentLabel = modalCheckbox.closest('.checkbox-item');
+                        if (parentLabel) parentLabel.style.display = showIndependentFields ? '' : 'none';
+                    }
+                });
+
+                // 下拉選單項目
+                // Trace 14, 20 (郵箱, Zalo, WhatsApp, Telegram)
+                const p14_dropdown = localStorage.getItem('perm-14') !== 'false';
+                const p20 = localStorage.getItem('perm-20') !== 'false';
+                const showContactInfo = p14_dropdown || p20;
+                const contactInfoItems = ['email', 'zalo', 'whatsapp', 'telegram'];
+                contactInfoItems.forEach(value => {
+                    const el = document.querySelector(`#accountTypeMenu li[data-value="${value}"]`);
+                    if (el) el.style.display = showContactInfo ? '' : 'none';
+                });
+
+                // Trace 36 (手機號)
+                const showPhone = localStorage.getItem('perm-36') !== 'false';
+                const phoneEl = document.querySelector(`#accountTypeMenu li[data-value="phone"]`);
+                if (phoneEl) phoneEl.style.display = showPhone ? '' : 'none';
+
+                // Trace 37 (真實姓名)
+                const showRealName = localStorage.getItem('perm-37') !== 'false';
+                const realNameEl = document.querySelector(`#accountTypeMenu li[data-value="realName"]`);
+                if (realNameEl) realNameEl.style.display = showRealName ? '' : 'none';
+
+                // Trace 21 (回訪備註)
+                const showRemark = localStorage.getItem('perm-21') !== 'false';
+                const remarkEl = document.querySelector(`#accountTypeMenu li[data-value="remark"]`);
+                if (remarkEl) remarkEl.style.display = showRemark ? '' : 'none';
+
+                // Trace 31, 32 (谷歌驗證碼)
+                const p31 = localStorage.getItem('perm-31') !== 'false';
+                const p32 = localStorage.getItem('perm-32') !== 'false';
+                const showGoogleCode = p31 || p32;
+                const googleCodeEl = document.querySelector(`#accountTypeMenu li[data-value="googleCode"]`);
+                if (googleCodeEl) googleCodeEl.style.display = showGoogleCode ? '' : 'none';
+
+                // Trace 4 (支付層級)
+                const p4 = localStorage.getItem('perm-4') !== 'false';
+                const editFormPayLevel = document.getElementById('editFormPayLevel');
+                if (editFormPayLevel) {
+                    editFormPayLevel.disabled = !p4;
+                    // Apply a visual cue for disabled state
+                    if (!p4) {
+                        editFormPayLevel.style.backgroundColor = 'var(--bg-color)';
+                        editFormPayLevel.style.cursor = 'not-allowed';
+                        editFormPayLevel.style.opacity = '0.6';
+                    } else {
+                        editFormPayLevel.style.backgroundColor = '';
+                        editFormPayLevel.style.cursor = '';
+                        editFormPayLevel.style.opacity = '';
+                    }
                 }
             }
 

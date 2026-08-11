@@ -416,6 +416,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (columnsDrawer) columnsDrawer.classList.remove('active');
         const userEditDrawer = document.getElementById('userEditDrawer');
         if (userEditDrawer) userEditDrawer.classList.remove('active');
+        const agentChangeRecordDrawer = document.getElementById('agentChangeRecordDrawer');
+        if (agentChangeRecordDrawer) agentChangeRecordDrawer.classList.remove('active');
         overlay.classList.remove('active');
     }
 
@@ -423,6 +425,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
     if (overlay) overlay.addEventListener('click', closeDrawer);
     document.getElementById('btnColumnsDrawerClose')?.addEventListener('click', closeDrawer);
+    document.getElementById('btnAgentChangeRecordClose')?.addEventListener('click', closeDrawer);
 
     // Table Mode & Pagination States
     let currentTableMode = 'nested'; // 'nested' or 'compact'
@@ -444,11 +447,11 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 'memberInfo', label: '會員信息' },
         { id: 'levelTeam', label: '等級&團隊' },
         { id: 'creditLimit', label: '信用&額度' },
-        { id: 'depositWithdraw', label: '存取款' },
+        { id: 'depositWithdraw', label: '存取款', requirePerm: 7 },
         { id: 'tags', label: '標籤' },
         { id: 'status', label: '狀態' },
         { id: 'dateInfo', label: '日期信息' },
-        { id: 'remark', label: '備註' }
+        { id: 'remark', label: '備註', requirePerm: 21 }
     ];
     let nestedColumnVisibility = {};
     let tempNestedColumnVisibility = {};
@@ -474,14 +477,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (val === '無權限') {
             return `<span class="tag-no-permission" title="無權限"><i class="ph-fill ph-lock"></i></span>`;
         }
-        if (val === '獲取失敗') {
-            return `<span class="data-error" title="獲取失敗"><i class="ph-fill ph-warning-circle"></i></span>`;
-        }
         if (val === 'NaN-NaN-NaN' || val === '解析異常') {
             return `<span class="tag-parse-error" title="原數據異常，無法正確解析">${val === 'NaN-NaN-NaN' ? '解析異常' : val}</span>`;
-        }
-        if (val === '載入中') {
-            return `<span class="data-loading" title="載入中"><i class="ph ph-spinner ph-spin"></i></span>`;
         }
         
         // Formats
@@ -644,7 +641,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 'action', group: '操作', label: '操作', render: (user) => {
             return `<td class="sticky-col-right" data-col="action" style="overflow:visible;text-align:center;vertical-align:middle;">
                 <div class="compact-action-container" style="display:inline-flex;align-items:center;justify-content:center;">
-                    <i class="ph ph-dots-three compact-action-icon" style="cursor:pointer;padding:4px;font-size:24px;color:#6b7280;line-height:1;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#6b7280'"></i>
+                    <i class="ph ph-dots-three compact-action-icon" data-uid="${user.uid}" style="cursor:pointer;padding:4px;font-size:24px;color:#6b7280;line-height:1;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#6b7280'"></i>
                 </div>
             </td>`;
         } }
@@ -741,9 +738,9 @@ document.addEventListener('DOMContentLoaded', () => {
         { uid: "1239361227", account: "test_user_2", realName: "林小華", nickname: "lin456", agentId: "AG888", inviter: "-", registerMode: "一般註冊", phone: "0987654321", payLevel: "默認層", growth: 150, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "-", directTeam: "1/1", vipLevel: 1, vipGrowth: 50, creditValue: 0, availableCredit: 1000, commissionBal: 15, balanceBuy: 300, arrears: "0", interest: 2, thirdBal: 0, points: 25, deposit: 2000, withdraw: 500, withdrawPre: "-", adminDeduct: "-", depositCount: 1, withdrawCount: 1, tags: ["新註冊"], status: "停用", date: "2023-02-02 10:00:00", lastLogin: "2023-03-02 15:30:00", offlineDays: 1, ip: "192.168.1.100", remark: "-", followRemark: "-", note: "-" },
         { uid: "1239361228", account: "test_user_3", realName: "-", nickname: "tu***02", agentId: "nnest123556", inviter: "nnest123556", registerMode: "一般註冊", phone: "13912341002", payLevel: "默認層", growth: 300, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "CODE102", directTeam: "2/2", vipLevel: 2, vipGrowth: 100, creditValue: 500, availableCredit: 2000, commissionBal: 30, balanceBuy: 600, arrears: "0", interest: 4, thirdBal: 0, points: 50, deposit: 4000, withdraw: 1000, withdrawPre: "-", adminDeduct: "-", depositCount: 2, withdrawCount: 2, tags: ["新註冊"], status: "冻结", date: "2023-02-03 10:00:00", lastLogin: "2023-03-03 15:30:00", offlineDays: 2, ip: "192.168.2.12", remark: "-", followRemark: "-", note: "-" },
         { uid: "1239361229", account: "test_user_4", realName: "陳大文", nickname: "tu***03", agentId: "dl", inviter: "-", registerMode: "一般註冊", phone: "未綁定", payLevel: "默認層", growth: 450, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "-", directTeam: "3/0", vipLevel: 3, vipGrowth: 150, creditValue: 0, availableCredit: 3000, commissionBal: 45, balanceBuy: 900, arrears: "0", interest: 6, thirdBal: 0, points: 75, deposit: 6000, withdraw: 1500, withdrawPre: "-", adminDeduct: "-", depositCount: 3, withdrawCount: 3, tags: ["新註冊"], status: "冻结", date: "2023-02-04 10:00:00", lastLogin: "2023-03-04 15:30:00", offlineDays: 3, ip: "192.168.2.13", remark: "這是一段非常長非常長非常長的備註，用來測試單行截斷與懸停提示的效果是否正常運作。", followRemark: "-", note: "-" },
-        { uid: "1239361230", account: "test_user_5", realName: "-", nickname: "tu***04", agentId: "AG888", inviter: "nnest123556", registerMode: "後台新增", phone: "13912341004", payLevel: "默認層", growth: 600, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "CODE104", directTeam: "4/1", vipLevel: 0, vipGrowth: 200, creditValue: 500, availableCredit: 4000, commissionBal: 60, balanceBuy: 1200, arrears: "0", interest: 8, thirdBal: 150, points: 100, deposit: 8000, withdraw: 2000, withdrawPre: "-", adminDeduct: "獲取失敗", depositCount: 4, withdrawCount: 4, tags: ["新註冊"], status: "冻结", date: "2023-02-05 10:00:00", lastLogin: "2023-03-05 15:30:00", offlineDays: 4, ip: "192.168.2.14", remark: "-", followRemark: "-", note: "-" },
+        { uid: "1239361230", account: "test_user_5", realName: "-", nickname: "tu***04", agentId: "AG888", inviter: "nnest123556", registerMode: "後台新增", phone: "13912341004", payLevel: "默認層", growth: 600, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "CODE104", directTeam: "4/1", vipLevel: 0, vipGrowth: 200, creditValue: 500, availableCredit: 4000, commissionBal: 60, balanceBuy: 1200, arrears: "0", interest: 8, thirdBal: 150, points: 100, deposit: 8000, withdraw: 2000, withdrawPre: "-", adminDeduct: "-", depositCount: 4, withdrawCount: 4, tags: ["新註冊"], status: "冻结", date: "2023-02-05 10:00:00", lastLogin: "2023-03-05 15:30:00", offlineDays: 4, ip: "192.168.2.14", remark: "-", followRemark: "-", note: "-" },
         { uid: "1239361231", account: "test_user_6", realName: "陳阿明", nickname: "tu***05", agentId: "ag123", inviter: "-", registerMode: "一般註冊", phone: "0933111222", payLevel: "默認層", growth: 750, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "-", directTeam: "0/2", vipLevel: 1, vipGrowth: 250, creditValue: 0, availableCredit: 5000, commissionBal: 75, balanceBuy: 1500, arrears: "0", interest: 10, thirdBal: 0, points: 125, deposit: 10000, withdraw: 2500, withdrawPre: "-", adminDeduct: "-", depositCount: 5, withdrawCount: 5, tags: ["正常", "活躍"], status: "正常", date: "2023-02-06 10:00:00", lastLogin: "2023-03-06 15:30:00", offlineDays: 5, ip: "192.168.2.15", remark: "-", followRemark: "-", note: "-" },
-        { uid: "1239361232", account: "test_user_7", realName: "陳大文", nickname: "tu***06", agentId: "dl", inviter: "nnest123556", registerMode: "一般註冊", phone: "13912341006", payLevel: "默認層", growth: 900, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "CODE106", directTeam: "1/0", vipLevel: 2, vipGrowth: 300, creditValue: 500, availableCredit: 6000, commissionBal: 90, balanceBuy: 1800, arrears: "0", interest: 12, thirdBal: 0, points: 150, deposit: 12000, withdraw: 3000, withdrawPre: "載入中", adminDeduct: "載入中", depositCount: 6, withdrawCount: 0, tags: ["新註冊"], status: "冻结", date: "2023-02-07 10:00:00", lastLogin: "2023-03-07 15:30:00", offlineDays: 6, ip: "192.168.2.16", remark: "-", followRemark: "-", note: "-" }
+        { uid: "1239361232", account: "test_user_7", realName: "陳大文", nickname: "tu***06", agentId: "dl", inviter: "nnest123556", registerMode: "一般註冊", phone: "13912341006", payLevel: "默認層", growth: 900, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "CODE106", directTeam: "1/0", vipLevel: 2, vipGrowth: 300, creditValue: 500, availableCredit: 6000, commissionBal: 90, balanceBuy: 1800, arrears: "0", interest: 12, thirdBal: 0, points: 150, deposit: 12000, withdraw: 3000, withdrawPre: "-", adminDeduct: "-", depositCount: 6, withdrawCount: 0, tags: ["新註冊"], status: "冻结", date: "2023-02-07 10:00:00", lastLogin: "2023-03-07 15:30:00", offlineDays: 6, ip: "192.168.2.16", remark: "-", followRemark: "-", note: "-" }
     ];
 
     // Generate 200 items to ensure pagination works smoothly with up to 100 items per page
@@ -780,7 +777,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 offlineDays: (user.offlineDays + i) % 15,
                 other: index % 2 === 0 ? "未充值玩家" : "測試帳號",
                 vip: index % 3 === 0 ? "钻石会员" : index % 3 === 1 ? "黄金会员" : "白银会员",
-                level: index % 3 === 0 ? "VIP會員" : index % 3 === 1 ? "黃金會員" : "普通會員"
+                level: index % 3 === 0 ? "VIP會員" : index % 3 === 1 ? "黃金會員" : "普通會員",
+                email: `user${num}@example.com`,
+                qq: `12345${num}`,
+                wechat: `wx_${newAccount}`,
+                zalo: `zalo_${newAccount}`,
+                whatsapp: `+123456789${num % 10}`,
+                telegram: `@tg_${newAccount}`,
+                facebook: `fb_${newAccount}`,
+                birthday: `199${num % 10}-0${(num % 9) + 1}-1${num % 9}`,
+                withdrawAccounts: index % 2 === 0 ? [
+                    { type: '銀行卡', account: '622202******1234', bank: '中國工商銀行 / CNY', address: '北京市朝陽區分行', status: '正常' },
+                    { type: 'USDT (TRC20)', account: 'TXYZ******7890', bank: 'USDT / USDT', address: '-', status: '正常' }
+                ] : [
+                    { type: '銀行卡', account: '621700******5678', bank: '中國建設銀行 / CNY', address: '上海市浦東新區分行', status: '正常' }
+                ],
+                agentChangeRecords: (index + i) % 4 !== 0 ? [
+                    { preAgent: 'd1', postAgent: 'aaaaaa1', operator: 'Wayne_test', time: '2026-08-11 09:25:24' },
+                    { preAgent: 'd0', postAgent: 'd1', operator: 'admin', time: '2026-08-10 10:15:00' }
+                ] : []
             });
         });
     }
@@ -1100,6 +1115,60 @@ document.addEventListener('DOMContentLoaded', () => {
         updateFilters();
         renderTable();
     });
+
+    window.openAgentChangeRecordDrawer = function(uid) {
+        const agentChangeRecordDrawer = document.getElementById('agentChangeRecordDrawer');
+        if (!agentChangeRecordDrawer) return;
+        
+        let recordsHtml = '';
+        if (uid) {
+            const user = mockUsers.find(u => u.uid === uid);
+            if (user && user.agentChangeRecords && user.agentChangeRecords.length > 0) {
+                recordsHtml = `
+                <div style="border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; background: var(--card-bg);">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid var(--border-color); background-color: var(--bg-color); color: var(--text-secondary);">
+                                <th style="padding: 16px 12px; font-weight: 500; white-space: nowrap;">變更前代理</th>
+                                <th style="padding: 16px 12px; font-weight: 500; white-space: nowrap;">變更後代理</th>
+                                <th style="padding: 16px 12px; font-weight: 500; white-space: nowrap;">操作者</th>
+                                <th style="padding: 16px 12px; font-weight: 500; white-space: nowrap;">操作時間</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${user.agentChangeRecords.map(record => `
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 16px 12px; white-space: nowrap;">
+                                    <span style="background-color: rgba(128, 128, 128, 0.15); color: var(--text-color); padding: 4px 8px; border-radius: 6px; font-size: 13px; font-family: monospace;">${record.preAgent}</span>
+                                </td>
+                                <td style="padding: 16px 12px; white-space: nowrap;">
+                                    <span style="background-color: rgba(128, 128, 128, 0.15); color: var(--text-color); padding: 4px 8px; border-radius: 6px; font-size: 13px; font-family: monospace;">${record.postAgent}</span>
+                                </td>
+                                <td style="padding: 16px 12px; white-space: nowrap;">
+                                    <span style="background-color: rgba(128, 128, 128, 0.15); color: var(--text-color); padding: 4px 8px; border-radius: 6px; font-size: 13px; font-family: monospace;">${record.operator}</span>
+                                </td>
+                                <td style="padding: 16px 12px; white-space: nowrap;">
+                                    <span style="background-color: rgba(128, 128, 128, 0.15); color: var(--text-color); padding: 4px 8px; border-radius: 6px; font-size: 13px; font-family: monospace;">${record.time}</span>
+                                </td>
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+            } else {
+                recordsHtml = '<div style="text-align: center; color: var(--text-muted); padding-top: 100px;">無變更紀錄</div>';
+            }
+        } else {
+            recordsHtml = '<div style="text-align: center; color: var(--text-muted); padding-top: 100px;">無變更紀錄</div>';
+        }
+        
+        const drawerContent = agentChangeRecordDrawer.querySelector('.drawer-content');
+        if (drawerContent) {
+            drawerContent.innerHTML = recordsHtml;
+        }
+
+        agentChangeRecordDrawer.classList.add('active');
+        if (overlay) overlay.classList.add('active');
+    };
 
     // Render Table Data & Headers
     function renderTable() {
@@ -1648,6 +1717,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (text === '查看詳情' || text === '編輯用戶') {
                     if (uid) openUserEditModal(uid);
+                } else if (text === '代理變更紀錄' || text === '代理变更记录') {
+                    window.openAgentChangeRecordDrawer(uid);
                 } else {
                     alert(`觸發操作：${text}`);
                 }
@@ -1659,7 +1730,16 @@ document.addEventListener('DOMContentLoaded', () => {
             li.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const text = li.textContent.trim();
-                alert(`觸發操作：${text}`);
+                const tr = li.closest('tr');
+                const userCell = tr ? tr.querySelector('.user-detail-link') : null;
+                const uid = userCell ? userCell.getAttribute('data-uid') : null;
+                
+                if (text === '代理變更紀錄' || text === '代理变更记录') {
+                    window.openAgentChangeRecordDrawer(uid);
+                } else {
+                    alert(`觸發操作：${text}`);
+                }
+                li.parentElement.classList.remove('show');
             });
         });
         
@@ -1743,8 +1823,9 @@ document.addEventListener('DOMContentLoaded', () => {
         let visibleCount = 0;
         
         if (currentTableMode === 'nested') {
-            const allChecked = nestedColumnsConfig.every(col => tempNestedColumnVisibility[col.id]);
-            const someChecked = nestedColumnsConfig.some(col => tempNestedColumnVisibility[col.id]);
+            const permCols = nestedColumnsConfig.filter(col => !col.requirePerm || hasPerm(col.requirePerm));
+            const allChecked = permCols.every(col => tempNestedColumnVisibility[col.id]);
+            const someChecked = permCols.some(col => tempNestedColumnVisibility[col.id]);
             const groupCbHtml = `<input type="checkbox" class="group-cb-nested" ${allChecked ? 'checked' : ''} style="margin-right:8px;">`;
             
             html += `
@@ -1756,7 +1837,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
             html += `<ul class="column-list" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">`;
-            nestedColumnsConfig.forEach(col => {
+            permCols.forEach(col => {
                 const isVisible = tempNestedColumnVisibility[col.id];
                 if (isVisible) visibleCount++;
                 const isPinned = tempNestedPinnedColumnIds.includes(col.id);
@@ -1792,7 +1873,10 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             for (const [groupName, cols] of Object.entries(groupedConfig)) {
-                const customizableCols = cols.filter(col => !['uid', 'account', 'action'].includes(col.id));
+                const permCols = cols.filter(col => !col.requirePerm || hasPerm(col.requirePerm));
+                if (permCols.length === 0) continue;
+
+                const customizableCols = permCols.filter(col => !['uid', 'account', 'action'].includes(col.id));
                 const allChecked = customizableCols.length > 0 && customizableCols.every(col => tempCompactColumnVisibility[col.id]);
                 const someChecked = customizableCols.some(col => tempCompactColumnVisibility[col.id]);
                 
@@ -1810,7 +1894,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `;
                 html += `<ul class="column-list" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">`;
-                cols.forEach(col => {
+                permCols.forEach(col => {
                     const isVisible = tempCompactColumnVisibility[col.id];
                     if (isVisible) visibleCount++;
                     const isPinned = tempPinnedColumnIds.includes(col.id);
@@ -2118,14 +2202,34 @@ document.addEventListener('DOMContentLoaded', () => {
         const user = (mockUsers || []).find(u => u.uid === uid) || (mockUsers && mockUsers[0]);
         if (!user) return;
 
-        const titleEl = document.getElementById('userEditDrawerTitle');
-        if (titleEl) titleEl.textContent = `編輯用戶詳情 - ${user.account}`;
-        
-        const accountEl = document.getElementById('editFormAccount');
+        const accountEl = document.getElementById('headerAccount');
         if (accountEl) accountEl.textContent = user.account;
         
-        const avatarEl = document.getElementById('modalUserAvatar');
-        if (avatarEl) avatarEl.textContent = user.account.charAt(0).toLowerCase();
+        const avatarEl = document.getElementById('headerAvatar');
+        if (avatarEl) avatarEl.textContent = user.account.charAt(0).toUpperCase();
+
+        const typeEl = document.getElementById('headerUserType');
+        if (typeEl) typeEl.textContent = user.userType || '普通會員';
+
+        const levelEl = document.getElementById('headerUserLevel');
+        if (levelEl) levelEl.textContent = user.level || '普通會員';
+
+        const statusBadge = document.getElementById('headerStatusBadge');
+        if (statusBadge) {
+            if (user.status === '正常') {
+                statusBadge.innerHTML = `<div style="width: 6px; height: 6px; border-radius: 50%; background-color: #16a34a;"></div>目前狀態：正常`;
+                statusBadge.style.backgroundColor = '#dcfce7';
+                statusBadge.style.color = '#16a34a';
+            } else if (user.status === '冻结') {
+                statusBadge.innerHTML = `<div style="width: 6px; height: 6px; border-radius: 50%; background-color: #eab308;"></div>目前狀態：冻结`;
+                statusBadge.style.backgroundColor = '#fef9c3';
+                statusBadge.style.color = '#eab308';
+            } else {
+                statusBadge.innerHTML = `<div style="width: 6px; height: 6px; border-radius: 50%; background-color: #dc2626;"></div>目前狀態：停用`;
+                statusBadge.style.backgroundColor = '#fee2e2';
+                statusBadge.style.color = '#dc2626';
+            }
+        }
 
         // Radio selections
         const userTypeRadios = document.querySelectorAll('input[name="editUserType"]');
@@ -2152,6 +2256,65 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const remarkIn = document.getElementById('editFormRemark');
         if (remarkIn) remarkIn.value = user.remark !== '-' ? user.remark : '';
+
+        const emailIn = document.getElementById('editFormEmail');
+        if (emailIn) emailIn.value = user.email || '';
+
+        const qqIn = document.getElementById('editFormQQ');
+        if (qqIn) qqIn.value = user.qq || '';
+
+        const wechatIn = document.getElementById('editFormWechat');
+        if (wechatIn) wechatIn.value = user.wechat || '';
+
+        const zaloIn = document.getElementById('editFormZalo');
+        if (zaloIn) zaloIn.value = user.zalo || '';
+
+        const whatsappIn = document.getElementById('editFormWhatsapp');
+        if (whatsappIn) whatsappIn.value = user.whatsapp || '';
+
+        const telegramIn = document.getElementById('editFormTelegram');
+        if (telegramIn) telegramIn.value = user.telegram || '';
+
+        const facebookIn = document.getElementById('editFormFacebook');
+        if (facebookIn) facebookIn.value = user.facebook || '';
+
+        const birthdayIn = document.getElementById('editFormBirthday');
+        if (birthdayIn) birthdayIn.value = user.birthday || '';
+
+        // Render Withdraw Accounts
+        const withdrawTbody = document.getElementById('editFormWithdrawInfoTableBody');
+        if (withdrawTbody) {
+            withdrawTbody.innerHTML = '';
+            if (user.withdrawAccounts && user.withdrawAccounts.length > 0) {
+                user.withdrawAccounts.forEach(acc => {
+                    const tr = document.createElement('tr');
+                    tr.style.height = '42px';
+                    tr.style.borderBottom = '1px solid #e2e8f0';
+                    tr.innerHTML = `
+                        <td style="padding: 8px 12px; white-space: nowrap;"><span class="pill-badge purple">${acc.type}</span></td>
+                        <td style="padding: 8px 12px; color: #334155; font-size: 13px; white-space: nowrap;">${acc.account}</td>
+                        <td style="padding: 8px 12px; color: #334155; font-size: 13px; white-space: nowrap;">${acc.bank}</td>
+                        <td style="padding: 8px 12px; color: #334155; font-size: 13px; white-space: nowrap;">${acc.address}</td>
+                        <td style="padding: 8px 12px; white-space: nowrap;">
+                            <span class="pill-badge green">${acc.status}</span>
+                        </td>
+                        <td style="padding: 8px 12px; font-size: 13px; white-space: nowrap;">
+                            <div style="display: flex; gap: 8px; justify-content: center;">
+                                <button class="btn-icon" title="編輯" style="color: #3b82f6; background: transparent; border: none; cursor: pointer; font-size: 16px;"><i class="ph ph-pencil-simple"></i></button>
+                                <button class="btn-icon" title="刪除" style="color: #ef4444; background: transparent; border: none; cursor: pointer; font-size: 16px;"><i class="ph ph-trash"></i></button>
+                            </div>
+                        </td>
+                    `;
+                    withdrawTbody.appendChild(tr);
+                });
+            } else {
+                withdrawTbody.innerHTML = `
+                    <tr style="height: 60px;">
+                        <td colspan="6" style="text-align: center; color: #94a3b8; font-size: 13px;">暂无数据</td>
+                    </tr>
+                `;
+            }
+        }
 
         // Reset to Basic Tab on open
         const basicTabBtn = document.querySelector('.user-edit-tab-item[data-tab="basic"]');
@@ -2318,6 +2481,26 @@ if (!globalActionMenu) {
     document.body.appendChild(globalActionMenu);
     renderCompactActionMenu();
 
+    globalActionMenu.addEventListener('click', (e) => {
+        const target = e.target.closest('a');
+        if (target) {
+            e.preventDefault();
+            const text = target.textContent.trim();
+            const uid = globalActionMenu.getAttribute('data-uid');
+            
+            if (text === '查看詳情' || text === '查看详情' || text === '編輯用戶' || text === '编辑用户') {
+                if (uid) openUserEditModal(uid);
+            } else if (text === '代理變更紀錄' || text === '代理变更记录') {
+                if (window.openAgentChangeRecordDrawer) {
+                    window.openAgentChangeRecordDrawer(uid);
+                }
+            } else {
+                alert(`觸發操作：${text}`);
+            }
+            hideMenu();
+        }
+    });
+
     let hideTimeout;
     const hideMenu = () => {
         hideTimeout = setTimeout(() => {
@@ -2336,6 +2519,10 @@ if (!globalActionMenu) {
     document.addEventListener('mouseover', (e) => {
         const icon = e.target.closest('.compact-action-icon');
         if (icon) {
+            const uid = icon.getAttribute('data-uid');
+            if (globalActionMenu) {
+                globalActionMenu.setAttribute('data-uid', uid);
+            }
             showMenu(icon);
         } else if (e.target.closest('#globalCompactActionMenu')) {
             clearTimeout(hideTimeout);

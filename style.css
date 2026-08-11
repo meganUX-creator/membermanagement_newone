@@ -3215,8 +3215,8 @@ td {
 .user-edit-drawer {
     position: fixed;
     top: 0;
-    right: -660px;
-    width: 660px;
+    right: -960px;
+    width: 960px;
     max-width: 90vw;
     height: 100vh;
     background-color: #ffffff;
@@ -3513,3 +3513,262 @@ td {
 .skeleton-text-short { width: 40%; }
 .skeleton-text-medium { width: 70%; }
 .skeleton-text-long { width: 100%; }
+
+/* ==========================================
+   Edit User Drawer Redesign Styles
+   ========================================== */
+.user-edit-form-body {
+    background-color: #f4f6f8;
+}
+
+.edit-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    margin-bottom: 16px;
+    border: 1px solid #e2e8f0;
+}
+
+.edit-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.edit-card-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.icon-container {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background-color: #f3e8ff; /* Light purple */
+    color: #7c3aed; /* Purple */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.icon-container.blue { background-color: #e0f2fe; color: #0284c7; }
+.icon-container.indigo { background-color: #e0e7ff; color: #4f46e5; }
+.icon-container.cyan { background-color: #cffafe; color: #0891b2; }
+
+.edit-card-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+}
+
+.edit-card-subtitle {
+    font-size: 13px;
+    color: #94a3b8;
+}
+
+.edit-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 24px;
+    row-gap: 20px;
+}
+
+.edit-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.edit-form-group label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #64748b;
+}
+
+.edit-form-group .form-input,
+.edit-form-group .form-select {
+    height: 40px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    padding: 0 12px;
+    font-size: 14px;
+    width: 100%;
+}
+
+.edit-form-group .form-input:focus,
+.edit-form-group .form-select:focus {
+    border-color: #6366f1;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.edit-form-group .form-input:disabled {
+    background-color: #f8fafc;
+    color: #94a3b8;
+    cursor: not-allowed;
+    border-style: dashed;
+}
+
+/* Radio Pills */
+.radio-pill-group {
+    display: flex;
+    gap: 12px;
+}
+
+.radio-pill {
+    position: relative;
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    background-color: #ffffff;
+    color: #475569;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.radio-pill input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.radio-pill i {
+    margin-right: 6px;
+    font-size: 16px;
+    opacity: 0.5;
+}
+
+.radio-pill input:checked + span {
+    color: #ffffff;
+}
+
+.radio-pill:has(input:checked) {
+    background-color: #6366f1;
+    border-color: #6366f1;
+    color: #ffffff;
+}
+.radio-pill:has(input:checked) i {
+    opacity: 1;
+}
+
+/* Specific radio active states based on value can be handled via JS adding classes, 
+   but standard CSS :has() works best here for simplicity */
+.radio-pill.color-red:has(input:checked) {
+    background-color: #ef4444;
+    border-color: #ef4444;
+}
+
+/* Settings Switch Toggle */
+.setting-switch-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+.setting-switch-item:last-child {
+    border-bottom: none;
+}
+
+.setting-switch-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.setting-switch-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.setting-switch-desc {
+    font-size: 13px;
+    color: #94a3b8;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #cbd5e1;
+    transition: .3s;
+    border-radius: 24px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: .3s;
+    border-radius: 50%;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+input:checked + .toggle-slider {
+    background-color: #6366f1;
+}
+
+input:checked + .toggle-slider:before {
+    transform: translateX(20px);
+}
+
+
+/* Pill Badges for Table */
+.pill-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.pill-badge.purple {
+    background-color: #e0e7ff;
+    color: #4f46e5;
+}
+
+.pill-badge.green {
+    background-color: #dcfce7;
+    color: #16a34a;
+}
+
+#agentChangeRecordDrawer {
+    width: 650px;
+    right: -650px;
+}
+#agentChangeRecordDrawer.active {
+    right: 0;
+}
