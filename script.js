@@ -832,6 +832,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 uid: newUid,
                 account: newAccount,
                 tags: dynamicTags,
+                nickname: user.nickname ? (i === 0 ? user.nickname : `${user.nickname}${i}`) : '',
                 offlineDays: (user.offlineDays + i) % 15,
                 other: index % 2 === 0 ? "未充值玩家" : "測試帳號",
                 vip: index % 3 === 0 ? "钻石会员" : index % 3 === 1 ? "黄金会员" : "白银会员",
