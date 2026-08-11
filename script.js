@@ -2924,16 +2924,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Render Withdraw Accounts
         const withdrawTbody = document.getElementById('editFormWithdrawInfoTableBody');
+        const btnAddWithdraw = document.getElementById('btnAddWithdrawAccount');
+        if (btnAddWithdraw) {
+            btnAddWithdraw.style.display = hasPerm(26) ? 'inline-block' : 'none';
+        }
+
         if (withdrawTbody) {
             withdrawTbody.innerHTML = '';
             if (user.withdrawAccounts && user.withdrawAccounts.length > 0) {
+                const canEditBank = hasPerm(29);
+                const canDeleteBank = hasPerm(30);
+                const canDisableBank = hasPerm(46);
+                const disabledAttr = canEditBank ? '' : 'disabled';
+                const inputStyle = canEditBank ? 'background-color: white;' : 'background-color: #f1f5f9; cursor: not-allowed;';
+                const saveBtnStyle = canEditBank ? 'background-color: #3b82f6; border-color: #3b82f6; color: white;' : 'background-color: #cbd5e1; border-color: #cbd5e1; color: white; cursor: not-allowed;';
+
                 user.withdrawAccounts.forEach(acc => {
                     const tr = document.createElement('tr');
                     tr.style.height = '42px';
                     tr.style.borderBottom = '1px solid #e2e8f0';
                     tr.innerHTML = `
                         <td style="padding: 12px; white-space: nowrap;">
-                            <select class="form-select" style="width: 100%; min-width: 120px; height: 36px; padding: 0 8px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 13px; outline: none;">
+                            <select class="form-select" ${disabledAttr} style="width: 100%; min-width: 120px; height: 36px; padding: 0 8px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 13px; outline: none; ${inputStyle}">
                                 <option value="支付宝" ${acc.type === '支付宝' ? 'selected' : ''}>支付宝</option>
                                 <option value="c2cWallet" ${acc.type === 'c2cWallet' ? 'selected' : ''}>c2cWallet</option>
                                 <option value="虚拟币" ${acc.type === '虚拟币' ? 'selected' : ''}>虚拟币</option>
@@ -2942,10 +2954,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             </select>
                         </td>
                         <td style="padding: 12px;">
-                            <input type="text" class="form-input" style="width: 100%; height: 36px; padding: 0 12px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 13px; outline: none; box-sizing: border-box;" value="${acc.account}">
+                            <input type="text" class="form-input" ${disabledAttr} style="width: 100%; height: 36px; padding: 0 12px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 13px; outline: none; box-sizing: border-box; ${inputStyle}" value="${acc.account}">
                         </td>
                         <td style="padding: 12px; white-space: nowrap;">
-                            <select class="form-select" style="width: 100%; min-width: 120px; height: 36px; padding: 0 8px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 13px; outline: none;">
+                            <select class="form-select" ${disabledAttr} style="width: 100%; min-width: 120px; height: 36px; padding: 0 8px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 13px; outline: none; ${inputStyle}">
                                 <option value="${acc.bank}" selected>${acc.bank}</option>
                                 <option value="Alipay">Alipay</option>
                                 <option value="88PAY">88PAY</option>
@@ -2955,16 +2967,16 @@ document.addEventListener('DOMContentLoaded', () => {
                             </select>
                         </td>
                         <td style="padding: 12px;">
-                            <input type="text" class="form-input" style="width: 100%; height: 36px; padding: 0 12px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 13px; outline: none; box-sizing: border-box;" value="${acc.address || ''}">
+                            <input type="text" class="form-input" ${disabledAttr} style="width: 100%; height: 36px; padding: 0 12px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 13px; outline: none; box-sizing: border-box; ${inputStyle}" value="${acc.address || ''}">
                         </td>
                         <td style="padding: 12px; white-space: nowrap; text-align: center;">
                             <span style="display: inline-block; background-color: #f0fdf4; color: #16a34a; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 500;">啟用</span>
                         </td>
                         <td style="padding: 12px; white-space: nowrap; text-align: center;">
                             <div style="display: flex; gap: 8px; justify-content: center;">
-                                <button type="button" class="btn btn-sm btn-danger" style="padding: 6px 12px; background-color: #f87171; border-color: #f87171; border-radius: 4px; color: white; border: 1px solid transparent; cursor: pointer; font-size: 13px;">刪除</button>
-                                <button type="button" class="btn btn-sm btn-primary" style="padding: 6px 12px; background-color: #3b82f6; border-color: #3b82f6; border-radius: 4px; color: white; border: 1px solid transparent; cursor: pointer; font-size: 13px;">儲存</button>
-                                <button type="button" class="btn btn-sm btn-outline" style="padding: 6px 12px; background-color: white; border: 1px solid #e2e8f0; border-radius: 4px; color: #475569; cursor: pointer; font-size: 13px;">禁用</button>
+                                ${canDeleteBank ? `<button type="button" class="btn btn-sm btn-danger" style="padding: 6px 12px; background-color: #f87171; border-color: #f87171; border-radius: 4px; color: white; border: 1px solid transparent; cursor: pointer; font-size: 13px;">刪除</button>` : ''}
+                                <button type="button" class="btn btn-sm btn-primary" ${disabledAttr} style="padding: 6px 12px; border-radius: 4px; border: 1px solid transparent; font-size: 13px; ${saveBtnStyle}">儲存</button>
+                                ${canDisableBank ? `<button type="button" class="btn btn-sm btn-outline" style="padding: 6px 12px; background-color: white; border: 1px solid #e2e8f0; border-radius: 4px; color: #475569; cursor: pointer; font-size: 13px;">禁用</button>` : ''}
                             </div>
                         </td>
                     `;
