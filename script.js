@@ -1941,7 +1941,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         nestedHeaderHtml += `<th>${col.label}</th>`;
                     }
                 });
-                nestedHeaderHtml += `<th style="text-align: center; width: 190px;">
+                nestedHeaderHtml += `<th style="text-align: center; width: 1%; white-space: nowrap; padding-right: 16px;">
                     <button type="button" class="btn-custom-columns-header btn-header-columns-toggle" title="自訂欄位">
                         <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                             <rect x="3" y="3" width="4" height="10" rx="1" stroke="currentColor" stroke-width="1.5"/>
@@ -2213,18 +2213,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     </td>`;
                 }
 
-                nestedRowHtml += `<td style="text-align: center; padding: 12px 8px;">
-                    <div class="operations-grid-3x3">
-                        ${shouldShowOp("編輯用戶") ? `<a href="#" class="op-link user-detail-link" data-uid="${user.uid}">編輯用戶</a>` : ''}
-                        ${shouldShowOp("查看詳情") ? `<a href="#" class="op-link user-detail-link" data-uid="${user.uid}">查看詳情</a>` : ''}
-                        ${shouldShowOp("額度修改") ? `<a href="#" class="op-link">額度修改</a>` : ''}
-                        ${shouldShowOp("資金明細") ? `<a href="#" class="op-link">資金明細</a>` : ''}
-                        ${shouldShowOp("注單明細") ? `<a href="#" class="op-link">注單明細</a>` : ''}
-                        ${shouldShowOp("修改密碼") ? `<a href="#" class="op-link">修改密碼</a>` : ''}
-                        ${shouldShowOp("下級會員") ? `<a href="#" class="op-link">下級會員</a>` : ''}
-                        ${shouldShowOp("下級報表") ? `<a href="#" class="op-link">下級報表</a>` : ''}
-                        ${shouldShowOp("下級注單") ? `<a href="#" class="op-link">下級注單</a>` : ''}
-                    </div>`;
+                const gridOps = [
+                        shouldShowOp("編輯用戶") ? `<a href="#" class="op-link user-detail-link" data-uid="${user.uid}">編輯用戶</a>` : '',
+                        shouldShowOp("查看詳情") ? `<a href="#" class="op-link user-detail-link" data-uid="${user.uid}">查看詳情</a>` : '',
+                        shouldShowOp("額度修改") ? `<a href="#" class="op-link">額度修改</a>` : '',
+                        shouldShowOp("資金明細") ? `<a href="#" class="op-link">資金明細</a>` : '',
+                        shouldShowOp("注單明細") ? `<a href="#" class="op-link">注單明細</a>` : '',
+                        shouldShowOp("修改密碼") ? `<a href="#" class="op-link">修改密碼</a>` : '',
+                        shouldShowOp("下級會員") ? `<a href="#" class="op-link">下級會員</a>` : '',
+                        shouldShowOp("下級報表") ? `<a href="#" class="op-link">下級報表</a>` : '',
+                        shouldShowOp("下級注單") ? `<a href="#" class="op-link">下級注單</a>` : ''
+                    ].filter(Boolean);
+
+                    nestedRowHtml += `<td style="text-align: center; padding: 12px 16px; width: 1%; white-space: nowrap; vertical-align: middle;">`;
+                    
+                    if (gridOps.length > 0) {
+                        nestedRowHtml += `<div class="operations-grid-3x3">
+                            ${gridOps.join('')}
+                        </div>`;
+                    }
                     
                     const moreOps = [
                         '交易設定', '赔率设置', '积分修改', '代理变更', '第三方游戏',
