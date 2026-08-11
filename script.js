@@ -1188,7 +1188,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const getAuditButtons = (isAudited) => {
             return `<span class="audit-buttons-container" style="display: flex; align-items: center; margin-left: 12px;">
                 ${isAudited ? 
-                    `<button onclick="if(confirm('確定要重置此項資料嗎？')) showToast('已重置')" style="padding: 2px 8px; font-size: 12px; background: transparent; color: #3b82f6; border: none; box-shadow: none; cursor: pointer;">重置</button>` :
+                    `<button onclick="handleResetAction(this)" style="padding: 2px 8px; font-size: 12px; background: transparent; color: #3b82f6; border: none; box-shadow: none; cursor: pointer;">重置</button>` :
                     `<button class="btn btn-sm" onclick="handleAuditAction(this, '已通過審核')" style="padding: 2px 8px; font-size: 12px; background: transparent; color: #3b82f6; border: 1px solid #3b82f6; border-radius: 4px; margin-right: 8px; cursor: pointer;">通過</button>
                      <button class="btn btn-sm" onclick="handleAuditAction(this, '已拒絕審核')" style="padding: 2px 8px; font-size: 12px; background: transparent; color: #ef4444; border: 1px solid #ef4444; border-radius: 4px; cursor: pointer;">拒絕</button>`
                 }
@@ -1197,7 +1197,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const getResetBtn = (hasData) => {
             // Only show reset if data exists and user has the audit permission (trace 27)
-            return hasData && hasPerm(27) ? `<button onclick="if(confirm('確定要重置此項資料嗎？')) showToast('已重置')" style="padding: 0 8px; font-size: 12px; background: transparent; color: #3b82f6; border: none; box-shadow: none; cursor: pointer; margin-left: 8px;">重置</button>` : '';
+            return hasData && hasPerm(27) ? `<button onclick="handleResetAction(this)" style="padding: 0 8px; font-size: 12px; background: transparent; color: #3b82f6; border: none; box-shadow: none; cursor: pointer; margin-left: 8px;">重置</button>` : '';
         };
 
         // Header
@@ -3058,6 +3058,33 @@ window.handleAuditAction = function(btn, message) {
         row.style.opacity = '0';
         row.style.transform = 'translateX(-10px)';
         setTimeout(() => row.remove(), 300);
+    }
+}
+
+window.handleResetAction = function(btn) {
+    if(confirm('確定要重置此項資料嗎？')) {
+        showToast('已重置');
+        
+        // Handle Basic Info tab layout (parent is div)
+        if (btn.parentElement && btn.parentElement.tagName === 'DIV') {
+            const spans = btn.parentElement.querySelectorAll('span');
+            // The data value is typically the second span (index 1)
+            if (spans.length >= 2) {
+                spans[1].textContent = '-';
+            }
+        } 
+        // Handle Audit tab table layout
+        else if (btn.closest('tr')) {
+            const row = btn.closest('tr');
+            const cells = row.querySelectorAll('td');
+            // '修改後' is the 3rd column (index 2)
+            if (cells.length >= 3) {
+                cells[2].textContent = '-';
+            }
+        }
+        
+        // Remove the reset button
+        btn.remove();
     }
 }
 
