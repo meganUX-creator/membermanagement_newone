@@ -151,6 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const dropdownLevel = document.getElementById('dropdownLevel');
     const dropdownVip = document.getElementById('dropdownVip');
     const dropdownOther = document.getElementById('dropdownOther');
+    const dropdownTagsSearch = document.getElementById('dropdownTagsSearch');
     const inputAccount = document.getElementById('inputAccount');
 
     // Account Type Dropdown Controls
@@ -343,6 +344,28 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         optionsList.querySelectorAll('li').forEach(li => {
+            if (li.classList.contains('search-input-li')) {
+                // Keep dropdown open when clicking input
+                li.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
+                const searchInput = li.querySelector('input[type="text"]');
+                if (searchInput) {
+                    searchInput.addEventListener('input', (e) => {
+                        const val = e.target.value.trim().toLowerCase();
+                        optionsList.querySelectorAll('li:not(.search-input-li)').forEach(item => {
+                            const text = item.textContent.toLowerCase();
+                            if (text.includes(val)) {
+                                item.style.display = '';
+                            } else {
+                                item.style.display = 'none';
+                            }
+                        });
+                    });
+                }
+                return; // skip standard checkbox logic
+            }
+
             li.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const checkbox = li.querySelector('input[type="checkbox"]');
@@ -418,6 +441,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (typeof dropdownOther !== 'undefined' && dropdownOther) {
         initMultiSelect(dropdownOther, () => {
+        });
+    }
+
+    if (typeof dropdownTagsSearch !== 'undefined' && dropdownTagsSearch) {
+        initMultiSelect(dropdownTagsSearch, () => {
         });
     }
 
@@ -563,7 +591,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 'status', group: '狀態', label: '狀態', checkboxIndex: 1, render: (user) => `<td data-col="status"><span class="user-custom-tag ${user.status === '正常' ? 'tag-green' : user.status === '冻结' ? 'tag-blue' : 'tag-red'}">${user.status}</span></td>` },
         { id: 'avatar', group: '狀態', label: '頭像', checkboxIndex: 2, render: (user) => `<td data-col="avatar"><div class="avatar-cell" style="width:24px;height:24px;border-radius:50%;background:#3b82f6;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;margin:0 auto;">${user.account.charAt(0).toLowerCase()}</div></td>` },
         { id: 'realName', group: '帳號', label: '真實姓名', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="realName">${hasPerm(37) ? renderDataState(user.realName) : '***'}</td>` },
-        { id: 'nickname', group: '帳號', label: '暱稱', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="nickname">${user.nickname ? (hasPerm(17) ? renderDataState(user.nickname) : '***') : '-'}</td>` },
+        { id: 'nickname', group: '帳號', label: '暱稱', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="nickname">${(user.nickname && user.nickname !== '-') ? user.nickname : renderDataState(user.account)}</td>` },
         { id: 'agentId', group: '會員信息（詳細）', label: '代理', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="agentId">${renderDataState(user.agentId)}</td>` },
         { id: 'inviter', group: '會員信息（詳細）', label: '邀請人', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="inviter">${renderDataState(user.inviter)}</td>` },
         { id: 'registerMode', group: '會員信息（詳細）', label: '註冊模式', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="registerMode">${user.registerMode}</td>` },
@@ -604,7 +632,7 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             let riskIndicatorHtml = '';
-            let currentTags = hasPerm(47) ? user.tags : user.tags.filter(t => t === '異常風險');
+            let currentTags = user.tags;
             let visibleCount = currentTags.length;
             let showGradientMore = false;
             let showGrayMore = false;
@@ -925,6 +953,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (selectedOthers.length > 0) {
             tags.push({ key: 'other', label: `其他: ${selectedOthers.join(', ')}`, type: 'multi-custom', element: dropdownOther });
         }
+        
+        // 4.5 Tags Search
+        const selectedTags = getMultiSelectValues(dropdownTagsSearch);
+        if (selectedTags.length > 0) {
+            tags.push({ key: 'tagsSearch', label: `標籤: ${selectedTags.join(', ')}`, type: 'multi-custom', element: dropdownTagsSearch });
+        }
         // 5. Account
         if (inputAccount && inputAccount.value.trim()) {
             let labelPrefix = '帳號';
@@ -1110,6 +1144,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         clearMultiSelectValue(dropdownVip);
         clearMultiSelectValue(dropdownOther);
+        clearMultiSelectValue(dropdownTagsSearch);
         
         const inputAccount = document.getElementById('inputAccount');
         if (inputAccount) inputAccount.value = '';
@@ -1187,18 +1222,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const user = mockUsers.find(u => u.uid === uid) || mockUsers[0];
         
         const getAuditButtons = (isAudited) => {
-            return `<span class="audit-buttons-container" style="display: flex; align-items: center; margin-left: 12px;">
+            const resetBtn = hasPerm(27) ? `<button class="btn btn-sm btn-outline btn-warning" onclick="handleResetAction(this)" style="padding: 2px 8px; font-size: 12px; border-radius: 4px; margin-left: 8px; cursor: pointer; border: 1px solid #f59e0b; color: #f59e0b; background: transparent;">重置</button>` : '';
+            return `<span class="audit-buttons-container" style="display: flex; align-items: center; justify-content: center;">
                 ${isAudited ? 
-                    `<button onclick="handleResetAction(this)" style="padding: 2px 8px; font-size: 12px; background: transparent; color: #3b82f6; border: none; box-shadow: none; cursor: pointer;">重置</button>` :
+                    `<span style="color: #64748b; font-size: 12px;">已審核</span>` :
                     `<button class="btn btn-sm" onclick="handleAuditAction(this, '已通過審核')" style="padding: 2px 8px; font-size: 12px; background: transparent; color: #3b82f6; border: 1px solid #3b82f6; border-radius: 4px; margin-right: 8px; cursor: pointer;">通過</button>
                      <button class="btn btn-sm" onclick="handleAuditAction(this, '已拒絕審核')" style="padding: 2px 8px; font-size: 12px; background: transparent; color: #ef4444; border: 1px solid #ef4444; border-radius: 4px; cursor: pointer;">拒絕</button>`
                 }
+                ${resetBtn}
             </span>`;
-        };
-
-        const getResetBtn = (hasData) => {
-            // Only show reset if data exists and user has the audit permission (trace 27)
-            return hasData && hasPerm(27) ? `<button onclick="handleResetAction(this)" style="padding: 0 8px; font-size: 12px; background: transparent; color: #3b82f6; border: none; box-shadow: none; cursor: pointer; margin-left: 8px;">重置</button>` : '';
         };
 
         // Header
@@ -1253,7 +1285,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div style="display: flex; align-items: center;">
                         <span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">用戶暱稱:</span>
-                        <span style="color: #475569; font-size: 14px; font-family: monospace;">${user.nickname ? (hasPerm(17) ? user.nickname : '***') : '-'}</span>
+                        <span style="color: #475569; font-size: 14px; font-family: monospace;">${(user.nickname && user.nickname !== '-') ? user.nickname : renderDataState(user.account)}</span>
                     </div>
                     <div style="display: flex; align-items: center;">
                         <span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">帳號:</span>
@@ -1262,12 +1294,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div style="display: flex; align-items: center;">
                         <span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">真實姓名:</span>
                         <span id="detailsRealName" data-val="${user.realName}" style="color: #475569; font-size: 14px;">${hasPerm(37) ? (user.realName && user.realName !== '-' ? user.realName : '-') : '***'}</span>
-                        ${getResetBtn(user.realName && user.realName !== '-')}
                     </div>
                     <div style="display: flex; align-items: center;">
                         <span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">出生年月日:</span>
                         <span style="color: #475569; font-size: 14px; font-family: monospace;">${user.birthday || '1995-08-18'}</span>
-                        ${getResetBtn(!!user.birthday || true)}
                     </div>
                 </div>
             </div>
@@ -1282,14 +1312,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">電話:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">${user.phone}</span>${getResetBtn(!!user.phone)}</div>
-                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">email:</span><span style="font-size: 14px; color: #475569;">${user.account}@example.com</span>${getResetBtn(!!user.account)}</div>
-                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">QQ:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">88392019</span>${getResetBtn(true)}</div>
-                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">微信:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">wx_${user.account}</span>${getResetBtn(true)}</div>
-                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">Zalo:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">+84${user.phone.substring(2)}</span>${getResetBtn(true)}</div>
-                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">WhatsApp:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">+84${user.phone.substring(2)}</span>${getResetBtn(true)}</div>
-                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">Telegram:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">@${user.account}_tg</span>${getResetBtn(true)}</div>
-                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">Facebook:</span><span style="font-size: 14px; color: #475569;">fb.me/${user.account}</span>${getResetBtn(true)}</div>
+                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">電話:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">${user.phone}</span></div>
+                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">email:</span><span style="font-size: 14px; color: #475569;">${user.account}@example.com</span></div>
+                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">QQ:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">88392019</span></div>
+                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">微信:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">wx_${user.account}</span></div>
+                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">Zalo:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">+84${user.phone.substring(2)}</span></div>
+                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">WhatsApp:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">+84${user.phone.substring(2)}</span></div>
+                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">Telegram:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">@${user.account}_tg</span></div>
+                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">Facebook:</span><span style="font-size: 14px; color: #475569;">fb.me/${user.account}</span></div>
                 </div>
             </div>
 
@@ -1430,95 +1460,71 @@ document.addEventListener('DOMContentLoaded', () => {
         const detailsLogin = document.getElementById('detailsLogin');
         if (detailsLogin) {
             detailsLogin.innerHTML = `
-            <div style="background: #ffffff;">
-                <div style="display: grid; grid-template-columns: 160px 1fr; border-bottom: 1px solid var(--border-color);">
-                    <div style="padding: 16px 24px; color: var(--text-muted); font-size: 14px; display: flex; align-items: center; justify-content: flex-end;">登錄IP:</div>
-                    <div style="padding: 16px 24px; font-size: 14px; font-family: monospace; display: flex; align-items: center; gap: 8px;">
-                        54.150.111.152 <span style="color: #94a3b8; font-family: sans-serif; font-size: 13px;">(Japan, Tokyo, Tokyo (日本東京都東京))</span> <i class="ph ph-copy" style="color: #94a3b8; cursor: pointer;"></i>
+            <div style="display: flex; flex-direction: column; gap: 24px;">
+                <!-- Login IP Card -->
+                <div style="border: 1px solid var(--border-color); border-radius: 8px; background: #ffffff; padding: 24px;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 16px;">
+                        <div style="background: #dbeafe; color: #1d4ed8; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px;">
+                            <i class="ph ph-sign-in"></i>
+                        </div>
+                        <h4 style="margin: 0; font-size: 16px; font-weight: 600; color: #1e293b;">最新登入紀錄</h4>
                     </div>
-                </div>
-                <div style="display: grid; grid-template-columns: 160px 1fr; border-bottom: 1px solid var(--border-color);">
-                    <div style="padding: 16px 24px; color: var(--text-muted); font-size: 14px; display: flex; align-items: center; justify-content: flex-end;">登錄時間:</div>
-                    <div style="padding: 16px 24px; font-size: 14px; font-family: monospace; display: flex; align-items: center; gap: 8px;">
-                        2026-07-28 16:30:42 <i class="ph ph-copy" style="color: #94a3b8; cursor: pointer;"></i>
-                    </div>
-                </div>
-                <div style="display: grid; grid-template-columns: 160px 1fr; border-bottom: 1px solid var(--border-color);">
-                    <div style="padding: 16px 24px; color: var(--text-muted); font-size: 14px; display: flex; align-items: center; justify-content: flex-end;">設備號:</div>
-                    <div style="padding: 16px 24px; font-size: 14px; font-family: monospace; display: flex; align-items: center; gap: 8px;">
-                        ee5868d85af7f68cf088a6780ff8882a <i class="ph ph-copy" style="color: #94a3b8; cursor: pointer;"></i>
-                    </div>
-                </div>
-                
-                <div id="rowIpLoginCount" style="display: grid; grid-template-columns: 160px 1fr; border-bottom: 1px solid var(--border-color); transition: all 0.2s;">
-                    <div style="padding: 16px 24px; color: var(--text-muted); font-size: 14px; display: flex; align-items: center; justify-content: flex-end;">同IP登錄人數:</div>
-                    <div style="padding: 16px 24px; font-size: 14px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 20px;">
                         <div>
-                            <a href="#" onclick="openDetailedContentDrawer(event, 'ip')" style="font-size: 18px; font-weight: 600; color: #3b82f6; text-decoration: underline;">4,703 <i class="ph ph-arrow-square-out" style="font-size: 16px;"></i></a>
+                            <div style="color: #64748b; font-size: 13px; margin-bottom: 8px; font-weight: 500;">IP 地址</div>
+                            <div style="font-size: 14px; font-family: monospace; display: flex; align-items: center; gap: 4px; color: #334155;">54.150.111.152 <i class="ph ph-copy" style="color: #94a3b8; cursor: pointer;"></i></div>
+                            <div style="color: #94a3b8; font-size: 12px; margin-top: 4px;">(Japan, Tokyo)</div>
                         </div>
-                        <div id="btnIpExpand" style="display: none;">
-                            <button class="btn btn-primary" onclick="openDetailedContentDrawer(event, 'ip')" style="background-color: #6366f1; border: none; border-radius: 16px; padding: 4px 12px; font-size: 13px;">展開中 &gt;</button>
-                        </div>
-                        <div id="hintIpExpand" style="font-size: 13px; color: #94a3b8; display: none;"></div>
-                    </div>
-                </div>
-                
-                <div id="rowDeviceLoginCount" style="display: grid; grid-template-columns: 160px 1fr; border-bottom: 1px solid var(--border-color); transition: all 0.2s;">
-                    <div style="padding: 16px 24px; color: var(--text-muted); font-size: 14px; display: flex; align-items: center; justify-content: flex-end;">同設備登錄人數:</div>
-                    <div style="padding: 16px 24px; font-size: 14px; display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <a href="#" onclick="openDetailedContentDrawer(event, 'device')" style="font-size: 18px; font-weight: 600; color: #3b82f6; text-decoration: underline;">28 <i class="ph ph-arrow-square-out" style="font-size: 16px;"></i></a>
+                            <div style="color: #64748b; font-size: 13px; margin-bottom: 8px; font-weight: 500;">時間</div>
+                            <div style="font-size: 14px; font-family: monospace; color: #334155;">2026-07-28</div>
+                            <div style="color: #64748b; font-size: 12px; margin-top: 4px;">16:30:42</div>
                         </div>
-                        <div id="btnDeviceExpand" style="display: none;">
-                            <button class="btn btn-primary" onclick="openDetailedContentDrawer(event, 'device')" style="background-color: #6366f1; border: none; border-radius: 16px; padding: 4px 12px; font-size: 13px;">展開中 &gt;</button>
-                        </div>
-                        <div id="hintDeviceExpand" style="font-size: 13px; color: #94a3b8; display: none;"></div>
-                    </div>
-                </div>
-            </div>`;
-        }
-
-        // Tab 4: 註冊IP
-        const detailsReg = document.getElementById('detailsReg');
-        if (detailsReg) {
-            detailsReg.innerHTML = `
-            <div style="background: #ffffff;">
-                <div style="display: grid; grid-template-columns: 160px 1fr; border-bottom: 1px solid var(--border-color);">
-                    <div style="padding: 16px 24px; color: var(--text-muted); font-size: 14px; display: flex; align-items: center; justify-content: flex-end;">註冊IP:</div>
-                    <div style="padding: 16px 24px; font-size: 14px; font-family: monospace; display: flex; align-items: center; gap: 8px;">
-                        54.150.111.152 <span style="color: #94a3b8; font-family: sans-serif; font-size: 13px;">(日本東京都東京)</span> <i class="ph ph-copy" style="color: #94a3b8; cursor: pointer;"></i>
-                    </div>
-                </div>
-                <div style="display: grid; grid-template-columns: 160px 1fr; border-bottom: 1px solid var(--border-color);">
-                    <div style="padding: 16px 24px; color: var(--text-muted); font-size: 14px; display: flex; align-items: center; justify-content: flex-end;">設備號:</div>
-                    <div style="padding: 16px 24px; font-size: 14px; font-family: monospace; display: flex; align-items: center; gap: 8px;">
-                        ee5868d85af7f68cf088a6780ff8882a <i class="ph ph-copy" style="color: #94a3b8; cursor: pointer;"></i>
-                    </div>
-                </div>
-                
-                <div id="rowRegIpLoginCount" style="display: grid; grid-template-columns: 160px 1fr; border-bottom: 1px solid var(--border-color); transition: all 0.2s;">
-                    <div style="padding: 16px 24px; color: var(--text-muted); font-size: 14px; display: flex; align-items: center; justify-content: flex-end;">同IP註冊人數:</div>
-                    <div style="padding: 16px 24px; font-size: 14px; display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <a href="#" onclick="openDetailedContentDrawer(event, 'reg_ip')" style="font-size: 18px; font-weight: 600; color: #3b82f6; text-decoration: underline;">3,412 <i class="ph ph-arrow-square-out" style="font-size: 16px;"></i></a>
+                            <div style="color: #64748b; font-size: 13px; margin-bottom: 8px; font-weight: 500;">設備號</div>
+                            <div style="font-size: 14px; font-family: monospace; color: #334155; word-break: break-all;" title="ee5868d85af7f68cf088a6780ff8882a">ee5868d85af7f68cf088a6780ff8882a <i class="ph ph-copy" style="color: #94a3b8; cursor: pointer;"></i></div>
                         </div>
-                        <div id="btnRegIpExpand" style="display: none;">
-                            <button class="btn btn-primary" onclick="openDetailedContentDrawer(event, 'reg_ip')" style="background-color: #6366f1; border: none; border-radius: 16px; padding: 4px 12px; font-size: 13px;">展開中 &gt;</button>
+                        <div>
+                            <div style="color: #64748b; font-size: 13px; margin-bottom: 8px; font-weight: 500;">同IP人數</div>
+                            <div><a href="#" onclick="openDetailedContentDrawer(event, 'ip')" style="color: #3b82f6; text-decoration: underline; font-weight: 600; font-size: 16px;">4,703</a></div>
                         </div>
-                        <div id="hintRegIpExpand" style="font-size: 13px; color: #94a3b8; display: none;"></div>
+                        <div>
+                            <div style="color: #64748b; font-size: 13px; margin-bottom: 8px; font-weight: 500;">同設備人數</div>
+                            <div><a href="#" onclick="openDetailedContentDrawer(event, 'device')" style="color: #3b82f6; text-decoration: underline; font-weight: 600; font-size: 16px;">28</a></div>
+                        </div>
                     </div>
                 </div>
-                
-                <div id="rowRegDeviceLoginCount" style="display: grid; grid-template-columns: 160px 1fr; border-bottom: 1px solid var(--border-color); transition: all 0.2s;">
-                    <div style="padding: 16px 24px; color: var(--text-muted); font-size: 14px; display: flex; align-items: center; justify-content: flex-end;">同設備註冊人數:</div>
-                    <div style="padding: 16px 24px; font-size: 14px; display: flex; justify-content: space-between; align-items: center;">
+            
+                <!-- Registration IP Card -->
+                <div style="border: 1px solid var(--border-color); border-radius: 8px; background: #ffffff; padding: 24px;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 16px;">
+                        <div style="background: #dcfce7; color: #15803d; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px;">
+                            <i class="ph ph-user-plus"></i>
+                        </div>
+                        <h4 style="margin: 0; font-size: 16px; font-weight: 600; color: #1e293b;">註冊紀錄</h4>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 20px;">
                         <div>
-                            <a href="#" onclick="openDetailedContentDrawer(event, 'reg_device')" style="font-size: 18px; font-weight: 600; color: #3b82f6; text-decoration: underline;">18 <i class="ph ph-arrow-square-out" style="font-size: 16px;"></i></a>
+                            <div style="color: #64748b; font-size: 13px; margin-bottom: 8px; font-weight: 500;">IP 地址</div>
+                            <div style="font-size: 14px; font-family: monospace; display: flex; align-items: center; gap: 4px; color: #334155;">54.150.111.152 <i class="ph ph-copy" style="color: #94a3b8; cursor: pointer;"></i></div>
+                            <div style="color: #94a3b8; font-size: 12px; margin-top: 4px;">(Japan, Tokyo)</div>
                         </div>
-                        <div id="btnRegDeviceExpand" style="display: none;">
-                            <button class="btn btn-primary" onclick="openDetailedContentDrawer(event, 'reg_device')" style="background-color: #6366f1; border: none; border-radius: 16px; padding: 4px 12px; font-size: 13px;">展開中 &gt;</button>
+                        <div>
+                            <div style="color: #64748b; font-size: 13px; margin-bottom: 8px; font-weight: 500;">時間</div>
+                            <div style="font-size: 14px; font-family: monospace; color: #94a3b8;">-</div>
                         </div>
-                        <div id="hintRegDeviceExpand" style="font-size: 13px; color: #94a3b8; display: none;"></div>
+                        <div>
+                            <div style="color: #64748b; font-size: 13px; margin-bottom: 8px; font-weight: 500;">設備號</div>
+                            <div style="font-size: 14px; font-family: monospace; color: #334155; word-break: break-all;" title="ee5868d85af7f68cf088a6780ff8882a">ee5868d85af7f68cf088a6780ff8882a <i class="ph ph-copy" style="color: #94a3b8; cursor: pointer;"></i></div>
+                        </div>
+                        <div>
+                            <div style="color: #64748b; font-size: 13px; margin-bottom: 8px; font-weight: 500;">同IP人數</div>
+                            <div><a href="#" onclick="openDetailedContentDrawer(event, 'reg_ip')" style="color: #3b82f6; text-decoration: underline; font-weight: 600; font-size: 16px;">3,412</a></div>
+                        </div>
+                        <div>
+                            <div style="color: #64748b; font-size: 13px; margin-bottom: 8px; font-weight: 500;">同設備人數</div>
+                            <div><a href="#" onclick="openDetailedContentDrawer(event, 'reg_device')" style="color: #3b82f6; text-decoration: underline; font-weight: 600; font-size: 16px;">18</a></div>
+                        </div>
                     </div>
                 </div>
             </div>`;
@@ -2129,7 +2135,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div><span class="info-label">用戶ID :</span> ${renderDataState(user.uid, 'copyable')}</div>
                         <div><span class="info-label">會員名 :</span> <a href="#" class="user-detail-link" data-uid="${user.uid}">${renderDataState(user.account, 'copyable')}</a></div>
                         <div><span class="info-label">真實姓名 :</span> ${hasPerm(37) ? renderDataState(user.realName) : '***'}</div>
-                        <div><span class="info-label">用戶暱稱 :</span> ${user.nickname ? (hasPerm(17) ? renderDataState(user.nickname) : '***') : '-'}</div>
+                        <div><span class="info-label">用戶暱稱 :</span> ${(user.nickname && user.nickname !== '-') ? user.nickname : renderDataState(user.account)}</div>
                         <div><span class="info-label">代理 :</span> ${renderDataState(user.agentId)}</div>
                         <div><span class="info-label">邀請人 :</span> ${renderDataState(user.inviter)}</div>
                         <div><span class="info-label">註冊模式 :</span> ${user.registerMode || '一般註冊'}</div>
@@ -2174,7 +2180,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (nestedColumnVisibility['tags']) {
                     const tagStyles = { '正常': 'tag-blue', 'VIP 客戶': 'tag-blue', 'VIP': 'tag-blue', '活躍': 'tag-green', '高頻交易': 'tag-green', '大戶': 'tag-purple', '高消費': 'tag-purple', '異常風險': 'tag-red' };
                     
-                    let currentTags = hasPerm(47) ? user.tags : user.tags.filter(t => t === '異常風險');
+                    let currentTags = user.tags;
                     let nestedTagsOutput = currentTags.map(tag => {
                         let styleClass = tagStyles[tag] || 'tag-grey';
                         if (tag === '異常風險') {
@@ -3388,5 +3394,18 @@ document.querySelectorAll('input[type="datetime-local"], input[type="date"]').fo
 
 window.renderTable = renderTable;
 window.renderCompactActionMenu = renderCompactActionMenu;
+
+window.filterIpRecords = function(val) {
+    const rows = document.querySelectorAll('#ipRecordsBody .ip-record-row');
+    rows.forEach(row => {
+        if (val === 'all') {
+            row.style.display = '';
+        } else if (val === 'login') {
+            row.style.display = row.classList.contains('login-record') ? '' : 'none';
+        } else if (val === 'reg') {
+            row.style.display = row.classList.contains('reg-record') ? '' : 'none';
+        }
+    });
+};
 
 });

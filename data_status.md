@@ -8,10 +8,6 @@
 | :--- | :--- | :--- | :--- |
 | **空值 / 無數據** | `-`, `null`, `""`, `無數據`, `暫無數據` | `<span class="data-empty">-</span>` (灰色短橫線) | 數據正常但沒有值，或 API 明確告知無數據時，統一顯示為短橫線。 |
 | **未綁定 / 未驗證** | `未綁定`, `未驗證` | `<span class="tag-unbound">未綁定</span>` (橘黃色外框標籤) | 提示用戶該資料（如手機號、銀行卡）尚欠缺，需要進行綁定或驗證。 |
-| **無權限** | `無權限` | `<span class="tag-no-permission" title="無權限"><i class="ph-fill ph-lock"></i></span>` (單純灰色鎖頭圖示) | 該代理或管理員無法查看此敏感數據。滑鼠 Hover 時會有「無權限」標題提示。 |
-| **獲取失敗** | `獲取失敗` | `<span class="data-error" title="獲取失敗"><i class="ph-fill ph-warning-circle"></i></span>` (單純灰色警示圖示) | API 請求超時或後端錯誤。滑鼠 Hover 時會有「獲取失敗」標題提示。 |
-| **解析異常** | `NaN-NaN-NaN`, `解析異常` | `<span class="tag-parse-error" title="原數據異常，無法正確解析">解析異常</span>` (黃底紅字標籤) | 日期或數字格式錯誤，前端無法解析。 |
-| **載入中** | `載入中` | `<span class="data-loading" title="載入中"><i class="ph ph-spinner ph-spin"></i></span>` (單純灰色旋轉圖示) | 數據正在非同步獲取中，請稍候。滑鼠 Hover 時會有「載入中」標題提示。 |
 
 ## 2. 表格載入狀態 (Skeleton Loading)
 

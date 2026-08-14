@@ -124,6 +124,26 @@
                         </div>
                     </div>
 
+                    <div class="form-group" data-filter-id="tagsSearch">
+                        <div class="custom-select-multi" id="dropdownTagsSearch">
+                            <div class="select-selected">
+                                <span class="inline-label">標籤搜尋：</span>
+                                <span class="selected-val" style="color: #94a3b8;">請選擇或輸入標籤...</span>
+                                <i class="ph ph-caret-down"></i>
+                            </div>
+                            <ul class="select-options">
+                                <li class="search-input-li" style="padding: 8px; background: #fff; position: sticky; top: 0; border-bottom: 1px solid var(--border-color); z-index: 10;">
+                                    <input type="text" placeholder="輸入標籤搜尋..." style="width: 100%; padding: 6px 8px; border: 1px solid var(--border-color); border-radius: 4px; outline: none; font-size: 13px;">
+                                </li>
+                                <li data-value="高價值"><input type="checkbox"> <span style="display: flex; align-items: center; gap: 6px;"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#eab308;"></span>高價值</span></li>
+                                <li data-value="風險"><input type="checkbox"> <span style="display: flex; align-items: center; gap: 6px;"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#ef4444;"></span>風險</span></li>
+                                <li data-value="活躍"><input type="checkbox"> <span style="display: flex; align-items: center; gap: 6px;"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#22c55e;"></span>活躍</span></li>
+                                <li data-value="沉睡"><input type="checkbox"> <span style="display: flex; align-items: center; gap: 6px;"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#94a3b8;"></span>沉睡</span></li>
+                                <li data-value="異常風險"><input type="checkbox"> <span style="display: flex; align-items: center; gap: 6px; color: #ea580c; font-weight: 500;"><i class="ph-fill ph-warning-circle" style="font-size: 14px;"></i>異常風險</span></li>
+                            </ul>
+                        </div>
+                    </div>
+
                     <!-- 新增隱藏的過濾欄位 (自訂篩選觸發) -->
                     <div class="form-group" data-filter-id="birthday">
                         <div class="custom-select-single" id="dropdownBirthdayOuter">
@@ -371,8 +391,7 @@
                 <button type="button" class="user-edit-tab-item user-details-tab-item active" data-target="detailsBasic">會員信息</button>
                 <button type="button" id="detailsAuditTabBtn" class="user-edit-tab-item user-details-tab-item" data-target="detailsAudit" style="display: none;">會員審核</button>
                 <button type="button" class="user-edit-tab-item user-details-tab-item" data-target="detailsWithdraw">提現信息</button>
-                <button type="button" class="user-edit-tab-item user-details-tab-item" data-target="detailsLogin">最後登錄</button>
-                <button type="button" class="user-edit-tab-item user-details-tab-item" data-target="detailsReg">註冊IP</button>
+                <button type="button" class="user-edit-tab-item user-details-tab-item" data-target="detailsLogin">設備與IP紀錄</button>
             </div>
 
             <div class="drawer-body user-details-form-body"
@@ -397,10 +416,7 @@
                     <!-- rendered via JS -->
                 </div>
 
-                <!-- Tab 4: 註冊IP (Registration IP) -->
-                <div class="details-tab-content-panel" id="detailsReg" style="display: none;">
-                    <!-- rendered via JS -->
-                </div>
+                <!-- Tab 4: 註冊IP (Registration IP) (Removed, combined into detailsLogin) -->
             </div>
         </div>
         
@@ -535,6 +551,10 @@
                     <label class="checkbox-item">
                         <input type="checkbox" value="other" checked>
                         <span>排除條件 (可複選)</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="tagsSearch" checked>
+                        <span>標籤搜尋</span>
                     </label>
                     <label class="checkbox-item">
                         <input type="checkbox" value="birthday" checked>
