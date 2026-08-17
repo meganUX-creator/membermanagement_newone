@@ -1172,10 +1172,6 @@
                 const realNameEl = document.querySelector(`#accountTypeMenu li[data-value="realName"]`);
                 if (realNameEl) realNameEl.style.display = showRealName ? '' : 'none';
 
-                // Trace 21 (回訪備註)
-                const showRemark = localStorage.getItem('perm-21') !== 'false';
-                const remarkEl = document.querySelector(`#accountTypeMenu li[data-value="remark"]`);
-                if (remarkEl) remarkEl.style.display = showRemark ? '' : 'none';
 
                 // Trace 31, 32 (谷歌驗證碼)
                 const p31 = localStorage.getItem('perm-31') !== 'false';

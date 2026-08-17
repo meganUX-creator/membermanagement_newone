@@ -584,6 +584,15 @@ document.addEventListener('DOMContentLoaded', () => {
         return val;
     }
 
+    window.getPhoneStatusHtml = function(phone) {
+        if (phone === '審核中') return '<span style="color: #ef4444; font-weight: 600;">審核中</span>';
+        if (phone === '待重新綁定') return '<span style="color: #f59e0b; font-weight: 500;">待重新綁定</span>';
+        if (phone && phone !== '-' && phone !== '未驗證' && phone !== '末綁定' && phone !== '未綁定') {
+            return '<span style="color: #16a34a; font-weight: 500;">已驗證</span>';
+        }
+        return '<span style="color: #94a3b8;">未驗證</span>';
+    }
+
     const compactColumnsConfig = [
         { id: 'uid', group: '基本', label: '用戶ID', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="uid">${renderDataState(user.uid, 'copyable')}</td>` },
         { id: 'account', group: '基本', label: '會員名', checkboxIndex: 3, render: (user) => `<td data-col="account"><a href="#" class="cell-username user-detail-link" data-uid="${user.uid}">${renderDataState(user.account, 'copyable')}</a></td>` },
@@ -595,7 +604,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 'agentId', group: '會員信息（詳細）', label: '代理', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="agentId">${renderDataState(user.agentId)}</td>` },
         { id: 'inviter', group: '會員信息（詳細）', label: '邀請人', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="inviter">${renderDataState(user.inviter)}</td>` },
         { id: 'registerMode', group: '會員信息（詳細）', label: '註冊模式', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="registerMode">${user.registerMode}</td>` },
-        { id: 'phone', group: '會員信息（詳細）', label: '手機號', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="phone">${hasPerm(36) ? renderDataState(user.phone, 'phone') : (user.phone && user.phone !== '-' ? '已驗證' : '未驗證')}</td>` },
+        { id: 'phone', group: '會員信息（詳細）', label: '手機號', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="phone">${getPhoneStatusHtml(user.phone)}</td>` },
         { id: 'payLevel', group: '等級 & 團隊', label: '支付層級', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="payLevel">${hasPerm(4) ? user.payLevel : '***'}</td>` },
         { id: 'growth', group: '等級 & 團隊', label: '成長值', sortable: true, checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="growth">${user.growth}</td>` },
         { id: 'level', group: '等級 & 團隊', label: '等級', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="level">${user.level}</td>` },
@@ -825,8 +834,8 @@ document.addEventListener('DOMContentLoaded', () => {
         { uid: "1239361228", account: "test_user_3", realName: "-", nickname: "Alice", agentId: "nnest123556", inviter: "nnest123556", registerMode: "一般註冊", phone: "13912341002", payLevel: "默認層", growth: 300, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "CODE102", directTeam: "2/2", vipLevel: 2, vipGrowth: 100, creditValue: 500, availableCredit: 2000, commissionBal: 30, balanceBuy: 600, arrears: "0", interest: 4, thirdBal: 0, points: 50, deposit: 4000, withdraw: 1000, withdrawPre: "-", adminDeduct: "-", depositCount: 2, withdrawCount: 2, tags: ["新註冊"], status: "冻结", date: "2023-02-03 10:00:00", lastLogin: "2023-03-03 15:30:00", offlineDays: 2, ip: "192.168.2.12", remark: "-", followRemark: "-", note: "-" },
         { uid: "1239361229", account: "test_user_4", realName: "陳大文", nickname: "", agentId: "dl", inviter: "-", registerMode: "一般註冊", phone: "未綁定", payLevel: "默認層", growth: 450, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "-", directTeam: "3/0", vipLevel: 3, vipGrowth: 150, creditValue: 0, availableCredit: 3000, commissionBal: 45, balanceBuy: 900, arrears: "0", interest: 6, thirdBal: 0, points: 75, deposit: 6000, withdraw: 1500, withdrawPre: "-", adminDeduct: "-", depositCount: 3, withdrawCount: 3, tags: ["新註冊"], status: "冻结", date: "2023-02-04 10:00:00", lastLogin: "2023-03-04 15:30:00", offlineDays: 3, ip: "192.168.2.13", remark: "這是一段非常長非常長非常長的備註，用來測試單行截斷與懸停提示的效果是否正常運作。", followRemark: "-", note: "-" },
         { uid: "1239361230", account: "test_user_5", realName: "-", nickname: "小明", agentId: "AG888", inviter: "nnest123556", registerMode: "後台新增", phone: "13912341004", payLevel: "默認層", growth: 600, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "CODE104", directTeam: "4/1", vipLevel: 0, vipGrowth: 200, creditValue: 500, availableCredit: 4000, commissionBal: 60, balanceBuy: 1200, arrears: "0", interest: 8, thirdBal: 150, points: 100, deposit: 8000, withdraw: 2000, withdrawPre: "-", adminDeduct: "-", depositCount: 4, withdrawCount: 4, tags: ["新註冊"], status: "冻结", date: "2023-02-05 10:00:00", lastLogin: "2023-03-05 15:30:00", offlineDays: 4, ip: "192.168.2.14", remark: "-", followRemark: "-", note: "-" },
-        { uid: "1239361231", account: "test_user_6", realName: "陳阿明", nickname: "", agentId: "ag123", inviter: "-", registerMode: "一般註冊", phone: "0933111222", payLevel: "默認層", growth: 750, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "-", directTeam: "0/2", vipLevel: 1, vipGrowth: 250, creditValue: 0, availableCredit: 5000, commissionBal: 75, balanceBuy: 1500, arrears: "0", interest: 10, thirdBal: 0, points: 125, deposit: 10000, withdraw: 2500, withdrawPre: "-", adminDeduct: "-", depositCount: 5, withdrawCount: 5, tags: ["正常", "活躍"], status: "正常", date: "2023-02-06 10:00:00", lastLogin: "2023-03-06 15:30:00", offlineDays: 5, ip: "192.168.2.15", remark: "-", followRemark: "-", note: "-" },
-        { uid: "1239361232", account: "test_user_7", realName: "陳大文", nickname: "SuperAdmin", agentId: "dl", inviter: "nnest123556", registerMode: "一般註冊", phone: "13912341006", payLevel: "默認層", growth: 900, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "CODE106", directTeam: "1/0", vipLevel: 2, vipGrowth: 300, creditValue: 500, availableCredit: 6000, commissionBal: 90, balanceBuy: 1800, arrears: "0", interest: 12, thirdBal: 0, points: 150, deposit: 12000, withdraw: 3000, withdrawPre: "-", adminDeduct: "-", depositCount: 6, withdrawCount: 0, tags: ["新註冊"], status: "冻结", date: "2023-02-07 10:00:00", lastLogin: "2023-03-07 15:30:00", offlineDays: 6, ip: "192.168.2.16", remark: "-", followRemark: "-", note: "-" }
+        { uid: "1239361231", account: "test_user_6", realName: "陳阿明", nickname: "", agentId: "ag123", inviter: "-", registerMode: "一般註冊", phone: "待重新綁定", payLevel: "默認層", growth: 750, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "-", directTeam: "0/2", vipLevel: 1, vipGrowth: 250, creditValue: 0, availableCredit: 5000, commissionBal: 75, balanceBuy: 1500, arrears: "0", interest: 10, thirdBal: 0, points: 125, deposit: 10000, withdraw: 2500, withdrawPre: "-", adminDeduct: "-", depositCount: 5, withdrawCount: 5, tags: ["正常", "活躍"], status: "正常", date: "2023-02-06 10:00:00", lastLogin: "2023-03-06 15:30:00", offlineDays: 5, ip: "192.168.2.15", remark: "-", followRemark: "-", note: "-" },
+        { uid: "1239361232", account: "test_user_7", realName: "陳大文", nickname: "SuperAdmin", agentId: "dl", inviter: "nnest123556", registerMode: "一般註冊", phone: "審核中", payLevel: "默認層", growth: 900, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "CODE106", directTeam: "1/0", vipLevel: 2, vipGrowth: 300, creditValue: 500, availableCredit: 6000, commissionBal: 90, balanceBuy: 1800, arrears: "0", interest: 12, thirdBal: 0, points: 150, deposit: 12000, withdraw: 3000, withdrawPre: "-", adminDeduct: "-", depositCount: 6, withdrawCount: 0, tags: ["新註冊"], status: "冻结", date: "2023-02-07 10:00:00", lastLogin: "2023-03-07 15:30:00", offlineDays: 6, ip: "192.168.2.16", remark: "-", followRemark: "-", note: "-" }
     ];
 
     // Generate 200 items to ensure pagination works smoothly with up to 100 items per page
@@ -886,6 +895,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
+    window.mockUsers = mockUsers;
 
     // Helper: Get active selections from multi-select
     function getMultiSelectValues(element) {
@@ -1221,8 +1231,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const user = mockUsers.find(u => u.uid === uid) || mockUsers[0];
         
-        const getAuditButtons = (isAudited) => {
-            const resetBtn = hasPerm(27) ? `<button class="btn btn-sm btn-outline btn-warning" onclick="handleResetAction(this)" style="padding: 2px 8px; font-size: 12px; border-radius: 4px; margin-left: 8px; cursor: pointer; border: 1px solid #f59e0b; color: #f59e0b; background: transparent;">重置</button>` : '';
+        const getAuditButtons = (isAudited, field = '') => {
+            const resetBtn = hasPerm(27) ? `<button class="btn btn-sm btn-outline btn-warning" onclick="handleResetAction(this, '${uid}', '${field}')" style="padding: 2px 8px; font-size: 12px; border-radius: 4px; margin-left: 8px; cursor: pointer; border: 1px solid #f59e0b; color: #f59e0b; background: transparent;">重置</button>` : '';
             return `<span class="audit-buttons-container" style="display: flex; align-items: center; justify-content: center;">
                 ${isAudited ? 
                     `<span style="color: #64748b; font-size: 12px;">已審核</span>` :
@@ -1312,7 +1322,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">電話:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">${user.phone}</span></div>
+                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">電話:</span><span id="drawer_basic_phone" style="font-size: 14px; color: #475569; font-family: monospace;">${getPhoneStatusHtml(user.phone)}</span></div>
                     <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">email:</span><span style="font-size: 14px; color: #475569;">${user.account}@example.com</span></div>
                     <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">QQ:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">88392019</span></div>
                     <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">微信:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">wx_${user.account}</span></div>
@@ -1378,9 +1388,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         <tr style="border-bottom: 1px solid var(--border-color); ${hasPerm(20) ? '' : 'display: none;'}">
                             <td style="padding: 16px; color: #475569;">電話</td>
                             <td style="padding: 16px; color: #94a3b8;">未填寫</td>
-                            <td style="padding: 16px; color: #1e293b;">${user.phone}</td>
+                            <td style="padding: 16px; color: #1e293b;">${getPhoneStatusHtml(user.phone)}</td>
                             <td style="padding: 16px; color: #64748b;">2023-10-25 14:35:12</td>
-                            <td style="padding: 16px; text-align: center;">${getAuditButtons(user.phoneAudited)}</td>
+                            <td style="padding: 16px; text-align: center;">${getAuditButtons(user.phoneAudited, 'phone')}</td>
                         </tr>
                         <tr style="border-bottom: 1px solid var(--border-color); ${hasPerm(20) ? '' : 'display: none;'}">
                             <td style="padding: 16px; color: #475569;">email</td>
@@ -1786,6 +1796,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Render Table Data & Headers
     function renderTable() {
+        window.renderTable = renderTable;
         if (!userTableBody) return;
         const selectedVips = getMultiSelectValues(dropdownVip);
         const selectedOthers = getMultiSelectValues(dropdownOther);
@@ -2139,7 +2150,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div><span class="info-label">代理 :</span> ${renderDataState(user.agentId)}</div>
                         <div><span class="info-label">邀請人 :</span> ${renderDataState(user.inviter)}</div>
                         <div><span class="info-label">註冊模式 :</span> ${user.registerMode || '一般註冊'}</div>
-                        <div><span class="info-label">手機號 :</span> ${hasPerm(36) ? renderDataState(user.phone, 'phone') : (user.phone && user.phone !== '-' ? '已驗證' : '未驗證')}</div>
+                        <div><span class="info-label">手機號 :</span> ${getPhoneStatusHtml(user.phone)}</div>
                     </td>`;
                 }
                 if (nestedColumnVisibility['levelTeam']) {
@@ -3094,29 +3105,44 @@ window.handleAuditAction = function(btn, message) {
     }
 }
 
-window.handleResetAction = function(btn) {
+window.handleResetAction = function(btn, uid, field) {
     if(confirm('確定要重置此項資料嗎？')) {
         showToast('已重置');
+        
+        let newValueHtml = '-';
+        
+        if (uid && field && window.mockUsers) {
+            const user = window.mockUsers.find(u => u.uid === uid);
+            if (user) {
+                if (field === 'phone') {
+                    user.phone = '待重新綁定';
+                    user.phoneAudited = false;
+                    newValueHtml = getPhoneStatusHtml(user.phone);
+                    
+                    const basicPhoneSpan = document.getElementById('drawer_basic_phone');
+                    if (basicPhoneSpan) basicPhoneSpan.innerHTML = newValueHtml;
+                }
+                
+                if (typeof renderTable === 'function') renderTable();
+            }
+        }
         
         // Handle Basic Info tab layout (parent is div)
         if (btn.parentElement && btn.parentElement.tagName === 'DIV') {
             const spans = btn.parentElement.querySelectorAll('span');
-            // The data value is typically the second span (index 1)
             if (spans.length >= 2) {
-                spans[1].textContent = '-';
+                spans[1].innerHTML = newValueHtml;
             }
         } 
         // Handle Audit tab table layout
         else if (btn.closest('tr')) {
             const row = btn.closest('tr');
             const cells = row.querySelectorAll('td');
-            // '修改後' is the 3rd column (index 2)
             if (cells.length >= 3) {
-                cells[2].textContent = '-';
+                cells[2].innerHTML = newValueHtml;
             }
         }
         
-        // Remove the reset button
         btn.remove();
     }
 }
