@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const detailsRealName = document.getElementById('detailsRealName');
                 if (detailsRealName) {
                     const rawVal = detailsRealName.getAttribute('data-val');
-                    detailsRealName.textContent = isChecked ? (rawVal && rawVal !== '-' ? rawVal : '-') : '***';
+                    detailsRealName.textContent = isChecked ? (rawVal && rawVal !== '-' ? rawVal : '-') : window.maskRealName(rawVal);
                 }
                 const editFormRealName = document.getElementById('editFormRealName');
                 if (editFormRealName) {
@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         editFormRealName.value = (rawVal && rawVal !== '-') ? rawVal : '';
                         editFormRealName.disabled = false;
                     } else {
-                        editFormRealName.value = '***';
+                        editFormRealName.value = window.maskRealName(rawVal);
                         editFormRealName.disabled = true;
                     }
                 }
@@ -584,6 +584,20 @@ document.addEventListener('DOMContentLoaded', () => {
         return val;
     }
 
+    window.maskRealName = function(name) {
+        if (!name || name === '-' || name === '未填寫' || name === '***') return '-';
+        return name.charAt(0) + '**';
+    };
+
+    window.maskIp = function(ip) {
+        if (!ip || ip === '-' || typeof ip !== 'string') return '***.***.***.***';
+        const parts = ip.split('.');
+        if (parts.length === 4) {
+            return `${parts[0]}.${parts[1]}.*.*`;
+        }
+        return '***.***.***.***';
+    };
+
     window.getPhoneStatusHtml = function(phone) {
         if (phone === '審核中') return '<span style="color: #ef4444; font-weight: 600;">審核中</span>';
         if (phone === '待重新綁定') return '<span style="color: #f59e0b; font-weight: 500;">待重新綁定</span>';
@@ -599,7 +613,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 'online', group: '狀態', label: '在線', checkboxIndex: 1, render: (user) => `<td data-col="online"><span class="status-dot-icon" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${user.offlineDays === 0 ? '#10b981' : '#9ca3af'};"></span></td>` },
         { id: 'status', group: '狀態', label: '狀態', checkboxIndex: 1, render: (user) => `<td data-col="status"><span class="user-custom-tag ${user.status === '正常' ? 'tag-green' : user.status === '冻结' ? 'tag-blue' : 'tag-red'}">${user.status}</span></td>` },
         { id: 'avatar', group: '狀態', label: '頭像', checkboxIndex: 2, render: (user) => `<td data-col="avatar"><div class="avatar-cell" style="width:24px;height:24px;border-radius:50%;background:#3b82f6;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;margin:0 auto;">${user.account.charAt(0).toLowerCase()}</div></td>` },
-        { id: 'realName', group: '帳號', label: '真實姓名', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="realName">${hasPerm(37) ? renderDataState(user.realName) : '***'}</td>` },
+        { id: 'realName', group: '帳號', label: '真實姓名', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="realName">${hasPerm(37) ? renderDataState(user.realName) : window.maskRealName(user.realName)}</td>` },
         { id: 'nickname', group: '帳號', label: '暱稱', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="nickname">${(user.nickname && user.nickname !== '-') ? user.nickname : renderDataState(user.account)}</td>` },
         { id: 'agentId', group: '會員信息（詳細）', label: '代理', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="agentId">${renderDataState(user.agentId)}</td>` },
         { id: 'inviter', group: '會員信息（詳細）', label: '邀請人', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="inviter">${renderDataState(user.inviter)}</td>` },
@@ -729,7 +743,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 'date', group: '日期信息', label: '新增時間', sortable: true, checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="date">${user.date}</td>` },
         { id: 'lastLogin', group: '日期信息', label: '最後登錄', sortable: true, checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="lastLogin">${user.lastLogin}</td>` },
         { id: 'offlineDays', group: '日期信息', label: '離開天數', sortable: true, checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="offlineDays">${user.offlineDays}</td>` },
-        { id: 'ip', group: '日期信息', label: '登錄IP', checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="ip"><div class="ip-row" style="display: flex; align-items: center; gap: 4px;">${hasPerm(17) ? renderDataState(user.ip, 'ip') : '***.***.***.***'}</div></td>` },
+        { id: 'ip', group: '日期信息', label: '登錄IP', checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="ip"><div class="ip-row" style="display: flex; align-items: center; gap: 4px;">${hasPerm(17) ? renderDataState(user.ip, 'ip') : window.maskIp(user.ip)}</div></td>` },
         { id: 'remark', group: '備註', label: '備註', checkboxIndex: 10, requirePerm: 21, render: (user) => `<td class="cell-val" data-col="remark">${user.remark}</td>` },
         { id: 'followRemark', group: '備註', label: '回訪備註', checkboxIndex: 10, requirePerm: 21, render: (user) => `<td class="cell-val" data-col="followRemark">${user.followRemark}</td>` },
         { id: 'note', group: '備註', label: '注', checkboxIndex: 10, requirePerm: 21, render: (user) => `<td class="cell-val" data-col="note">${user.note}</td>` },
@@ -826,14 +840,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Comprehensive Mock Users Database (50 Users for pagination demonstration)
     const baseMockUsers = [
-        { uid: "1239361225", account: "mingv0717001", realName: "-", nickname: "", agentId: "dl", inviter: "-", registerMode: "一般註冊", phone: "末綁定", payLevel: "默認層", growth: 0, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "-", directTeam: "0/0", vipLevel: 0, vipGrowth: 0, creditValue: 0, availableCredit: 0, commissionBal: 0, balanceBuy: 0, arrears: "-", interest: 0, thirdBal: 0, points: 0, deposit: 0, withdraw: 0, withdrawPre: "-", adminDeduct: "-", depositCount: 0, withdrawCount: 0, tags: ["VIP 客戶", "高頻交易", "大戶", "標籤四", "標籤五", "標籤六"], status: "冻结", date: "2023-01-01 12:00:00", lastLogin: "2023-01-10 15:30:00", offlineDays: 9, ip: "192.168.1.1", remark: "-", followRemark: "-", note: "-" },
-        { uid: "1239361224", account: "albertvn021", realName: "-", nickname: "阿布", agentId: "nnest123556", inviter: "nnest123556", registerMode: "一般註冊", phone: "未驗證", payLevel: "默認層", growth: 0, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "06077790", directTeam: "0/0", vipLevel: 0, vipGrowth: 0, creditValue: 0, availableCredit: 0, commissionBal: 0, balanceBuy: 0, arrears: "-", interest: 0, thirdBal: 0, points: 0, deposit: 0, withdraw: 0, withdrawPre: "-", adminDeduct: "-", depositCount: 0, withdrawCount: 0, tags: ["異常風險", "VIP 客戶", "標籤三", "標籤四", "標籤五"], status: "停用", date: "2023-01-02 10:00:00", lastLogin: "2023-01-11 09:20:00", offlineDays: 9, ip: "192.168.1.2", remark: "-", followRemark: "-", note: "-" },
+        { uid: "1239361225", account: "mingv0717001", realName: "李小明", nickname: "", agentId: "dl", inviter: "-", registerMode: "一般註冊", phone: "末綁定", payLevel: "默認層", growth: 0, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "-", directTeam: "0/0", vipLevel: 0, vipGrowth: 0, creditValue: 0, availableCredit: 0, commissionBal: 0, balanceBuy: 0, arrears: "-", interest: 0, thirdBal: 0, points: 0, deposit: 0, withdraw: 0, withdrawPre: "-", adminDeduct: "-", depositCount: 0, withdrawCount: 0, tags: ["VIP 客戶", "高頻交易", "大戶", "標籤四", "標籤五", "標籤六"], status: "冻结", date: "2023-01-01 12:00:00", lastLogin: "2023-01-10 15:30:00", offlineDays: 9, ip: "192.168.1.1", remark: "-", followRemark: "-", note: "-" },
+        { uid: "1239361224", account: "albertvn021", realName: "黃大維", nickname: "阿布", agentId: "nnest123556", inviter: "nnest123556", registerMode: "一般註冊", phone: "未驗證", payLevel: "默認層", growth: 0, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "06077790", directTeam: "0/0", vipLevel: 0, vipGrowth: 0, creditValue: 0, availableCredit: 0, commissionBal: 0, balanceBuy: 0, arrears: "-", interest: 0, thirdBal: 0, points: 0, deposit: 0, withdraw: 0, withdrawPre: "-", adminDeduct: "-", depositCount: 0, withdrawCount: 0, tags: ["異常風險", "VIP 客戶", "標籤三", "標籤四", "標籤五"], status: "停用", date: "2023-01-02 10:00:00", lastLogin: "2023-01-11 09:20:00", offlineDays: 9, ip: "192.168.1.2", remark: "-", followRemark: "-", note: "-" },
         { uid: "1239361223", account: "vip_king", realName: "李娜", realNameAudited: true, birthdayAudited: true, nickname: "鄭姐", agentId: "AG888", inviter: "nnest123556", registerMode: "一般註冊", phone: "13812348888", payLevel: "默認層", growth: 1250, level: "鑽石會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "INV02", directTeam: "12/8", vipLevel: 3, vipGrowth: 6800, creditValue: 500, availableCredit: 2000, commissionBal: 680, balanceBuy: 8750, arrears: "0", interest: 120, thirdBal: 320, points: 450, deposit: 3200, withdraw: 1500, withdrawPre: "-", adminDeduct: "-", depositCount: 8, withdrawCount: 4, tags: ["正常", "活躍", "高消費", "標籤四", "標籤五"], status: "冻结", date: "2023-01-05 14:15:00", lastLogin: "2023-01-15 18:45:00", offlineDays: 0, ip: "192.168.1.3", remark: "-", followRemark: "-", note: "-" },
         { uid: "1239361226", account: "test_user_1", realName: "王大明", nickname: "王大", agentId: "dl", inviter: "nnest123556", registerMode: "後台新增", phone: "0912345678", payLevel: "默認層", growth: 0, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "CODE100", directTeam: "0/0", vipLevel: 0, vipGrowth: 0, creditValue: 500, availableCredit: 0, commissionBal: 0, balanceBuy: 0, arrears: "0", interest: 0, thirdBal: 150, points: 0, deposit: 0, withdraw: 0, withdrawPre: "-", adminDeduct: "-", depositCount: 0, withdrawCount: 0, tags: ["新註冊"], status: "停用", date: "2023-02-01 10:00:00", lastLogin: "2023-03-01 15:30:00", offlineDays: 30, ip: "192.168.2.10", remark: "大戶需關注", followRemark: "-", note: "-" },
         { uid: "1239361227", account: "test_user_2", realName: "林小華", nickname: "", agentId: "AG888", inviter: "-", registerMode: "一般註冊", phone: "0987654321", payLevel: "默認層", growth: 150, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "-", directTeam: "1/1", vipLevel: 1, vipGrowth: 50, creditValue: 0, availableCredit: 1000, commissionBal: 15, balanceBuy: 300, arrears: "0", interest: 2, thirdBal: 0, points: 25, deposit: 2000, withdraw: 500, withdrawPre: "-", adminDeduct: "-", depositCount: 1, withdrawCount: 1, tags: ["新註冊"], status: "停用", date: "2023-02-02 10:00:00", lastLogin: "2023-03-02 15:30:00", offlineDays: 1, ip: "192.168.1.100", remark: "-", followRemark: "-", note: "-" },
-        { uid: "1239361228", account: "test_user_3", realName: "-", nickname: "Alice", agentId: "nnest123556", inviter: "nnest123556", registerMode: "一般註冊", phone: "13912341002", payLevel: "默認層", growth: 300, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "CODE102", directTeam: "2/2", vipLevel: 2, vipGrowth: 100, creditValue: 500, availableCredit: 2000, commissionBal: 30, balanceBuy: 600, arrears: "0", interest: 4, thirdBal: 0, points: 50, deposit: 4000, withdraw: 1000, withdrawPre: "-", adminDeduct: "-", depositCount: 2, withdrawCount: 2, tags: ["新註冊"], status: "冻结", date: "2023-02-03 10:00:00", lastLogin: "2023-03-03 15:30:00", offlineDays: 2, ip: "192.168.2.12", remark: "-", followRemark: "-", note: "-" },
+        { uid: "1239361228", account: "test_user_3", realName: "周思齊", nickname: "Alice", agentId: "nnest123556", inviter: "nnest123556", registerMode: "一般註冊", phone: "13912341002", payLevel: "默認層", growth: 300, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "CODE102", directTeam: "2/2", vipLevel: 2, vipGrowth: 100, creditValue: 500, availableCredit: 2000, commissionBal: 30, balanceBuy: 600, arrears: "0", interest: 4, thirdBal: 0, points: 50, deposit: 4000, withdraw: 1000, withdrawPre: "-", adminDeduct: "-", depositCount: 2, withdrawCount: 2, tags: ["新註冊"], status: "冻结", date: "2023-02-03 10:00:00", lastLogin: "2023-03-03 15:30:00", offlineDays: 2, ip: "192.168.2.12", remark: "-", followRemark: "-", note: "-" },
         { uid: "1239361229", account: "test_user_4", realName: "陳大文", nickname: "", agentId: "dl", inviter: "-", registerMode: "一般註冊", phone: "未綁定", payLevel: "默認層", growth: 450, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "-", directTeam: "3/0", vipLevel: 3, vipGrowth: 150, creditValue: 0, availableCredit: 3000, commissionBal: 45, balanceBuy: 900, arrears: "0", interest: 6, thirdBal: 0, points: 75, deposit: 6000, withdraw: 1500, withdrawPre: "-", adminDeduct: "-", depositCount: 3, withdrawCount: 3, tags: ["新註冊"], status: "冻结", date: "2023-02-04 10:00:00", lastLogin: "2023-03-04 15:30:00", offlineDays: 3, ip: "192.168.2.13", remark: "這是一段非常長非常長非常長的備註，用來測試單行截斷與懸停提示的效果是否正常運作。", followRemark: "-", note: "-" },
-        { uid: "1239361230", account: "test_user_5", realName: "-", nickname: "小明", agentId: "AG888", inviter: "nnest123556", registerMode: "後台新增", phone: "13912341004", payLevel: "默認層", growth: 600, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "CODE104", directTeam: "4/1", vipLevel: 0, vipGrowth: 200, creditValue: 500, availableCredit: 4000, commissionBal: 60, balanceBuy: 1200, arrears: "0", interest: 8, thirdBal: 150, points: 100, deposit: 8000, withdraw: 2000, withdrawPre: "-", adminDeduct: "-", depositCount: 4, withdrawCount: 4, tags: ["新註冊"], status: "冻结", date: "2023-02-05 10:00:00", lastLogin: "2023-03-05 15:30:00", offlineDays: 4, ip: "192.168.2.14", remark: "-", followRemark: "-", note: "-" },
+        { uid: "1239361230", account: "test_user_5", realName: "許大茂", nickname: "小明", agentId: "AG888", inviter: "nnest123556", registerMode: "後台新增", phone: "13912341004", payLevel: "默認層", growth: 600, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "CODE104", directTeam: "4/1", vipLevel: 0, vipGrowth: 200, creditValue: 500, availableCredit: 4000, commissionBal: 60, balanceBuy: 1200, arrears: "0", interest: 8, thirdBal: 150, points: 100, deposit: 8000, withdraw: 2000, withdrawPre: "-", adminDeduct: "-", depositCount: 4, withdrawCount: 4, tags: ["新註冊"], status: "冻结", date: "2023-02-05 10:00:00", lastLogin: "2023-03-05 15:30:00", offlineDays: 4, ip: "192.168.2.14", remark: "-", followRemark: "-", note: "-" },
         { uid: "1239361231", account: "test_user_6", realName: "陳阿明", nickname: "", agentId: "ag123", inviter: "-", registerMode: "一般註冊", phone: "待重新綁定", payLevel: "默認層", growth: 750, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "-", directTeam: "0/2", vipLevel: 1, vipGrowth: 250, creditValue: 0, availableCredit: 5000, commissionBal: 75, balanceBuy: 1500, arrears: "0", interest: 10, thirdBal: 0, points: 125, deposit: 10000, withdraw: 2500, withdrawPre: "-", adminDeduct: "-", depositCount: 5, withdrawCount: 5, tags: ["正常", "活躍"], status: "正常", date: "2023-02-06 10:00:00", lastLogin: "2023-03-06 15:30:00", offlineDays: 5, ip: "192.168.2.15", remark: "-", followRemark: "-", note: "-" },
         { uid: "1239361232", account: "test_user_7", realName: "陳大文", nickname: "SuperAdmin", agentId: "dl", inviter: "nnest123556", registerMode: "一般註冊", phone: "審核中", payLevel: "默認層", growth: 900, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "CODE106", directTeam: "1/0", vipLevel: 2, vipGrowth: 300, creditValue: 500, availableCredit: 6000, commissionBal: 90, balanceBuy: 1800, arrears: "0", interest: 12, thirdBal: 0, points: 150, deposit: 12000, withdraw: 3000, withdrawPre: "-", adminDeduct: "-", depositCount: 6, withdrawCount: 0, tags: ["新註冊"], status: "冻结", date: "2023-02-07 10:00:00", lastLogin: "2023-03-07 15:30:00", offlineDays: 6, ip: "192.168.2.16", remark: "-", followRemark: "-", note: "-" }
     ];
@@ -1303,7 +1317,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div style="display: flex; align-items: center;">
                         <span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">真實姓名:</span>
-                        <span id="detailsRealName" data-val="${user.realName}" style="color: #475569; font-size: 14px;">${hasPerm(37) ? (user.realName && user.realName !== '-' ? user.realName : '-') : '***'}</span>
+                        <span id="detailsRealName" data-val="${user.realName}" style="color: #475569; font-size: 14px;">${hasPerm(37) ? (user.realName && user.realName !== '-' ? user.realName : '-') : window.maskRealName(user.realName)}</span>
                     </div>
                     <div style="display: flex; align-items: center;">
                         <span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">出生年月日:</span>
@@ -1374,7 +1388,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <tr style="border-bottom: 1px solid var(--border-color);">
                             <td style="padding: 16px; color: #475569;">真實姓名</td>
                             <td style="padding: 16px; color: #94a3b8;">未填寫</td>
-                            <td style="padding: 16px; color: #1e293b;">${hasPerm(37) ? (user.realName && user.realName !== '-' ? user.realName : '-') : '***'}</td>
+                            <td style="padding: 16px; color: #1e293b;">${hasPerm(37) ? (user.realName && user.realName !== '-' ? user.realName : '-') : window.maskRealName(user.realName)}</td>
                             <td style="padding: 16px; color: #64748b;">2023-10-25 14:30:00</td>
                             <td style="padding: 16px; text-align: center;">${getAuditButtons(user.realNameAudited)}</td>
                         </tr>
@@ -2145,7 +2159,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     nestedRowHtml += `<td class="nested-cell-info">
                         <div><span class="info-label">用戶ID :</span> ${renderDataState(user.uid, 'copyable')}</div>
                         <div><span class="info-label">會員名 :</span> <a href="#" class="user-detail-link" data-uid="${user.uid}">${renderDataState(user.account, 'copyable')}</a></div>
-                        <div><span class="info-label">真實姓名 :</span> ${hasPerm(37) ? renderDataState(user.realName) : '***'}</div>
+                        <div><span class="info-label">真實姓名 :</span> ${hasPerm(37) ? renderDataState(user.realName) : window.maskRealName(user.realName)}</div>
                         <div><span class="info-label">用戶暱稱 :</span> ${(user.nickname && user.nickname !== '-') ? user.nickname : renderDataState(user.account)}</div>
                         <div><span class="info-label">代理 :</span> ${renderDataState(user.agentId)}</div>
                         <div><span class="info-label">邀請人 :</span> ${renderDataState(user.inviter)}</div>
@@ -2218,7 +2232,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div><span class="info-label">離開天數 :</span> ${user.offlineDays}天</div>
                         <div><span class="info-label">登錄IP :</span></div>
                         <div class="ip-row" style="display: flex; align-items: center; gap: 4px;">
-                            ${hasPerm(17) ? renderDataState(user.ip, 'ip') : '***.***.***.***'}
+                            ${hasPerm(17) ? renderDataState(user.ip, 'ip') : window.maskIp(user.ip)}
                         </div>
                     </td>`;
                 }
@@ -2909,7 +2923,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 realNameIn.value = user.realName !== '-' ? user.realName : '';
                 realNameIn.disabled = false;
             } else {
-                realNameIn.value = '***';
+                realNameIn.value = window.maskRealName(user.realName);
                 realNameIn.disabled = true;
             }
         }
