@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-CN">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>會員管理 Prototype</title>
+    <title>会员管理 Prototype</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -19,37 +19,37 @@
                 <div class="toolbar-left">
                     <div class="mode-segmented-control">
                         <button type="button" class="mode-btn active" id="btnModeNested" data-mode="nested"
-                            title="巢狀模式">
+                            title="巢状模式">
                             <i class="ph ph-squares-four"></i>
                         </button>
-                        <button type="button" class="mode-btn" id="btnModeCompact" data-mode="compact" title="壓縮模式">
+                        <button type="button" class="mode-btn" id="btnModeCompact" data-mode="compact" title="压缩模式">
                             <i class="ph ph-rows"></i>
                         </button>
                     </div>
                 </div>
                 <div class="toolbar-right">
-                    <button class="btn btn-primary" id="btnAddMember">新增會員</button>
-                    <button class="btn btn-outline">資料驗證</button>
-                    <!-- 批量操作下拉選單 -->
+                    <button class="btn btn-primary" id="btnAddMember">新增会员</button>
+                    <button class="btn btn-outline">资料验证</button>
+                    <!-- 批量操作下拉选单 -->
                     <div class="batch-dropdown-container">
                         <button class="btn btn-outline" id="btnBatchOperations">批量操作 <i
                                 class="ph ph-caret-down"></i></button>
                         <ul class="batch-dropdown-menu" id="batchOperationsMenu">
-                            <li id="batchItem-12">更新用戶餘額</li>
-                            <li id="batchItem-14">更新用戶</li>
-                            <li id="batchItem-24">更新用戶狀態</li>
-                            <li id="batchItem-43">代理變更</li>
-                            <li id="batchItem-44">更新最大提款次數</li>
+                            <li id="batchItem-12">更新用户余额</li>
+                            <li id="batchItem-14">更新用户</li>
+                            <li id="batchItem-24">更新用户状态</li>
+                            <li id="batchItem-43">代理变更</li>
+                            <li id="batchItem-44">更新最大提款次数</li>
                         </ul>
                     </div>
                     <div class="topbar-divider"></div>
-                    <!-- 導出數據下拉選單 -->
+                    <!-- 导出数据下拉选单 -->
                     <div class="export-dropdown-container">
-                        <button class="btn btn-outline" id="btnExportData">導出數據 <i
+                        <button class="btn btn-outline" id="btnExportData">导出数据 <i
                                 class="ph ph-caret-down"></i></button>
                         <ul class="export-dropdown-menu" id="exportDataMenu">
-                            <li>已篩選用戶</li>
-                            <li>用戶數據</li>
+                            <li>已筛选用户</li>
+                            <li>用户数据</li>
                         </ul>
                     </div>
                 </div>
@@ -57,13 +57,13 @@
 
             <!-- Anchor to detect scroll threshold for sticky filter card -->
             <div id="filter-scroll-anchor" style="height: 1px; margin-bottom: -1px;"></div>
-            <!-- 搜尋過濾區塊 -->
+            <!-- 搜寻过滤区块 -->
             <section class="filter-card">
                 <div class="filter-row">
                     <div class="form-group" data-filter-id="status">
                         <div class="custom-select-single" id="dropdownStatus">
                             <div class="select-selected">
-                                <span class="inline-label">狀態：</span>
+                                <span class="inline-label">状态：</span>
                                 <span class="selected-val">正常</span>
                                 <i class="ph ph-caret-down"></i>
                             </div>
@@ -78,23 +78,23 @@
                     <div class="form-group" data-filter-id="level">
                         <div class="custom-select-single" id="dropdownLevel">
                             <div class="select-selected">
-                                <span class="inline-label">用戶層級：</span>
-                                <span class="selected-val">默認層</span>
+                                <span class="inline-label">用户层级：</span>
+                                <span class="selected-val">默认层</span>
                                 <i class="ph ph-caret-down"></i>
                             </div>
                             <ul class="select-options">
                                 <li data-value="" class="active">全部</li>
-                                <li data-value="普通會員">普通會員</li>
-                                <li data-value="VIP會員">VIP會員</li>
-                                <li data-value="黃金會員">黃金會員</li>
+                                <li data-value="普通会员">普通会员</li>
+                                <li data-value="VIP会员">VIP会员</li>
+                                <li data-value="黄金会员">黄金会员</li>
                             </ul>
                         </div>
                     </div>
                     <div class="form-group" data-filter-id="vip">
                         <div class="custom-select-multi" id="dropdownVip">
                             <div class="select-selected">
-                                <span class="inline-label">會員等級：</span>
-                                <span class="selected-val">請選擇</span>
+                                <span class="inline-label">会员等级：</span>
+                                <span class="selected-val">请选择</span>
                                 <i class="ph ph-caret-down"></i>
                             </div>
                             <ul class="select-options">
@@ -111,13 +111,13 @@
                     <div class="form-group" data-filter-id="other">
                         <div class="custom-select-multi" id="dropdownOther">
                             <div class="select-selected">
-                                <span class="inline-label">排除條件：</span>
-                                <span class="selected-val">測試帳號</span>
+                                <span class="inline-label">排除条件：</span>
+                                <span class="selected-val">测试帐号</span>
                                 <i class="ph ph-caret-down"></i>
                             </div>
                             <ul class="select-options">
-                                <li data-value="測試帳號" class="selected"><input type="checkbox" checked>
-                                    <span>測試帳號</span>
+                                <li data-value="测试帐号" class="selected"><input type="checkbox" checked>
+                                    <span>测试帐号</span>
                                 </li>
                                 <li data-value="未充值玩家"><input type="checkbox"> <span>未充值玩家</span></li>
                             </ul>
@@ -127,24 +127,24 @@
                     <div class="form-group" data-filter-id="tagsSearch">
                         <div class="custom-select-multi" id="dropdownTagsSearch">
                             <div class="select-selected">
-                                <span class="inline-label">標籤搜尋：</span>
-                                <span class="selected-val" style="color: #94a3b8;">請選擇或輸入標籤...</span>
+                                <span class="inline-label">标签搜寻：</span>
+                                <span class="selected-val" style="color: #94a3b8;">请选择或输入标签...</span>
                                 <i class="ph ph-caret-down"></i>
                             </div>
                             <ul class="select-options">
                                 <li class="search-input-li" style="padding: 8px; background: #fff; position: sticky; top: 0; border-bottom: 1px solid var(--border-color); z-index: 10;">
-                                    <input type="text" placeholder="輸入標籤搜尋..." style="width: 100%; padding: 6px 8px; border: 1px solid var(--border-color); border-radius: 4px; outline: none; font-size: 13px;">
+                                    <input type="text" placeholder="输入标签搜寻..." style="width: 100%; padding: 6px 8px; border: 1px solid var(--border-color); border-radius: 4px; outline: none; font-size: 13px;">
                                 </li>
-                                <li data-value="高價值"><input type="checkbox"> <span style="display: flex; align-items: center; gap: 6px;"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#eab308;"></span>高價值</span></li>
-                                <li data-value="風險"><input type="checkbox"> <span style="display: flex; align-items: center; gap: 6px;"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#ef4444;"></span>風險</span></li>
-                                <li data-value="活躍"><input type="checkbox"> <span style="display: flex; align-items: center; gap: 6px;"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#22c55e;"></span>活躍</span></li>
+                                <li data-value="高价值"><input type="checkbox"> <span style="display: flex; align-items: center; gap: 6px;"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#eab308;"></span>高价值</span></li>
+                                <li data-value="风险"><input type="checkbox"> <span style="display: flex; align-items: center; gap: 6px;"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#ef4444;"></span>风险</span></li>
+                                <li data-value="活跃"><input type="checkbox"> <span style="display: flex; align-items: center; gap: 6px;"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#22c55e;"></span>活跃</span></li>
                                 <li data-value="沉睡"><input type="checkbox"> <span style="display: flex; align-items: center; gap: 6px;"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#94a3b8;"></span>沉睡</span></li>
-                                <li data-value="異常風險"><input type="checkbox"> <span style="display: flex; align-items: center; gap: 6px; color: #ea580c; font-weight: 500;"><i class="ph-fill ph-warning-circle" style="font-size: 14px;"></i>異常風險</span></li>
+                                <li data-value="异常风险"><input type="checkbox"> <span style="display: flex; align-items: center; gap: 6px; color: #ea580c; font-weight: 500;"><i class="ph-fill ph-warning-circle" style="font-size: 14px;"></i>异常风险</span></li>
                             </ul>
                         </div>
                     </div>
 
-                    <!-- 新增隱藏的過濾欄位 (自訂篩選觸發) -->
+                    <!-- 新增隐藏的过滤栏位 (自订筛选触发) -->
                     <div class="form-group" data-filter-id="birthday">
                         <div class="custom-select-single" id="dropdownBirthdayOuter">
                             <div class="select-selected">
@@ -172,7 +172,7 @@
 
                     <div class="form-group" data-filter-id="registerTime">
                         <div class="date-range-container">
-                            <span class="inline-label">新增時間：</span>
+                            <span class="inline-label">新增时间：</span>
                             <input type="datetime-local" class="date-text" id="inputDateStartOuter"
                                 style="border:none; outline:none; background:transparent;">
                             <span class="date-separator-line">~</span>
@@ -183,15 +183,15 @@
 
                     <div class="form-group" data-filter-id="bankCard">
                         <div class="input-with-inline-label">
-                            <span class="inline-label">綁定銀行卡：</span>
-                            <input type="text" placeholder="銀行卡號" id="inputBankCardOuter">
+                            <span class="inline-label">绑定银行卡：</span>
+                            <input type="text" placeholder="银行卡号" id="inputBankCardOuter">
                         </div>
                     </div>
 
                     <div class="form-group" data-filter-id="notLoginDays">
                         <div class="input-with-suffix">
-                            <span class="inline-label">未登入天數 (大於)：</span>
-                            <input type="text" placeholder="天數" id="inputOfflineDaysOuter">
+                            <span class="inline-label">未登入天数 (大于)：</span>
+                            <input type="text" placeholder="天数" id="inputOfflineDaysOuter">
                             <span class="suffix">天</span>
                         </div>
                     </div>
@@ -205,8 +205,8 @@
 
                     <div class="form-group" data-filter-id="vipLevel">
                         <div class="input-with-inline-label">
-                            <span class="inline-label">VIP會員等級：</span>
-                            <input type="text" placeholder="VIP會員等級" id="inputVipLevelOuter">
+                            <span class="inline-label">VIP会员等级：</span>
+                            <input type="text" placeholder="VIP会员等级" id="inputVipLevelOuter">
                         </div>
                     </div>
 
@@ -219,8 +219,8 @@
 
                     <div class="form-group" data-filter-id="depositAmount">
                         <div class="input-with-inline-label">
-                            <span class="inline-label">存款金額大於：</span>
-                            <input type="text" placeholder="金額" id="inputDepositOuter">
+                            <span class="inline-label">存款金额大于：</span>
+                            <input type="text" placeholder="金额" id="inputDepositOuter">
                         </div>
                     </div>
 
@@ -230,15 +230,15 @@
                     <div class="account-input-group">
                         <div class="account-type-dropdown" id="accountTypeDropdown">
                             <div class="dropdown-selected" id="accountTypeSelected">
-                                <i class="ph-fill ph-snowflake"></i> <span id="accountTypeText">帳號 (精確匹配)</span> <i
+                                <i class="ph-fill ph-snowflake"></i> <span id="accountTypeText">帐号 (精确匹配)</span> <i
                                     class="ph ph-caret-down"></i>
                             </div>
                             <ul class="dropdown-menu" id="accountTypeMenu" style="max-height: 250px; overflow-y: auto;">
-                                <li data-value="exact" class="active"><span>帳號 (精確匹配)</span> <span
+                                <li data-value="exact" class="active"><span>帐号 (精确匹配)</span> <span
                                         class="type-badge">Exact</span></li>
-                                <li data-value="fuzzy"><span>帳號 (模糊匹配)</span> <span class="type-badge">Fuzzy</span>
+                                <li data-value="fuzzy"><span>帐号 (模糊匹配)</span> <span class="type-badge">Fuzzy</span>
                                 </li>
-                                <li data-value="multi"><span>帳號 (多帳號篩選)</span> <span class="type-badge">Multi</span>
+                                <li data-value="multi"><span>帐号 (多帐号筛选)</span> <span class="type-badge">Multi</span>
                                 </li>
                                 <li data-value="quickLogin"><span>快速登录帐号</span> <span class="type-badge">Quick</span>
                                 </li>
@@ -259,40 +259,40 @@
                                 </li>
                             </ul>
                         </div>
-                        <input type="text" id="inputAccount" placeholder="請輸入精確帳號">
+                        <input type="text" id="inputAccount" placeholder="请输入精确帐号">
                     </div>
                     <button class="btn btn-outline" id="openAdvancedFilter" style="display: none;">
-                        <i class="ph ph-sliders-horizontal"></i> 進階篩選條件 <span class="badge" id="advancedBadge">0</span>
+                        <i class="ph ph-sliders-horizontal"></i> 进阶筛选条件 <span class="badge" id="advancedBadge">0</span>
                     </button>
                     <button class="btn btn-primary" id="btnSearch">
-                        <i class="ph ph-magnifying-glass"></i> 搜尋
+                        <i class="ph ph-magnifying-glass"></i> 搜寻
                     </button>
                     <button class="btn btn-outline" id="btnReset">
                         <i class="ph ph-arrow-counter-clockwise"></i> 重置
                     </button>
-                    <button class="btn btn-outline btn-icon-only" id="btnCustomizeFilter" title="自訂篩選欄位">
+                    <button class="btn btn-outline btn-icon-only" id="btnCustomizeFilter" title="自订筛选栏位">
                         <i class="ph ph-faders"></i>
                     </button>
                 </div>
             </section>
 
-            <!-- 列表區塊 -->
+            <!-- 列表区块 -->
             <section class="table-card">
-                <!-- 將篩選區塊與表格群組在同一個 div，方便未來整體移動 -->
+                <!-- 将筛选区块与表格群组在同一个 div，方便未来整体移动 -->
                 <div class="table-and-filter-group">
                     <div class="current-filters">
                         <div class="filter-tags" id="filterTagsContainer">
                             <!-- Dynamic filter tags will be rendered here -->
                         </div>
-                        <!-- 分頁區塊 (極簡版) -->
+                        <!-- 分页区块 (极简版) -->
                         <div class="pagination-container" style="gap: 8px;">
                             <div class="pagination-size-wrapper">
                                 <select id="selectPageSize" class="page-size-select"
                                     style="padding: 2px 6px; font-size: 12px; height: 24px;">
-                                    <option value="10">10 條/頁</option>
-                                    <option value="20" selected>20 條/頁</option>
-                                    <option value="50">50 條/頁</option>
-                                    <option value="100">100 條/頁</option>
+                                    <option value="10">10 条/页</option>
+                                    <option value="20" selected>20 条/页</option>
+                                    <option value="50">50 条/页</option>
+                                    <option value="100">100 条/页</option>
                                 </select>
                             </div>
                             <div class="pagination-pages" id="paginationPagesContainer"
@@ -324,29 +324,29 @@
             </section>
         </div>
 
-        <!-- 底部固定數據統計欄 (Bottom Summary Stats Bar) -->
+        <!-- 底部固定数据统计栏 (Bottom Summary Stats Bar) -->
         <div class="bottom-stats-bar" id="bottomStatsBar">
-            <button class="stats-toggle-btn" id="btnToggleStats" title="展開/收起統計">
+            <button class="stats-toggle-btn" id="btnToggleStats" title="展开/收起统计">
                 <i class="ph ph-caret-down"></i>
             </button>
             <div class="bottom-stats-left">
                 <div class="stat-item">
-                    <span class="stat-label">用戶餘額寶總額</span>
+                    <span class="stat-label">用户余额宝总额</span>
                     <span class="stat-value"><strong>$ 15,057.43</strong> <span class="stat-unit">T</span></span>
                 </div>
                 <div class="stat-divider"></div>
                 <div class="stat-item">
-                    <span class="stat-label">用戶總金額</span>
+                    <span class="stat-label">用户总金额</span>
                     <span class="stat-value"><strong>$ 20,417,771</strong></span>
                 </div>
                 <div class="stat-divider"></div>
                 <div class="stat-item">
-                    <span class="stat-label">三方遊戲總餘額總額 <i class="ph ph-info" title="參考值"></i></span>
+                    <span class="stat-label">三方游戏总余额总额 <i class="ph ph-info" title="参考值"></i></span>
                     <span class="stat-value"><strong>$ 620,847</strong></span>
                 </div>
                 <div class="stat-divider"></div>
                 <div class="stat-item">
-                    <span class="stat-label">註冊</span>
+                    <span class="stat-label">注册</span>
                     <span class="stat-value text-indigo"><strong>15</strong> <span class="stat-unit">人</span></span>
                 </div>
                 <div class="stat-divider"></div>
@@ -356,12 +356,12 @@
                 </div>
             </div>
             <div class="bottom-stats-right">
-                <span class="stats-exclude-badge">數據已排除測試帳號</span>
+                <span class="stats-exclude-badge">数据已排除测试帐号</span>
             </div>
         </div>
     </div>
 
-    <!-- 查看詳情右側抽屜 (User Details Drawer) -->
+    <!-- 查看详情右侧抽屉 (User Details Drawer) -->
     <div class="user-edit-drawer" id="userDetailsDrawer" style="flex-direction: row; transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
         <!-- Main Left Panel -->
         <div style="flex: 1; display: flex; flex-direction: column; min-width: 600px; background: #ffffff;">
@@ -370,10 +370,10 @@
                 <div style="display: flex; gap: 16px; align-items: center;">
                     <div id="detailsHeaderAvatar" class="icon-container indigo" style="width: 48px; height: 48px; font-size: 24px; border-radius: 12px; font-weight: bold; background-color: #6366f1; color: white;">U</div>
                     <div>
-                        <h3 style="margin:0 0 8px 0; font-size:20px; font-weight:600; color:var(--text-color);">查看詳情 · <span id="detailsHeaderAccount">user_account</span></h3>
+                        <h3 style="margin:0 0 8px 0; font-size:20px; font-weight:600; color:var(--text-color);">查看详情 · <span id="detailsHeaderAccount">user_account</span></h3>
                         <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #64748b;">
-                            <span id="detailsHeaderUserType">代理會員</span> · <span id="detailsHeaderUserLevel">VIP會員</span>
-                            <span id="detailsHeaderStatusBadge" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 12px; background-color: #fee2e2; color: #dc2626; font-size: 12px; margin-left: 8px;"><div style="width: 6px; height: 6px; border-radius: 50%; background-color: #dc2626;"></div>目前狀態：停用</span>
+                            <span id="detailsHeaderUserType">代理会员</span> · <span id="detailsHeaderUserLevel">VIP会员</span>
+                            <span id="detailsHeaderStatusBadge" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 12px; background-color: #fee2e2; color: #dc2626; font-size: 12px; margin-left: 8px;"><div style="width: 6px; height: 6px; border-radius: 50%; background-color: #dc2626;"></div>目前状态：停用</span>
                         </div>
                     </div>
                 </div>
@@ -385,45 +385,45 @@
                 </div>
             </div>
 
-            <!-- 頁籤導覽 (Tabs) -->
+            <!-- 页签导览 (Tabs) -->
             <div class="user-edit-tabs"
                 style="display: flex; gap: 24px; border-bottom: 1px solid var(--border-color); padding: 0 24px; background: #ffffff;">
-                <button type="button" class="user-edit-tab-item user-details-tab-item active" data-target="detailsBasic">會員信息</button>
-                <button type="button" id="detailsAuditTabBtn" class="user-edit-tab-item user-details-tab-item" data-target="detailsAudit" style="display: none;">會員審核</button>
-                <button type="button" class="user-edit-tab-item user-details-tab-item" data-target="detailsWithdraw">提現信息</button>
-                <button type="button" class="user-edit-tab-item user-details-tab-item" data-target="detailsLogin">設備與IP紀錄</button>
+                <button type="button" class="user-edit-tab-item user-details-tab-item active" data-target="detailsBasic">会员信息</button>
+                <button type="button" id="detailsAuditTabBtn" class="user-edit-tab-item user-details-tab-item" data-target="detailsAudit" style="display: none;">会员审核</button>
+                <button type="button" class="user-edit-tab-item user-details-tab-item" data-target="detailsWithdraw">提现信息</button>
+                <button type="button" class="user-edit-tab-item user-details-tab-item" data-target="detailsLogin">设备与IP纪录</button>
             </div>
 
             <div class="drawer-body user-details-form-body"
                 style="padding: 24px; overflow-y: auto; height: calc(100vh - 120px);">
-                <!-- Tab 1: 會員信息 (Basic Info) -->
+                <!-- Tab 1: 会员信息 (Basic Info) -->
                 <div class="details-tab-content-panel active" id="detailsBasic">
                     <!-- rendered via JS -->
                 </div>
 
-                <!-- Tab 1.5: 會員審核 (Member Audit) -->
+                <!-- Tab 1.5: 会员审核 (Member Audit) -->
                 <div class="details-tab-content-panel" id="detailsAudit" style="display: none;">
                     <!-- rendered via JS -->
                 </div>
                 
-                <!-- Tab 2: 提現信息 (Withdraw Info) -->
+                <!-- Tab 2: 提现信息 (Withdraw Info) -->
                 <div class="details-tab-content-panel" id="detailsWithdraw" style="display: none;">
                     <!-- rendered via JS -->
                 </div>
 
-                <!-- Tab 3: 最後登錄 (Last Login) -->
+                <!-- Tab 3: 最后登录 (Last Login) -->
                 <div class="details-tab-content-panel" id="detailsLogin" style="display: none;">
                     <!-- rendered via JS -->
                 </div>
 
-                <!-- Tab 4: 註冊IP (Registration IP) (Removed, combined into detailsLogin) -->
+                <!-- Tab 4: 注册IP (Registration IP) (Removed, combined into detailsLogin) -->
             </div>
         </div>
         
         <!-- Expandable Right Panel -->
         <div id="detailsExpandPanel" style="width: 700px; min-width: 700px; border-left: 1px solid var(--border-color); background: #f8fafc; display: none; flex-direction: column;">
             <div class="drawer-header" style="background: #0f172a; color: white; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center;">
-                <h3 style="margin: 0; font-size: 18px; font-weight: 500;">詳細內容</h3>
+                <h3 style="margin: 0; font-size: 18px; font-weight: 500;">详细内容</h3>
                 <button id="btnDetailsExpandClose" style="background: transparent; border: none; color: #94a3b8; cursor: pointer; font-size: 20px; display: flex; align-items: center;">
                     <i class="ph ph-x"></i>
                 </button>
@@ -437,18 +437,18 @@
     </main>
     </div>
 
-    <!-- 進階搜尋側邊欄 (Drawer) / 彈窗 (Modal) -->
+    <!-- 进阶搜寻侧边栏 (Drawer) / 弹窗 (Modal) -->
     <div class="overlay" id="overlay"></div>
     <div class="advanced-filter-drawer" id="advancedDrawer">
         <div class="drawer-header">
-            <h3><i class="ph ph-faders"></i> 進階搜尋條件篩選</h3>
+            <h3><i class="ph ph-faders"></i> 进阶搜寻条件筛选</h3>
             <button class="btn-close" id="closeAdvancedFilter"><i class="ph ph-x"></i></button>
         </div>
 
         <div class="drawer-content">
             <!-- Section 1 -->
             <div class="drawer-section">
-                <h4 class="section-title text-primary"><i class="ph-fill ph-clock"></i> 時間維度與附加選項</h4>
+                <h4 class="section-title text-primary"><i class="ph-fill ph-clock"></i> 时间维度与附加选项</h4>
                 <div class="form-row-2">
                     <div class="form-group">
                         <label>生日月份</label>
@@ -471,7 +471,7 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>新增時間範圍</label>
+                        <label>新增时间范围</label>
                         <div class="date-range-input">
                             <input type="datetime-local" id="inputDateStart" value=""
                                 style="border:none; padding:0; width:170px; font-size:12px;">
@@ -486,16 +486,16 @@
 
             <!-- Section 3 -->
             <div class="drawer-section">
-                <h4 class="section-title text-secondary"><i class="ph-fill ph-shield-check"></i> 交易與安全維度</h4>
+                <h4 class="section-title text-secondary"><i class="ph-fill ph-shield-check"></i> 交易与安全维度</h4>
                 <div class="form-row-2">
                     <div class="form-group">
-                        <label>綁定銀行卡</label>
-                        <input type="text" id="inputBankCard" value="" placeholder="銀行卡號">
+                        <label>绑定银行卡</label>
+                        <input type="text" id="inputBankCard" value="" placeholder="银行卡号">
                     </div>
                     <div class="form-group">
-                        <label>未登入天數 (大於)</label>
+                        <label>未登入天数 (大于)</label>
                         <div class="input-with-suffix">
-                            <input type="text" id="inputOfflineDays" placeholder="天數">
+                            <input type="text" id="inputOfflineDays" placeholder="天数">
                             <span>天</span>
                         </div>
                     </div>
@@ -504,16 +504,16 @@
                         <input type="text" id="inputAgentId" value="" placeholder="代理Id">
                     </div>
                     <div class="form-group">
-                        <label>VIP會員等級</label>
-                        <input type="text" id="inputVipLevel" value="" placeholder="VIP會員等級">
+                        <label>VIP会员等级</label>
+                        <input type="text" id="inputVipLevel" value="" placeholder="VIP会员等级">
                     </div>
                     <div class="form-group">
                         <label>登录IP</label>
                         <input type="text" id="inputIp" value="" placeholder="登录IP">
                     </div>
                     <div class="form-group">
-                        <label>存款金額大於</label>
-                        <input type="text" id="inputDeposit" value="" placeholder="金額">
+                        <label>存款金额大于</label>
+                        <input type="text" id="inputDeposit" value="" placeholder="金额">
                     </div>
                 </div>
             </div>近
@@ -521,15 +521,15 @@
 
         <div class="drawer-footer">
             <button class="btn btn-outline btn-block" id="btnClearDrawer">清空所有</button>
-            <button class="btn btn-primary btn-block" id="btnApply">確認套用</button>
+            <button class="btn btn-primary btn-block" id="btnApply">确认套用</button>
         </div>
     </div>
 
-    <!-- 自訂篩選彈窗 (Customize Filter Modal) -->
+    <!-- 自订筛选弹窗 (Customize Filter Modal) -->
     <div class="modal-overlay" id="customizeFilterModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>自訂篩選維度</h3>
+                <h3>自订筛选维度</h3>
                 <button class="btn-icon btn-close-modal" id="btnCustomizeFilterClose">
                     <i class="ph ph-x"></i>
                 </button>
@@ -538,23 +538,23 @@
                 <div class="checkbox-list">
                     <label class="checkbox-item">
                         <input type="checkbox" value="status" checked>
-                        <span>帳號狀態 (原類型分類)</span>
+                        <span>帐号状态 (原类型分类)</span>
                     </label>
                     <label class="checkbox-item">
                         <input type="checkbox" value="level" checked>
-                        <span>用戶層級</span>
+                        <span>用户层级</span>
                     </label>
                     <label class="checkbox-item">
                         <input type="checkbox" value="vip" checked>
-                        <span>會員等級</span>
+                        <span>会员等级</span>
                     </label>
                     <label class="checkbox-item">
                         <input type="checkbox" value="other" checked>
-                        <span>排除條件 (可複選)</span>
+                        <span>排除条件 (可复选)</span>
                     </label>
                     <label class="checkbox-item">
                         <input type="checkbox" value="tagsSearch" checked>
-                        <span>標籤搜尋</span>
+                        <span>标签搜寻</span>
                     </label>
                     <label class="checkbox-item">
                         <input type="checkbox" value="birthday" checked>
@@ -562,15 +562,15 @@
                     </label>
                     <label class="checkbox-item">
                         <input type="checkbox" value="registerTime" checked>
-                        <span>新增時間範圍</span>
+                        <span>新增时间范围</span>
                     </label>
                     <label class="checkbox-item">
                         <input type="checkbox" value="bankCard" checked>
-                        <span>綁定銀行卡</span>
+                        <span>绑定银行卡</span>
                     </label>
                     <label class="checkbox-item">
                         <input type="checkbox" value="notLoginDays" checked>
-                        <span>未登入天數 (大於)</span>
+                        <span>未登入天数 (大于)</span>
                     </label>
                     <label class="checkbox-item">
                         <input type="checkbox" value="agentId" checked>
@@ -578,7 +578,7 @@
                     </label>
                     <label class="checkbox-item">
                         <input type="checkbox" value="vipLevel" checked>
-                        <span>VIP會員等級</span>
+                        <span>VIP会员等级</span>
                     </label>
                     <label class="checkbox-item">
                         <input type="checkbox" value="loginIp" checked>
@@ -586,28 +586,28 @@
                     </label>
                     <label class="checkbox-item">
                         <input type="checkbox" value="depositAmount" checked>
-                        <span>存款金額大於</span>
+                        <span>存款金额大于</span>
                     </label>
                 </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-outline" id="btnCustomizeFilterCancel">取消</button>
-                <button class="btn btn-primary" id="btnCustomizeFilterConfirm">確認</button>
+                <button class="btn btn-primary" id="btnCustomizeFilterConfirm">确认</button>
             </div>
         </div>
     </div>
 
-    <!-- 修改用戶詳情右側抽屜 (Edit User Details Drawer) -->
+    <!-- 修改用户详情右侧抽屉 (Edit User Details Drawer) -->
     <div class="user-edit-drawer" id="userEditDrawer">
         <div class="drawer-header"
             style="padding: 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: flex-start; background: #ffffff;">
             <div style="display: flex; gap: 16px; align-items: center;">
                 <div id="headerAvatar" class="icon-container indigo" style="width: 48px; height: 48px; font-size: 24px; border-radius: 12px; font-weight: bold; background-color: #6366f1; color: white;">U</div>
                 <div>
-                    <h3 style="margin:0 0 8px 0; font-size:20px; font-weight:600; color:var(--text-color);">修改用戶詳情 · <span id="headerAccount">test_user_1</span></h3>
+                    <h3 style="margin:0 0 8px 0; font-size:20px; font-weight:600; color:var(--text-color);">修改用户详情 · <span id="headerAccount">test_user_1</span></h3>
                     <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #64748b;">
-                        <span id="headerUserType">代理會員</span> · <span id="headerUserLevel">VIP會員</span>
-                        <span id="headerStatusBadge" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 12px; background-color: #fee2e2; color: #dc2626; font-size: 12px; margin-left: 8px;"><div style="width: 6px; height: 6px; border-radius: 50%; background-color: #dc2626;"></div>目前狀態：停用</span>
+                        <span id="headerUserType">代理会员</span> · <span id="headerUserLevel">VIP会员</span>
+                        <span id="headerStatusBadge" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 12px; background-color: #fee2e2; color: #dc2626; font-size: 12px; margin-left: 8px;"><div style="width: 6px; height: 6px; border-radius: 50%; background-color: #dc2626;"></div>目前状态：停用</span>
                     </div>
                 </div>
             </div>
@@ -621,11 +621,11 @@
             </div>
         </div>
 
-        <!-- 頁籤導覽 (Tabs) -->
+        <!-- 页签导览 (Tabs) -->
         <div class="user-edit-tabs"
             style="display: flex; gap: 24px; border-bottom: 1px solid var(--border-color); padding: 0 24px; background: #ffffff;">
             <button type="button" class="user-edit-tab-item active" data-tab="basic">基本信息</button>
-            <button type="button" class="user-edit-tab-item" data-tab="settings">會員設置</button>
+            <button type="button" class="user-edit-tab-item" data-tab="settings">会员设置</button>
         </div>
 
         <div class="drawer-body user-edit-form-body"
@@ -635,73 +635,73 @@
             <div class="tab-content-panel active" id="tabContentBasic">
                 <form id="userEditForm" class="user-edit-form" style="display: flex; flex-direction: column;">
                     
-                    <!-- Card 1: 帳戶概況 -->
+                    <!-- Card 1: 帐户概况 -->
                     <div class="edit-card">
                         <div class="edit-card-header">
                             <div class="edit-card-title-wrap">
                                 <div class="icon-container indigo" style="background-color: #e0e7ff; color: #4f46e5;"><i class="ph ph-user"></i></div>
-                                <h4 class="edit-card-title">帳戶概況</h4>
+                                <h4 class="edit-card-title">帐户概况</h4>
                             </div>
-                            <span class="edit-card-subtitle">帳號 · 狀態 · 會員類型 · 等級</span>
+                            <span class="edit-card-subtitle">帐号 · 状态 · 会员类型 · 等级</span>
                         </div>
                         <div class="edit-form-grid">
                             <div class="edit-form-group" style="grid-column: 1 / -1;">
-                                <label>帳號</label>
+                                <label>帐号</label>
                                 <input type="text" class="form-input" id="editFormAccountInput" value="test_user_1" disabled style="background-color: #f8fafc; border-style: dashed; color: #475569; font-weight: 500;">
                             </div>
                             <div class="edit-form-group">
-                                <label>會員類型</label>
+                                <label>会员类型</label>
                                 <div class="radio-pill-group">
-                                    <label class="radio-pill"><input type="radio" name="editUserType" value="代理會員" checked><i class="ph ph-check-circle"></i><span>代理會員</span></label>
-                                    <label class="radio-pill"><input type="radio" name="editUserType" value="普通會員"><i class="ph ph-circle"></i><span>普通會員</span></label>
+                                    <label class="radio-pill"><input type="radio" name="editUserType" value="代理会员" checked><i class="ph ph-check-circle"></i><span>代理会员</span></label>
+                                    <label class="radio-pill"><input type="radio" name="editUserType" value="普通会员"><i class="ph ph-circle"></i><span>普通会员</span></label>
                                 </div>
                             </div>
                             <div class="edit-form-group">
-                                <label>帳戶狀態</label>
+                                <label>帐户状态</label>
                                 <div class="radio-pill-group">
                                     <label class="radio-pill"><input type="radio" name="editStatus" value="正常" checked><i class="ph ph-check-circle"></i><span>正常</span></label>
                                     <label class="radio-pill color-red"><input type="radio" name="editStatus" value="冻结"><i class="ph ph-circle"></i><span>冻结</span></label>
                                     <label class="radio-pill color-red"><input type="radio" name="editStatus" value="停用"><i class="ph ph-circle"></i><span>停用</span></label>
                                 </div>
                             </div>
-                            <div class="edit-form-group"><label>用戶暱稱</label><input type="text" id="editFormNickname" class="form-input"></div>
-                            <div class="edit-form-group"><label>真實姓名</label><input type="text" id="editFormRealName" class="form-input"></div>
+                            <div class="edit-form-group"><label>用户暱称</label><input type="text" id="editFormNickname" class="form-input"></div>
+                            <div class="edit-form-group"><label>真实姓名</label><input type="text" id="editFormRealName" class="form-input"></div>
                             <div class="edit-form-group"><label>出生年月日</label><input type="date" id="editFormBirthday" class="form-input"></div>
                             <div class="edit-form-group">
-                                <label>用戶等級</label>
+                                <label>用户等级</label>
                                 <select id="editFormLevel" class="form-select">
-                                    <option value="普通會員">普通會員</option>
-                                    <option value="黃金會員">黃金會員</option>
-                                    <option value="VIP會員">VIP會員</option>
-                                    <option value="鑽石會員">鑽石會員</option>
+                                    <option value="普通会员">普通会员</option>
+                                    <option value="黄金会员">黄金会员</option>
+                                    <option value="VIP会员">VIP会员</option>
+                                    <option value="钻石会员">钻石会员</option>
                                 </select>
                             </div>
                             <div class="edit-form-group">
-                                <label>支付層級</label>
+                                <label>支付层级</label>
                                 <select id="editFormPayLevel" class="form-select">
-                                    <option value="默認層">默認層</option>
-                                    <option value="VIP層">VIP層</option>
+                                    <option value="默认层">默认层</option>
+                                    <option value="VIP层">VIP层</option>
                                 </select>
                             </div>
-                            <div class="edit-form-group"><label>國家</label><input type="text" id="editFormCountry" class="form-input" value="VN"></div>
-                            <div class="edit-form-group"><label>幣種</label><input type="text" id="editFormCurrency" class="form-input" value="VND"></div>
+                            <div class="edit-form-group"><label>国家</label><input type="text" id="editFormCountry" class="form-input" value="VN"></div>
+                            <div class="edit-form-group"><label>币种</label><input type="text" id="editFormCurrency" class="form-input" value="VND"></div>
                         </div>
                     </div>
 
-                    <!-- Card 2: 聯絡方式 -->
+                    <!-- Card 2: 联络方式 -->
                     <div class="edit-card" id="editContactInfoCard">
                         <div class="edit-card-header">
                             <div class="edit-card-title-wrap">
                                 <div class="icon-container indigo" style="background-color: #f5f3ff; color: #7c3aed;"><i class="ph ph-phone"></i></div>
-                                <h4 class="edit-card-title">聯絡方式</h4>
+                                <h4 class="edit-card-title">联络方式</h4>
                             </div>
                         </div>
                         <div class="edit-form-grid">
                             <div class="edit-form-group">
-                                <label>電話</label>
+                                <label>电话</label>
                                 <div style="display: flex; gap: 8px;">
-                                    <input type="text" id="editFormPhone" class="form-input" style="flex: 1;" placeholder="0912345678">
-                                    <button type="button" class="btn btn-primary" style="background-color: #6366f1; border-color: #6366f1; border-radius: 8px; padding: 0 16px;">校驗</button>
+                                    <input type="text" id="editFormPhone" class="form-input" style="flex: 1;" placeholder="-">
+                                    <button type="button" id="btnVerifyPhone" class="btn btn-primary" style="background-color: #6366f1; border-color: #6366f1; border-radius: 8px; padding: 0 16px;">校验</button>
                                 </div>
                             </div>
                             <div class="edit-form-group"><label>email</label><input type="text" id="editFormEmail" class="form-input"></div>
@@ -714,37 +714,37 @@
                         </div>
                     </div>
 
-                    <!-- Card 3: 第三方登入綁定 -->
+                    <!-- Card 3: 第三方登入绑定 -->
                     <div class="edit-card">
                         <div class="edit-card-header" style="margin-bottom: 16px;">
                             <div class="edit-card-title-wrap">
                                 <div class="icon-container blue" style="background-color: #f8fafc; border: 1px solid #e2e8f0; color: #4f46e5;"><i class="ph ph-coffee"></i></div>
-                                <h4 class="edit-card-title">第三方登入綁定</h4>
+                                <h4 class="edit-card-title">第三方登入绑定</h4>
                             </div>
                         </div>
                         <div class="edit-form-grid">
                             <div class="edit-form-group">
                                 <label>Facebook 登入</label>
-                                <div style="height: 40px; border-radius: 8px; border: 1px dashed #cbd5e1; background-color: #f8fafc; color: #94a3b8; display: flex; align-items: center; justify-content: center; font-size: 14px;">尚未綁定</div>
+                                <div style="height: 40px; border-radius: 8px; border: 1px dashed #cbd5e1; background-color: #f8fafc; color: #94a3b8; display: flex; align-items: center; justify-content: center; font-size: 14px;">尚未绑定</div>
                             </div>
                             <div class="edit-form-group">
                                 <label>Google 登入</label>
-                                <div style="height: 40px; border-radius: 8px; border: 1px dashed #cbd5e1; background-color: #f8fafc; color: #94a3b8; display: flex; align-items: center; justify-content: center; font-size: 14px;">尚未綁定</div>
+                                <div style="height: 40px; border-radius: 8px; border: 1px dashed #cbd5e1; background-color: #f8fafc; color: #94a3b8; display: flex; align-items: center; justify-content: center; font-size: 14px;">尚未绑定</div>
                             </div>
                             <div class="edit-form-group">
                                 <label>Telegram 登入</label>
-                                <div style="height: 40px; border-radius: 8px; border: 1px dashed #cbd5e1; background-color: #f8fafc; color: #94a3b8; display: flex; align-items: center; justify-content: center; font-size: 14px;">尚未綁定</div>
+                                <div style="height: 40px; border-radius: 8px; border: 1px dashed #cbd5e1; background-color: #f8fafc; color: #94a3b8; display: flex; align-items: center; justify-content: center; font-size: 14px;">尚未绑定</div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Card 4: 提現信息 -->
+                    <!-- Card 4: 提现信息 -->
                     
                     <div class="edit-card">
                         <div class="edit-card-header" style="margin-bottom: 0;">
                             <div class="edit-card-title-wrap">
                                 <div class="icon-container indigo"><i class="ph ph-credit-card"></i></div>
-                                <h4 class="edit-card-title">提現信息</h4>
+                                <h4 class="edit-card-title">提现信息</h4>
                             </div>
                             <button id="btnAddWithdrawAccount" type="button" class="btn btn-primary btn-sm" style="background-color: #6366f1; border-color: #6366f1; border-radius: 8px; padding: 4px 16px;"><i class="ph ph-plus" style="margin-right: 4px;"></i>添加</button>
                         </div>
@@ -762,19 +762,19 @@
                                         style="background-color: #ffffff; border-bottom: 1px solid #e2e8f0; height: 42px;">
                                         <th
                                             style="padding: 8px 12px; color: #475569; font-weight: 500; white-space: nowrap;">
-                                            出款類型</th>
+                                            出款类型</th>
                                         <th
                                             style="padding: 8px 12px; color: #475569; font-weight: 500; white-space: nowrap;">
-                                            卡號 / 錢包 / 支付寶帳號</th>
+                                            卡号 / 钱包 / 支付宝帐号</th>
                                         <th
                                             style="padding: 8px 12px; color: #475569; font-weight: 500; white-space: nowrap;">
-                                            銀行 / 幣種</th>
+                                            银行 / 币种</th>
                                         <th
                                             style="padding: 8px 12px; color: #475569; font-weight: 500; white-space: nowrap;">
-                                            銀行地址 / 備注</th>
+                                            银行地址 / 备注</th>
                                         <th
                                             style="padding: 8px 12px; color: #475569; font-weight: 500; white-space: nowrap;">
-                                            狀態</th>
+                                            状态</th>
                                         <th style="padding: 8px 12px; color: #475569; font-weight: 500; white-space: nowrap;">操作</th>
                                     </tr>
                                 </thead>
@@ -787,16 +787,16 @@
                             </table>
                         </div>
 
-                        <!-- 提現信息 分頁區塊 -->
+                        <!-- 提现信息 分页区块 -->
                         <div class="pagination-container"
                             style="padding: 12px 0 0 0; border-top: none; background: transparent;">
                             <div class="pagination-info">
-                                共 <span>0</span> 條
+                                共 <span>0</span> 条
                             </div>
                             <div class="pagination-size-wrapper">
                                 <select class="page-size-select" style="height: 28px; font-size: 12px; padding: 0 4px;">
-                                    <option value="10">10 條/頁</option>
-                                    <option value="20" selected>20 條/頁</option>
+                                    <option value="10">10 条/页</option>
+                                    <option value="20" selected>20 条/页</option>
                                 </select>
                             </div>
                             <div class="pagination-pages">
@@ -809,7 +809,7 @@
                             <div class="pagination-jump" style="font-size: 12px;">
                                 前往 <input type="number" min="1" max="1" value="1"
                                     style="height: 28px; width: 40px; text-align: center; font-size: 12px; margin: 0 4px; border: 1px solid var(--border-color); border-radius: 4px;">
-                                頁
+                                页
                             </div>
                         </div>
                         </div>
@@ -818,43 +818,43 @@
             </div>
 
             
-            <!-- Tab 2: 會員設置 (Member Settings) -->
+            <!-- Tab 2: 会员设置 (Member Settings) -->
             <div class="tab-content-panel" id="tabContentSettings" style="display: none;">
                 <div class="member-settings-container" style="display: flex; flex-direction: column;">
                     
-                    <!-- Card 1: 費率與備註 -->
+                    <!-- Card 1: 费率与备注 -->
                     <div class="edit-card">
                         <div class="edit-card-header" style="margin-bottom: 16px;">
                             <div class="edit-card-title-wrap">
                                 <div class="icon-container indigo" style="background-color: #f5f3ff; color: #7c3aed;"><i class="ph ph-currency-dollar"></i></div>
-                                <h4 class="edit-card-title">費率與備註</h4>
+                                <h4 class="edit-card-title">费率与备注</h4>
                             </div>
                         </div>
                         <div class="edit-form-group" style="margin-bottom: 16px;">
-                            <label style="display: flex; align-items: center; gap: 4px;">提現費率 <i class="ph ph-question" style="color: #94a3b8; font-size: 14px;"></i></label>
-                            <input type="text" id="settingWithdrawFee" class="form-input" placeholder="例如：0.015（支持三位小數）">
+                            <label style="display: flex; align-items: center; gap: 4px;">提现费率 <i class="ph ph-question" style="color: #94a3b8; font-size: 14px;"></i></label>
+                            <input type="text" id="settingWithdrawFee" class="form-input" placeholder="例如：0.015（支持三位小数）">
                         </div>
                         <div class="edit-form-group">
-                            <label>備註</label>
-                            <textarea id="editFormRemark" class="form-textarea" rows="3" style="width: 100%; border-radius: 8px; border: 1px solid #cbd5e1; padding: 12px; font-size: 14px; outline: none; resize: vertical;" placeholder="大戶需關注"></textarea>
+                            <label>备注</label>
+                            <textarea id="editFormRemark" class="form-textarea" rows="3" style="width: 100%; border-radius: 8px; border: 1px solid #cbd5e1; padding: 12px; font-size: 14px; outline: none; resize: vertical;" placeholder="大户需关注"></textarea>
                         </div>
                     </div>
 
-                    <!-- Card 2: 權限與限制 -->
+                    <!-- Card 2: 权限与限制 -->
                     <div class="edit-card">
                         <div class="edit-card-header" style="margin-bottom: 16px;">
                             <div class="edit-card-title-wrap">
                                 <div class="icon-container indigo" style="background-color: #f5f3ff; color: #7c3aed;"><i class="ph ph-lock-key"></i></div>
-                                <h4 class="edit-card-title">權限與限制</h4>
+                                <h4 class="edit-card-title">权限与限制</h4>
                             </div>
-                            <span class="edit-card-subtitle">開啟即代表啟用該限制 / 功能</span>
+                            <span class="edit-card-subtitle">开启即代表启用该限制 / 功能</span>
                         </div>
                         <div style="display: flex; flex-direction: column;">
                             <!-- Item 1 -->
                             <div class="setting-switch-item">
                                 <div class="setting-switch-content">
                                     <div class="setting-switch-title">停止第三方返水</div>
-                                    <div class="setting-switch-desc">開啟後，該用戶將不再享有第三方返水優惠</div>
+                                    <div class="setting-switch-desc">开启后，该用户将不再享有第三方返水优惠</div>
                                 </div>
                                 <label class="toggle-switch">
                                     <input type="checkbox" id="settingStopThirdRebate">
@@ -864,8 +864,8 @@
                             <!-- Item 2 -->
                             <div class="setting-switch-item">
                                 <div class="setting-switch-content">
-                                    <div class="setting-switch-title">限制轉入第三方</div>
-                                    <div class="setting-switch-desc">開啟後，該用戶帳戶無法轉帳至第三方平台</div>
+                                    <div class="setting-switch-title">限制转入第三方</div>
+                                    <div class="setting-switch-desc">开启后，该用户帐户无法转帐至第三方平台</div>
                                 </div>
                                 <label class="toggle-switch">
                                     <input type="checkbox" id="settingLimitThirdTransfer">
@@ -876,7 +876,7 @@
                             <div class="setting-switch-item">
                                 <div class="setting-switch-content">
                                     <div class="setting-switch-title">停止彩票返水</div>
-                                    <div class="setting-switch-desc">開啟後，該用戶的彩票投注將不再計算返水</div>
+                                    <div class="setting-switch-desc">开启后，该用户的彩票投注将不再计算返水</div>
                                 </div>
                                 <label class="toggle-switch">
                                     <input type="checkbox" id="settingStopLotteryRebate">
@@ -886,8 +886,8 @@
                             <!-- Item 4 -->
                             <div class="setting-switch-item">
                                 <div class="setting-switch-content">
-                                    <div class="setting-switch-title">邀請碼註冊 <i class="ph ph-question" style="color: #94a3b8; font-size: 14px;"></i></div>
-                                    <div class="setting-switch-desc">此用戶為透過邀請碼完成註冊</div>
+                                    <div class="setting-switch-title">邀请码注册 <i class="ph ph-question" style="color: #94a3b8; font-size: 14px;"></i></div>
+                                    <div class="setting-switch-desc">此用户为透过邀请码完成注册</div>
                                 </div>
                                 <label class="toggle-switch">
                                     <input type="checkbox" id="settingInviteReg" checked>
@@ -897,8 +897,8 @@
                             <!-- Item 5 -->
                             <div class="setting-switch-item">
                                 <div class="setting-switch-content">
-                                    <div class="setting-switch-title">停止成長值和等級更新</div>
-                                    <div class="setting-switch-desc">開啟後，該用戶的成長值與會員等級將被凍結</div>
+                                    <div class="setting-switch-title">停止成长值和等级更新</div>
+                                    <div class="setting-switch-desc">开启后，该用户的成长值与会员等级将被冻结</div>
                                 </div>
                                 <label class="toggle-switch">
                                     <input type="checkbox" id="settingStopLevelUpdate">
@@ -908,8 +908,8 @@
                             <!-- Item 6 -->
                             <div class="setting-switch-item">
                                 <div class="setting-switch-content">
-                                    <div class="setting-switch-title">能否修改下級賠率</div>
-                                    <div class="setting-switch-desc">開啟後，該代理可自行調整下級會員的賠率設定</div>
+                                    <div class="setting-switch-title">能否修改下级赔率</div>
+                                    <div class="setting-switch-desc">开启后，该代理可自行调整下级会员的赔率设定</div>
                                 </div>
                                 <label class="toggle-switch">
                                     <input type="checkbox" id="settingCanEditSubOdds">
@@ -919,24 +919,24 @@
                         </div>
                     </div>
 
-                    <!-- Card 3: 每日次數限制 -->
+                    <!-- Card 3: 每日次数限制 -->
                     <div class="edit-card">
                         <div class="edit-card-header" style="margin-bottom: 16px;">
                             <div class="edit-card-title-wrap">
                                 <div class="icon-container indigo" style="background-color: #f5f3ff; color: #7c3aed;"><i class="ph ph-chart-bar"></i></div>
-                                <h4 class="edit-card-title">每日次數限制</h4>
+                                <h4 class="edit-card-title">每日次数限制</h4>
                             </div>
                         </div>
                         <div class="edit-form-grid">
                             <div class="edit-form-group">
-                                <label>當天最大提款次數</label>
-                                <input type="text" id="settingMaxWithdraw" class="form-input" placeholder="未設置即不限制">
-                                <span style="font-size: 12px; color: #94a3b8; margin-top: 4px;">留空代表不限制提款次數</span>
+                                <label>当天最大提款次数</label>
+                                <input type="text" id="settingMaxWithdraw" class="form-input" placeholder="未设置即不限制">
+                                <span style="font-size: 12px; color: #94a3b8; margin-top: 4px;">留空代表不限制提款次数</span>
                             </div>
                             <div class="edit-form-group">
-                                <label>當天最大充值返利次數</label>
-                                <input type="text" id="settingMaxRebate" class="form-input" placeholder="未設置即不限制">
-                                <span style="font-size: 12px; color: #94a3b8; margin-top: 4px;">留空代表不限制充值返利次數</span>
+                                <label>当天最大充值返利次数</label>
+                                <input type="text" id="settingMaxRebate" class="form-input" placeholder="未设置即不限制">
+                                <span style="font-size: 12px; color: #94a3b8; margin-top: 4px;">留空代表不限制充值返利次数</span>
                             </div>
                         </div>
                     </div>
@@ -953,9 +953,9 @@
         <!-- Custom Columns Drawer (Compact Mode) -->
         <div class="advanced-filter-drawer" id="columnsDrawer">
             <div class="drawer-header">
-                <h3>自訂欄位</h3>
+                <h3>自订栏位</h3>
                 <div style="display: flex; gap: 8px; align-items: center;">
-                    <button class="btn btn-outline btn-sm" id="btnColumnsDrawerClose">關閉</button>
+                    <button class="btn btn-outline btn-sm" id="btnColumnsDrawerClose">关闭</button>
                     <button class="btn btn-primary btn-sm" id="btnColumnsDrawerSave">保存</button>
                 </div>
             </div>
@@ -964,10 +964,10 @@
             </div>
         </div>
 
-        <!-- 代理變更紀錄 Drawer -->
+        <!-- 代理变更纪录 Drawer -->
         <div class="advanced-filter-drawer" id="agentChangeRecordDrawer">
             <div class="drawer-header">
-                <h3>代理變更紀錄</h3>
+                <h3>代理变更纪录</h3>
                 <button class="btn-icon btn-close-modal" id="btnAgentChangeRecordClose">
                     <i class="ph ph-x"></i>
                 </button>
@@ -977,10 +977,10 @@
                     <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
                         <thead>
                             <tr style="border-bottom: 1px solid var(--border-color); background-color: var(--bg-color); color: var(--text-secondary);">
-                                <th style="padding: 16px 12px; font-weight: 500;">變更前代理</th>
-                                <th style="padding: 16px 12px; font-weight: 500;">變更後代理</th>
+                                <th style="padding: 16px 12px; font-weight: 500;">变更前代理</th>
+                                <th style="padding: 16px 12px; font-weight: 500;">变更后代理</th>
                                 <th style="padding: 16px 12px; font-weight: 500;">操作者</th>
-                                <th style="padding: 16px 12px; font-weight: 500;">操作時間</th>
+                                <th style="padding: 16px 12px; font-weight: 500;">操作时间</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1091,13 +1091,13 @@
             const exportContainer = document.querySelector('.export-dropdown-container');
             
             function updatePermissions() {
-                // 1. 新增會員按鈕 (trace 2)
+                // 1. 新增会员按钮 (trace 2)
                 if (btnAddMember) {
                     const showAdd = localStorage.getItem('perm-2') !== 'false';
                     btnAddMember.style.display = showAdd ? '' : 'none';
                 }
                 
-                // 2. 批量操作按鈕與下拉選單項目 (trace 12, 14, 24, 43, 44)
+                // 2. 批量操作按钮与下拉选单项目 (trace 12, 14, 24, 43, 44)
                 if (batchContainer) {
                     const p12 = localStorage.getItem('perm-12') !== 'false';
                     const p14 = localStorage.getItem('perm-14') !== 'false';
@@ -1105,11 +1105,11 @@
                     const p43 = localStorage.getItem('perm-43') !== 'false';
                     const p44 = localStorage.getItem('perm-44') !== 'false';
                     
-                    // 如果這五個權限有任何一個是開啟的，就顯示；否則隱藏整組
+                    // 如果这五个权限有任何一个是开启的，就显示；否则隐藏整组
                     const showBatch = p12 || p14 || p24 || p43 || p44;
                     batchContainer.style.display = showBatch ? '' : 'none';
                     
-                    // 個別控制下拉選單項目
+                    // 个别控制下拉选单项目
                     const item12 = document.getElementById('batchItem-12');
                     if (item12) item12.style.display = p12 ? '' : 'none';
                     
@@ -1126,24 +1126,24 @@
                     if (item44) item44.style.display = p44 ? '' : 'none';
                 }
                 
-                // 3. 導出數據按鈕 (trace 13)
+                // 3. 导出数据按钮 (trace 13)
                 if (exportContainer) {
                     const showExport = localStorage.getItem('perm-13') !== 'false';
                     exportContainer.style.display = showExport ? '' : 'none';
                 }
 
-                // 4. 動態搜尋欄位權限控制
-                // 獨立搜尋欄位 (Trace: 17, 3)
+                // 4. 动态搜寻栏位权限控制
+                // 独立搜寻栏位 (Trace: 17, 3)
                 const p17 = localStorage.getItem('perm-17') !== 'false';
                 const p3 = localStorage.getItem('perm-3') !== 'false';
                 const showIndependentFields = p17 || p3;
                 const independentFields = ['birthday', 'bankCard', 'depositAmount', 'loginIp'];
                 independentFields.forEach(id => {
-                    // 表單群組 (搜尋欄位)
+                    // 表单群组 (搜寻栏位)
                     const el = document.querySelector(`.form-group[data-filter-id="${id}"]`);
                     if (el) el.style.display = showIndependentFields ? '' : 'none';
 
-                    // 自訂篩選維度彈窗內的選項
+                    // 自订筛选维度弹窗内的选项
                     const modalCheckbox = document.querySelector(`.checkbox-item input[value="${id}"]`);
                     if (modalCheckbox) {
                         const parentLabel = modalCheckbox.closest('.checkbox-item');
@@ -1151,8 +1151,8 @@
                     }
                 });
 
-                // 下拉選單項目
-                // Trace 14, 20 (郵箱, Zalo, WhatsApp, Telegram)
+                // 下拉选单项目
+                // Trace 14, 20 (邮箱, Zalo, WhatsApp, Telegram)
                 const p14_dropdown = localStorage.getItem('perm-14') !== 'false';
                 const p20 = localStorage.getItem('perm-20') !== 'false';
                 const showContactInfo = p14_dropdown || p20;
@@ -1162,25 +1162,25 @@
                     if (el) el.style.display = showContactInfo ? '' : 'none';
                 });
 
-                // Trace 36 (手機號)
+                // Trace 36 (手机号)
                 const showPhone = localStorage.getItem('perm-36') !== 'false';
                 const phoneEl = document.querySelector(`#accountTypeMenu li[data-value="phone"]`);
                 if (phoneEl) phoneEl.style.display = showPhone ? '' : 'none';
 
-                // Trace 37 (真實姓名)
+                // Trace 37 (真实姓名)
                 const showRealName = localStorage.getItem('perm-37') !== 'false';
                 const realNameEl = document.querySelector(`#accountTypeMenu li[data-value="realName"]`);
                 if (realNameEl) realNameEl.style.display = showRealName ? '' : 'none';
 
 
-                // Trace 31, 32 (谷歌驗證碼)
+                // Trace 31, 32 (谷歌验证码)
                 const p31 = localStorage.getItem('perm-31') !== 'false';
                 const p32 = localStorage.getItem('perm-32') !== 'false';
                 const showGoogleCode = p31 || p32;
                 const googleCodeEl = document.querySelector(`#accountTypeMenu li[data-value="googleCode"]`);
                 if (googleCodeEl) googleCodeEl.style.display = showGoogleCode ? '' : 'none';
 
-                // Trace 4 (支付層級)
+                // Trace 4 (支付层级)
                 const p4 = localStorage.getItem('perm-4') !== 'false';
                 const editFormPayLevel = document.getElementById('editFormPayLevel');
                 if (editFormPayLevel) {
@@ -1196,12 +1196,71 @@
                         editFormPayLevel.style.opacity = '';
                     }
                 }
+                
+                // Trace 37 (Real Name form and details toggle)
+                const detailsRealName = document.getElementById('detailsRealName');
+                if (detailsRealName) {
+                    const rawVal = detailsRealName.getAttribute('data-val');
+                    detailsRealName.textContent = showRealName ? (rawVal && rawVal !== '-' ? rawVal : '-') : window.maskRealName(rawVal);
+                }
+                const editFormRealName = document.getElementById('editFormRealName');
+                if (editFormRealName) {
+                    const rawVal = editFormRealName.getAttribute('data-val');
+                    if (showRealName) {
+                        editFormRealName.value = (rawVal && rawVal !== '-') ? rawVal : '';
+                        editFormRealName.disabled = false;
+                    } else {
+                        editFormRealName.value = (rawVal && rawVal !== '-') ? rawVal : '';
+                        editFormRealName.disabled = true;
+                    }
+                }
+                
+
+                // Trace 36 (Phone Edit)
+                const showPhoneEdit = localStorage.getItem('perm-36') !== 'false';
+                const editFormPhone = document.getElementById('editFormPhone');
+                if (editFormPhone) {
+                    const rawVal = editFormPhone.getAttribute('data-val');
+                    const isUnverified = !rawVal || rawVal === '-' || rawVal === '未验证' || rawVal === '末绑定' || rawVal === '未绑定' || rawVal === '待重新绑定' || rawVal === '审核中';
+                    if (isUnverified) {
+                        editFormPhone.value = '-';
+                    } else {
+                        editFormPhone.value = rawVal;
+                    }
+                    
+                    if (showPhoneEdit) {
+                        editFormPhone.disabled = false;
+                    } else {
+                        editFormPhone.disabled = true;
+                    }
+                }
+                
+                // Trace 27 (Audit Info toggle)
+                const p27 = localStorage.getItem('perm-27') !== 'false';
+                const detailsAuditTabBtn = document.getElementById('detailsAuditTabBtn');
+                if (detailsAuditTabBtn) {
+                    detailsAuditTabBtn.style.display = p27 ? '' : 'none';
+                    if (!p27 && detailsAuditTabBtn.classList.contains('active')) {
+                        const basicTabBtn = document.querySelector('.user-details-tab-item[data-target="detailsBasic"]');
+                        if (basicTabBtn) basicTabBtn.click();
+                    }
+                }
+                
+                // Trace 20 (Contact Info Card toggle)
+                const detailsContactInfoCard = document.getElementById('detailsContactInfoCard');
+                if (detailsContactInfoCard) {
+                    detailsContactInfoCard.style.display = p20 ? '' : 'none';
+                }
+                const editContactInfoCard = document.getElementById('editContactInfoCard');
+                if (editContactInfoCard) {
+                    editContactInfoCard.style.display = p20 ? '' : 'none';
+                }
             }
 
-            // 初始設定
+            // 初始设定
             updatePermissions();
             
-            // 監聽來自 index.html 的 postMessage (Works reliably on file:// protocol)
+            // 监听来自 index.html 的 postMessage (Works reliably on file:// protocol)
             window.addEventListener('message', (e) => {
                 if (e.data && e.data.type === 'permission_change') {
                     localStorage.setItem('perm-' + e.data.traceId, e.data.checked);

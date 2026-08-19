@@ -3,35 +3,35 @@ document.addEventListener('DOMContentLoaded', () => {
     // Permission helper for row actions
     function getTraceId(opName) {
         const mapping = {
-            "編輯用戶": 3, "编辑用户": 3,
-            "查看詳情": 17, "查看详情": 17,
-            "額度修改": 9, "额度修改": 9,
-            "資金明細": 7, "资金明细": 7,
-            "注單明細": 8, "注单明细": 8,
-            "修改密碼": 35, "修改密码": 35,
+            "编辑用户": 3, "编辑用户": 3,
+            "查看详情": 17, "查看详情": 17,
+            "额度修改": 9, "额度修改": 9,
+            "资金明细": 7, "资金明细": 7,
+            "注单明细": 8, "注单明细": 8,
+            "修改密码": 35, "修改密码": 35,
             
-            // 下級相關 (對應 trace 6: 返点设定)
-            "下級會員": 6, "下级会员": 6,
-            "下級報表": 6, "下级报表": 6,
-            "下級注單": 6, "下级注单": 6,
+            // 下级相关 (对应 trace 6: 返点设定)
+            "下级会员": 6, "下级会员": 6,
+            "下级报表": 6, "下级报表": 6,
+            "下级注单": 6, "下级注单": 6,
 
-            "支付層級": 4, "支付层级": 4,
-            "交易設定": 10, "交易设定": 10,
-            "代理变更": 11, "代理變更": 11,
-            "第三方游戏": 15, "第三方遊戲": 15,
-            "积分修改": 16, "積分修改": 16,
-            "稽核记录": 18, "稽核紀錄": 18,
-            "代理变更记录": 19, "代理變更紀錄": 19,
+            "支付层级": 4, "支付层级": 4,
+            "交易设定": 10, "交易设定": 10,
+            "代理变更": 11, "代理变更": 11,
+            "第三方游戏": 15, "第三方游戏": 15,
+            "积分修改": 16, "积分修改": 16,
+            "稽核记录": 18, "稽核纪录": 18,
+            "代理变更记录": 19, "代理变更纪录": 19,
             "回访备注": 21,
-            "隐藏资金明细": 22, "隱藏資金明細": 22,
-            "快速登录变更": 25, "快速登錄變更": 25,
-            "谷歌验证码": 31, "谷歌驗證碼": 31,
-            "链上地址": 33, "鏈上地址": 33,
+            "隐藏资金明细": 22, "隐藏资金明细": 22,
+            "快速登录变更": 25, "快速登录变更": 25,
+            "谷歌验证码": 31, "谷歌验证码": 31,
+            "链上地址": 33, "链上地址": 33,
             "额度修改(链上充值)": 34,
-            "赔率设置": 38, "賠率設置": 38,
+            "赔率设置": 38, "赔率设置": 38,
             "校验用户任务": 45,
-            "编辑标签": 47, "編輯標籤": 47,
-            "用户标签编辑记录": 48, "編輯標籤紀錄": 48
+            "编辑标签": 47, "编辑标签": 47,
+            "用户标签编辑记录": 48, "编辑标签纪录": 48
         };
         return mapping[opName] || null;
     }
@@ -88,53 +88,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (typeof renderTable === 'function') renderTable();
             renderCompactActionMenu();
             
-            // Real-time toggle for trace 20 (Contact Info)
-            if (e.target.getAttribute('data-trace') === '20') {
-                const isChecked = e.target.checked;
-                const detailsContactInfoCard = document.getElementById('detailsContactInfoCard');
-                if (detailsContactInfoCard) {
-                    detailsContactInfoCard.style.display = isChecked ? '' : 'none';
-                }
-                const editContactInfoCard = document.getElementById('editContactInfoCard');
-                if (editContactInfoCard) {
-                    editContactInfoCard.style.display = isChecked ? '' : 'none';
-                }
-            }
-            
-            // Real-time toggle for trace 37 (Real Name)
-            if (e.target.getAttribute('data-trace') === '37') {
-                const isChecked = e.target.checked;
-                const detailsRealName = document.getElementById('detailsRealName');
-                if (detailsRealName) {
-                    const rawVal = detailsRealName.getAttribute('data-val');
-                    detailsRealName.textContent = isChecked ? (rawVal && rawVal !== '-' ? rawVal : '-') : window.maskRealName(rawVal);
-                }
-                const editFormRealName = document.getElementById('editFormRealName');
-                if (editFormRealName) {
-                    const rawVal = editFormRealName.getAttribute('data-val');
-                    if (isChecked) {
-                        editFormRealName.value = (rawVal && rawVal !== '-') ? rawVal : '';
-                        editFormRealName.disabled = false;
-                    } else {
-                        editFormRealName.value = window.maskRealName(rawVal);
-                        editFormRealName.disabled = true;
-                    }
-                }
-            }
-            
-            // Real-time toggle for trace 27 (Audit Info)
-            if (e.target.getAttribute('data-trace') === '27') {
-                const isChecked = e.target.checked;
-                const detailsAuditTabBtn = document.getElementById('detailsAuditTabBtn');
-                if (detailsAuditTabBtn) {
-                    detailsAuditTabBtn.style.display = isChecked ? '' : 'none';
-                    // If unchecked while active, switch back to basic tab
-                    if (!isChecked && detailsAuditTabBtn.classList.contains('active')) {
-                        const basicTabBtn = document.querySelector('.user-details-tab-item[data-target="detailsBasic"]');
-                        if (basicTabBtn) basicTabBtn.click();
-                    }
-                }
-            }
         });
     });
 
@@ -183,13 +136,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Change placeholder and clear value
                 if (inputAccount) {
                     if (value === 'exact') {
-                        inputAccount.placeholder = '請輸入精確帳號';
+                        inputAccount.placeholder = '请输入精确帐号';
                     } else if (value === 'fuzzy') {
-                        inputAccount.placeholder = '請輸入模糊帳號關鍵字';
+                        inputAccount.placeholder = '请输入模糊帐号关键字';
                     } else if (value === 'multi') {
                         inputAccount.placeholder = "帐号以';'隔开，上限限制 50 个帐号";
                     } else {
-                        inputAccount.placeholder = `請輸入${selectedText}`;
+                        inputAccount.placeholder = `请输入${selectedText}`;
                     }
                     inputAccount.value = '';
                 }
@@ -274,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         batchOperationsMenu.querySelectorAll('li').forEach(li => {
             li.addEventListener('click', () => {
-                alert(`觸發操作：${li.textContent.trim()}`);
+                alert(`触发操作：${li.textContent.trim()}`);
                 batchOperationsMenu.classList.remove('show');
             });
         });
@@ -295,7 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         exportDataMenu.querySelectorAll('li').forEach(li => {
             li.addEventListener('click', () => {
-                alert(`觸發操作：${li.textContent.trim()}`);
+                alert(`触发操作：${li.textContent.trim()}`);
                 exportDataMenu.classList.remove('show');
             });
         });
@@ -384,7 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (selectedItems.length === 0) {
-                selectedValSpan.textContent = '請選擇';
+                selectedValSpan.textContent = '请选择';
             } else if (selectedItems.length === 1) {
                 selectedValSpan.textContent = selectedItems[0];
             } else {
@@ -528,16 +481,16 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Nested Visibility State
     const nestedColumnsConfig = [
-        { id: 'online', label: '在線' },
-        { id: 'avatar', label: '頭像' },
-        { id: 'memberInfo', label: '會員信息' },
-        { id: 'levelTeam', label: '等級&團隊' },
-        { id: 'creditLimit', label: '信用&額度' },
-        { id: 'depositWithdraw', label: '存取款', requirePerm: 7 },
-        { id: 'tags', label: '標籤' },
-        { id: 'status', label: '狀態' },
+        { id: 'online', label: '在线' },
+        { id: 'avatar', label: '头像' },
+        { id: 'memberInfo', label: '会员信息' },
+        { id: 'levelTeam', label: '等级&团队' },
+        { id: 'creditLimit', label: '信用&额度' },
+        { id: 'depositWithdraw', label: '存取款' },
+        { id: 'tags', label: '标签' },
+        { id: 'status', label: '状态' },
         { id: 'dateInfo', label: '日期信息' },
-        { id: 'remark', label: '備註', requirePerm: 21 }
+        { id: 'remark', label: '备注' }
     ];
     let nestedColumnVisibility = {};
     let tempNestedColumnVisibility = {};
@@ -551,20 +504,20 @@ document.addEventListener('DOMContentLoaded', () => {
     let nestedDropdownHtml = '';
     // --- Data State Rendering Helper ---
     function renderDataState(val, type = 'text') {
-        if (val === '-' || val === null || val === undefined || val === '' || val === '無數據') {
+        if (val === '-' || val === null || val === undefined || val === '' || val === '无数据') {
             if (type === 'phone') {
-                return `<span class="tag-unbound">未驗證</span>`;
+                return `<span class="tag-unbound">未验证</span>`;
             }
             return `<span class="data-empty">-</span>`;
         }
-        if (val === '未綁定' || val === '未驗證') {
+        if (val === '未绑定' || val === '未验证') {
             return `<span class="tag-unbound">${val}</span>`;
         }
-        if (val === '無權限') {
-            return `<span class="tag-no-permission" title="無權限"><i class="ph-fill ph-lock"></i></span>`;
+        if (val === '无权限') {
+            return `<span class="tag-no-permission" title="无权限"><i class="ph-fill ph-lock"></i></span>`;
         }
-        if (val === 'NaN-NaN-NaN' || val === '解析異常') {
-            return `<span class="tag-parse-error" title="原數據異常，無法正確解析">${val === 'NaN-NaN-NaN' ? '解析異常' : val}</span>`;
+        if (val === 'NaN-NaN-NaN' || val === '解析异常') {
+            return `<span class="tag-parse-error" title="原数据异常，无法正确解析">${val === 'NaN-NaN-NaN' ? '解析异常' : val}</span>`;
         }
         
         // Formats
@@ -572,20 +525,23 @@ document.addEventListener('DOMContentLoaded', () => {
             return `<span class="status-bound"><span class="data-masked">${val}</span></span>`;
         }
         if (type === 'longText') {
-            return `<span class="text-truncate" title="${val}">${val}</span>`;
+            return `<div class="remark-container">
+                        <div class="remark-content">${val}</div>
+                        <div class="remark-tooltip">${val}</div>
+                    </div>`;
         }
         if (type === 'copyable') {
-            return `<span class="copyable-text" onclick="alert('已複製：' + '${val}')" title="點擊複製">${val}<i class="ph-bold ph-copy copy-icon"></i></span>`;
+            return `<span class="copyable-text" onclick="alert('已复制：' + '${val}')" title="点击复制">${val}<i class="ph-bold ph-copy copy-icon"></i></span>`;
         }
         if (type === 'ip') {
-            return `<a href="#" class="ip-link" data-ip="${val}" style="color: var(--primary-color); text-decoration: none;">${val}</a> <i class="ph ph-copy copy-ip-btn" data-ip="${val}" style="cursor: pointer; color: var(--text-muted);" title="複製IP"></i>`;
+            return `<a href="#" class="ip-link" data-ip="${val}" style="color: var(--primary-color); text-decoration: none;">${val}</a> <i class="ph ph-copy copy-ip-btn" data-ip="${val}" style="cursor: pointer; color: var(--text-muted);" title="复制IP"></i>`;
         }
     
         return val;
     }
 
     window.maskRealName = function(name) {
-        if (!name || name === '-' || name === '未填寫' || name === '***') return '-';
+        if (!name || name === '-' || name === '未填写' || name === '***') return '-';
         return name.charAt(0) + '**';
     };
 
@@ -598,60 +554,66 @@ document.addEventListener('DOMContentLoaded', () => {
         return '***.***.***.***';
     };
 
-    window.getPhoneStatusHtml = function(phone) {
-        if (phone === '審核中') return '<span style="color: #ef4444; font-weight: 600;">審核中</span>';
-        if (phone === '待重新綁定') return '<span style="color: #f59e0b; font-weight: 500;">待重新綁定</span>';
-        if (phone && phone !== '-' && phone !== '未驗證' && phone !== '末綁定' && phone !== '未綁定') {
-            return '<span style="color: #16a34a; font-weight: 500;">已驗證</span>';
+    window.maskAccountForNickname = function(account) {
+        if (!account || account === '-') return '-';
+        if (account.length <= 4) {
+            return account.charAt(0) + '***' + account.charAt(account.length - 1);
         }
-        return '<span style="color: #94a3b8;">未驗證</span>';
+        return account.substring(0, 2) + '***' + account.substring(account.length - 2);
+    };
+
+    window.getPhoneStatusHtml = function(phone) {
+        if (phone && phone !== '-' && phone !== '未验证' && phone !== '末绑定' && phone !== '未绑定') {
+            return '<span style="color: #16a34a; font-weight: 500;">已验证</span>';
+        }
+        return '<span style="color: #94a3b8;">未验证</span>';
     }
 
     const compactColumnsConfig = [
-        { id: 'uid', group: '基本', label: '用戶ID', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="uid">${renderDataState(user.uid, 'copyable')}</td>` },
-        { id: 'account', group: '基本', label: '會員名', checkboxIndex: 3, render: (user) => `<td data-col="account"><a href="#" class="cell-username user-detail-link" data-uid="${user.uid}">${renderDataState(user.account, 'copyable')}</a></td>` },
-        { id: 'online', group: '狀態', label: '在線', checkboxIndex: 1, render: (user) => `<td data-col="online"><span class="status-dot-icon" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${user.offlineDays === 0 ? '#10b981' : '#9ca3af'};"></span></td>` },
-        { id: 'status', group: '狀態', label: '狀態', checkboxIndex: 1, render: (user) => `<td data-col="status"><span class="user-custom-tag ${user.status === '正常' ? 'tag-green' : user.status === '冻结' ? 'tag-blue' : 'tag-red'}">${user.status}</span></td>` },
-        { id: 'avatar', group: '狀態', label: '頭像', checkboxIndex: 2, render: (user) => `<td data-col="avatar"><div class="avatar-cell" style="width:24px;height:24px;border-radius:50%;background:#3b82f6;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;margin:0 auto;">${user.account.charAt(0).toLowerCase()}</div></td>` },
-        { id: 'realName', group: '帳號', label: '真實姓名', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="realName">${hasPerm(37) ? renderDataState(user.realName) : window.maskRealName(user.realName)}</td>` },
-        { id: 'nickname', group: '帳號', label: '暱稱', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="nickname">${(user.nickname && user.nickname !== '-') ? user.nickname : renderDataState(user.account)}</td>` },
-        { id: 'agentId', group: '會員信息（詳細）', label: '代理', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="agentId">${renderDataState(user.agentId)}</td>` },
-        { id: 'inviter', group: '會員信息（詳細）', label: '邀請人', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="inviter">${renderDataState(user.inviter)}</td>` },
-        { id: 'registerMode', group: '會員信息（詳細）', label: '註冊模式', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="registerMode">${user.registerMode}</td>` },
-        { id: 'phone', group: '會員信息（詳細）', label: '手機號', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="phone">${getPhoneStatusHtml(user.phone)}</td>` },
-        { id: 'payLevel', group: '等級 & 團隊', label: '支付層級', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="payLevel">${hasPerm(4) ? user.payLevel : '***'}</td>` },
-        { id: 'growth', group: '等級 & 團隊', label: '成長值', sortable: true, checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="growth">${user.growth}</td>` },
-        { id: 'level', group: '等級 & 團隊', label: '等級', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="level">${user.level}</td>` },
-        { id: 'accountType', group: '等級 & 團隊', label: '帳號類型', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="accountType">${user.accountType}</td>` },
-        { id: 'userType', group: '等級 & 團隊', label: '會員類型', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="userType">${user.userType}</td>` },
-        { id: 'inviteCode', group: '等級 & 團隊', label: '邀請碼', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="inviteCode">${user.inviteCode}</td>` },
-        { id: 'directTeam', group: '等級 & 團隊', label: '直屬下級/團隊數', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="directTeam"><a href="#" class="subordinate-link" style="color: var(--primary-color); text-decoration: underline;" data-uid="${user.uid}">${hasPerm(6) ? user.directTeam : '*/*'}</a></td>` },
-        { id: 'vipLevel', group: '等級 & 團隊', label: 'VIP等級', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="vipLevel">${user.vipLevel}</td>` },
-        { id: 'vipGrowth', group: '等級 & 團隊', label: 'VIP成長值', sortable: true, checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="vipGrowth">${user.vipGrowth}</td>` },
-        { id: 'creditValue', group: '信用 & 額度', label: '信用值', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="creditValue">${hasPerm(7) ? user.creditValue : '***'}</td>` },
-        { id: 'availableCredit', group: '信用 & 額度', label: '可用額度', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="availableCredit">${user.availableCredit}</td>` },
-        { id: 'commissionBal', group: '信用 & 額度', label: '佣金餘額', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-money ${hasPerm(7) && user.commissionBal > 0 ? 'positive' : ''}" data-col="commissionBal">${hasPerm(7) ? (user.commissionBal > 0 ? user.commissionBal : '0') : '***'}</td>` },
-        { id: 'balanceBuy', group: '信用 & 額度', label: '餘額買', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-money ${user.balanceBuy > 0 ? 'highlight' : ''}" data-col="balanceBuy">${user.balanceBuy > 0 ? user.balanceBuy : '0'}</td>` },
-        { id: 'arrears', group: '信用 & 額度', label: '欠款', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-money ${hasPerm(7) && user.arrears === '0' ? 'negative' : ''}" style="color:${hasPerm(7) && user.arrears === '0' ? '#ef4444' : 'inherit'};" data-col="arrears">${hasPerm(7) ? renderDataState(user.arrears) : '***'}</td>` },
-        { id: 'interest', group: '信用 & 額度', label: '餘額買利息', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="interest">${user.interest}</td>` },
-        { id: 'thirdBal', group: '信用 & 額度', label: '三方餘額', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="thirdBal"><div style="display:flex;align-items:center;">${user.thirdBal > 0 ? user.thirdBal : '0'} <i class="ph ph-arrows-clockwise refresh-icon-compact" data-uid="${user.uid}" title="刷新餘額"></i></div></td>` },
-        { id: 'points', group: '信用 & 額度', label: '會員積分', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="points">${user.points}</td>` },
-        { id: 'deposit', group: '存取款', label: '存款總額', sortable: true, checkboxIndex: 6, requirePerm: 7, render: (user) => `<td class="cell-money ${user.deposit > 0 ? 'highlight' : ''}" data-col="deposit">${user.deposit > 0 ? user.deposit : '0'}</td>` },
-        { id: 'withdraw', group: '存取款', label: '取款總額', sortable: true, checkboxIndex: 6, requirePerm: 7, render: (user) => `<td class="cell-money" data-col="withdraw">${user.withdraw > 0 ? user.withdraw : '0'}</td>` },
-        { id: 'withdrawPre', group: '存取款', label: '提款扣金額', sortable: true, checkboxIndex: 6, requirePerm: 7, render: (user) => `<td class="cell-val" data-col="withdrawPre">${renderDataState(user.withdrawPre)}</td>` },
-        { id: 'adminDeduct', group: '存取款', label: '後台扣款總額', sortable: true, checkboxIndex: 6, requirePerm: 7, render: (user) => `<td class="cell-val" data-col="adminDeduct">${renderDataState(user.adminDeduct)}</td>` },
-        { id: 'depositCount', group: '存取款', label: '存款次數', checkboxIndex: 6, requirePerm: 7, render: (user) => `<td class="cell-val" data-col="depositCount">${user.depositCount}</td>` },
-        { id: 'withdrawCount', group: '存取款', label: '取款次數', checkboxIndex: 6, requirePerm: 7, render: (user) => `<td class="cell-val" data-col="withdrawCount">${user.withdrawCount}</td>` },
-        { id: 'tags', group: '其他', label: '標籤', checkboxIndex: 7, render: (user) => {
+        { id: 'uid', group: '基本', label: '用户ID', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="uid">${renderDataState(user.uid, 'copyable')}</td>` },
+        { id: 'account', group: '基本', label: '会员名', checkboxIndex: 3, render: (user) => `<td data-col="account"><a href="#" class="cell-username user-detail-link" data-uid="${user.uid}">${renderDataState(user.account, 'copyable')}</a></td>` },
+        { id: 'online', group: '状态', label: '在线', checkboxIndex: 1, render: (user) => `<td data-col="online"><span class="status-dot-icon" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${user.offlineDays === 0 ? '#10b981' : '#9ca3af'};"></span></td>` },
+        { id: 'status', group: '状态', label: '状态', checkboxIndex: 1, render: (user) => `<td data-col="status"><span class="user-custom-tag ${user.status === '正常' ? 'tag-green' : user.status === '冻结' ? 'tag-blue' : 'tag-red'}">${user.status}</span></td>` },
+        { id: 'avatar', group: '状态', label: '头像', checkboxIndex: 2, render: (user) => `<td data-col="avatar"><div class="avatar-cell" style="width:24px;height:24px;border-radius:50%;background:#3b82f6;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;margin:0 auto;">${user.account.charAt(0).toLowerCase()}</div></td>` },
+        { id: 'realName', group: '帐号', label: '真实姓名', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="realName">${renderDataState(user.realName)}</td>` },
+        { id: 'nickname', group: '帐号', label: '暱称', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="nickname">${(user.nickname && user.nickname !== '-') ? user.nickname : renderDataState(window.maskAccountForNickname(user.account))}</td>` },
+        { id: 'agentId', group: '会员信息（详细）', label: '代理', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="agentId">${renderDataState(user.agentId)}</td>` },
+        { id: 'inviter', group: '会员信息（详细）', label: '邀请人', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="inviter">${renderDataState(user.inviter)}</td>` },
+        { id: 'registerMode', group: '会员信息（详细）', label: '注册模式', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="registerMode">${user.registerMode}</td>` },
+        { id: 'phone', group: '会员信息（详细）', label: '手机号', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="phone">${getPhoneStatusHtml(user.phone)}</td>` },
+        { id: 'payLevel', group: '等级 & 团队', label: '支付层级', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="payLevel">${user.payLevel}</td>` },
+        { id: 'growth', group: '等级 & 团队', label: '成长值', sortable: true, checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="growth">${user.growth}</td>` },
+        { id: 'level', group: '等级 & 团队', label: '等级', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="level">${user.level}</td>` },
+        { id: 'accountType', group: '等级 & 团队', label: '帐号类型', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="accountType">${user.accountType}</td>` },
+        { id: 'userType', group: '等级 & 团队', label: '会员类型', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="userType">${user.userType}</td>` },
+        { id: 'inviteCode', group: '等级 & 团队', label: '邀请码', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="inviteCode">${user.inviteCode}</td>` },
+        { id: 'directTeam', group: '等级 & 团队', label: '直属下级/团队数', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="directTeam"><a href="#" class="subordinate-link" style="color: var(--primary-color); text-decoration: underline;" data-uid="${user.uid}">${user.directTeam}</a></td>` },
+        { id: 'vipLevel', group: '等级 & 团队', label: 'VIP等级', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="vipLevel">${user.vipLevel}</td>` },
+        { id: 'vipGrowth', group: '等级 & 团队', label: 'VIP成长值', sortable: true, checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="vipGrowth">${user.vipGrowth}</td>` },
+        { id: 'creditValue', group: '信用 & 额度', label: '信用值', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="creditValue">${hasPerm(7) ? user.creditValue : '***'}</td>` },
+        { id: 'availableCredit', group: '信用 & 额度', label: '可用额度', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="availableCredit">${user.availableCredit}</td>` },
+        { id: 'commissionBal', group: '信用 & 额度', label: '佣金余额', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-money ${user.commissionBal > 0 ? 'positive' : ''}" data-col="commissionBal">${user.commissionBal > 0 ? user.commissionBal : '0'}</td>` },
+        { id: 'balanceBuy', group: '信用 & 额度', label: '余额买', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-money ${user.balanceBuy > 0 ? 'highlight' : ''}" data-col="balanceBuy">${user.balanceBuy > 0 ? user.balanceBuy : '0'}</td>` },
+        { id: 'arrears', group: '信用 & 额度', label: '欠款', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-money ${user.arrears === '0' ? 'negative' : ''}" style="color:${user.arrears === '0' ? '#ef4444' : 'inherit'};" data-col="arrears">${renderDataState(user.arrears)}</td>` },
+        { id: 'interest', group: '信用 & 额度', label: '余额买利息', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="interest">${user.interest}</td>` },
+        { id: 'thirdBal', group: '信用 & 额度', label: '三方余额', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="thirdBal"><div style="display:flex;align-items:center;">${user.thirdBal > 0 ? user.thirdBal : '0'} <i class="ph ph-arrows-clockwise refresh-icon-compact" data-uid="${user.uid}" title="刷新余额"></i></div></td>` },
+        { id: 'points', group: '信用 & 额度', label: '会员积分', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="points">${user.points}</td>` },
+        { id: 'deposit', group: '存取款', label: '存款总额', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money ${user.deposit > 0 ? 'highlight' : ''}" data-col="deposit">${user.deposit > 0 ? user.deposit : '0'}</td>` },
+        { id: 'withdraw', group: '存取款', label: '取款总额', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money" data-col="withdraw">${user.withdraw > 0 ? user.withdraw : '0'}</td>` },
+        { id: 'withdrawPre', group: '存取款', label: '提款扣金额', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-val" data-col="withdrawPre">${renderDataState(user.withdrawPre)}</td>` },
+        { id: 'adminDeduct', group: '存取款', label: '后台扣款总额', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-val" data-col="adminDeduct">${renderDataState(user.adminDeduct)}</td>` },
+        { id: 'depositCount', group: '存取款', label: '存款次数', checkboxIndex: 6, render: (user) => `<td class="cell-val" data-col="depositCount">${user.depositCount}</td>` },
+        { id: 'withdrawCount', group: '存取款', label: '取款次数', checkboxIndex: 6, render: (user) => `<td class="cell-val" data-col="withdrawCount">${user.withdrawCount}</td>` },
+        { id: 'tags', group: '其他', label: '标签', checkboxIndex: 7, render: (user) => {
             const tagStyles = {
                 '正常': 'tag-blue',
-                'VIP 客戶': 'tag-blue',
+                'VIP 客户': 'tag-blue',
                 'VIP': 'tag-blue',
-                '活躍': 'tag-green',
-                '高頻交易': 'tag-green',
-                '大戶': 'tag-purple',
-                '高消費': 'tag-purple',
-                '異常風險': 'tag-red'
+                '活跃': 'tag-green',
+                '高频交易': 'tag-green',
+                '大户': 'tag-purple',
+                '高消费': 'tag-purple',
+                '异常风险': 'tag-red'
             };
 
             let riskIndicatorHtml = '';
@@ -671,7 +633,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <div style="position: absolute; top: 0; right: 0; width: 6px; height: 6px; background-color: #dc2626; border-radius: 50%; border: 1px solid #fff;"></div>
                             </div>
                             <div class="tag-tooltip">
-                                <span class="user-custom-tag tag-red"><i class="ph-fill ph-warning-circle" style="margin-right: 4px; font-size: 13px;"></i>異常風險</span>
+                                <span class="user-custom-tag tag-red"><i class="ph-fill ph-warning-circle" style="margin-right: 4px; font-size: 13px;"></i>异常风险</span>
                             </div>
                         </div>
                         <div style="width: 1px; height: 16px; background-color: #e2e8f0;"></div>
@@ -696,7 +658,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             let tagsOutput = renderedTags.map(tag => {
                 let styleClass = tagStyles[tag] || 'tag-grey';
-                if (tag === '異常風險') {
+                if (tag === '异常风险') {
                     return `<span class="user-custom-tag ${styleClass}"><i class="ph-fill ph-warning-circle" style="margin-right: 4px; font-size: 13px;"></i>${tag}</span>`;
                 }
                 return `<span class="user-custom-tag ${styleClass}">${tag}</span>`;
@@ -706,7 +668,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (showGradientMore || showGrayMore) {
                 let hiddenTagsHtml = currentTags.slice(visibleCount).map(tag => {
                     let styleClass = tagStyles[tag] || 'tag-grey';
-                    if (tag === '異常風險') {
+                    if (tag === '异常风险') {
                         return `<span class="user-custom-tag ${styleClass}"><i class="ph-fill ph-warning-circle" style="margin-right: 4px; font-size: 13px;"></i>${tag}</span>`;
                     }
                     return `<span class="user-custom-tag ${styleClass}">${tag}</span>`;
@@ -715,7 +677,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (showGradientMore) {
-                let fourthTag = currentTags[visibleCount] || '標籤...';
+                let fourthTag = currentTags[visibleCount] || '标签...';
                 let hiddenCount = currentTags.length - visibleCount;
                 tagsOutput += `
                     <div class="tag-more-container" style="position: relative; display: flex; align-items: center; margin-left: 0px;">
@@ -740,13 +702,12 @@ document.addEventListener('DOMContentLoaded', () => {
             </td>`;
         } },
 
-        { id: 'date', group: '日期信息', label: '新增時間', sortable: true, checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="date">${user.date}</td>` },
-        { id: 'lastLogin', group: '日期信息', label: '最後登錄', sortable: true, checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="lastLogin">${user.lastLogin}</td>` },
-        { id: 'offlineDays', group: '日期信息', label: '離開天數', sortable: true, checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="offlineDays">${user.offlineDays}</td>` },
-        { id: 'ip', group: '日期信息', label: '登錄IP', checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="ip"><div class="ip-row" style="display: flex; align-items: center; gap: 4px;">${hasPerm(17) ? renderDataState(user.ip, 'ip') : window.maskIp(user.ip)}</div></td>` },
-        { id: 'remark', group: '備註', label: '備註', checkboxIndex: 10, requirePerm: 21, render: (user) => `<td class="cell-val" data-col="remark">${user.remark}</td>` },
-        { id: 'followRemark', group: '備註', label: '回訪備註', checkboxIndex: 10, requirePerm: 21, render: (user) => `<td class="cell-val" data-col="followRemark">${user.followRemark}</td>` },
-        { id: 'note', group: '備註', label: '注', checkboxIndex: 10, requirePerm: 21, render: (user) => `<td class="cell-val" data-col="note">${user.note}</td>` },
+        { id: 'date', group: '日期信息', label: '新增时间', sortable: true, checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="date">${user.date}</td>` },
+        { id: 'lastLogin', group: '日期信息', label: '最后登录', sortable: true, checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="lastLogin">${user.lastLogin}</td>` },
+        { id: 'offlineDays', group: '日期信息', label: '离开天数', sortable: true, checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="offlineDays">${user.offlineDays}</td>` },
+        { id: 'ip', group: '日期信息', label: '登录IP', checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="ip"><div class="ip-row" style="display: flex; align-items: center; gap: 4px;">${renderDataState(user.ip, 'ip')}</div></td>` },
+        { id: 'remark', group: '备注', label: '备注', checkboxIndex: 10, render: (user) => `<td class="cell-val" data-col="remark">${renderDataState(user.remark, 'longText')}</td>` },
+        { id: 'followRemark', group: '备注', label: '回访备注', checkboxIndex: 10, render: (user) => `<td class="cell-val" data-col="followRemark">${user.followRemark}</td>` },
         { id: 'action', group: '操作', label: '操作', render: (user) => {
             return `<td class="sticky-col-right" data-col="action" style="overflow:visible;text-align:center;vertical-align:middle;">
                 <div class="compact-action-container" style="display:inline-flex;align-items:center;justify-content:center;">
@@ -777,14 +738,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (mode === 'nested') {
             if (btnModeNested) btnModeNested.classList.add('active');
             if (btnModeCompact) btnModeCompact.classList.remove('active');
-            if (modeDescriptionText) modeDescriptionText.textContent = '巢狀結構：分組整合屬性，減少表格欄位寬度';
-            if (modeNoticeText) modeNoticeText.innerHTML = '<strong>巢狀模式</strong>：將欄位屬性垂直分組組合，畫面精簡展示。點擊切換為壓縮模式可展開所有獨立列進行橫向比對。';
+            if (modeDescriptionText) modeDescriptionText.textContent = '巢状结构：分组整合属性，减少表格栏位宽度';
+            if (modeNoticeText) modeNoticeText.innerHTML = '<strong>巢状模式</strong>：将栏位属性垂直分组组合，画面精简展示。点击切换为压缩模式可展开所有独立列进行横向比对。';
             if (userTable) userTable.classList.remove('compact-mode-table');
         } else {
             if (btnModeCompact) btnModeCompact.classList.add('active');
             if (btnModeNested) btnModeNested.classList.remove('active');
-            if (modeDescriptionText) modeDescriptionText.textContent = '壓縮結構：扁平化所有屬性，適合橫向數據比對';
-            if (modeNoticeText) modeNoticeText.innerHTML = '<strong>壓縮模式</strong>：所有欄位變成獨立的列，標題只出現在最上方一次，數據按行排列，方便橫向比對，類似 Excel 的視圖。';
+            if (modeDescriptionText) modeDescriptionText.textContent = '压缩结构：扁平化所有属性，适合横向数据比对';
+            if (modeNoticeText) modeNoticeText.innerHTML = '<strong>压缩模式</strong>：所有栏位变成独立的列，标题只出现在最上方一次，数据按行排列，方便横向比对，类似 Excel 的视图。';
             if (userTable) userTable.classList.add('compact-mode-table');
         }
         currentPage = 1;
@@ -840,16 +801,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Comprehensive Mock Users Database (50 Users for pagination demonstration)
     const baseMockUsers = [
-        { uid: "1239361225", account: "mingv0717001", realName: "李小明", nickname: "", agentId: "dl", inviter: "-", registerMode: "一般註冊", phone: "末綁定", payLevel: "默認層", growth: 0, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "-", directTeam: "0/0", vipLevel: 0, vipGrowth: 0, creditValue: 0, availableCredit: 0, commissionBal: 0, balanceBuy: 0, arrears: "-", interest: 0, thirdBal: 0, points: 0, deposit: 0, withdraw: 0, withdrawPre: "-", adminDeduct: "-", depositCount: 0, withdrawCount: 0, tags: ["VIP 客戶", "高頻交易", "大戶", "標籤四", "標籤五", "標籤六"], status: "冻结", date: "2023-01-01 12:00:00", lastLogin: "2023-01-10 15:30:00", offlineDays: 9, ip: "192.168.1.1", remark: "-", followRemark: "-", note: "-" },
-        { uid: "1239361224", account: "albertvn021", realName: "黃大維", nickname: "阿布", agentId: "nnest123556", inviter: "nnest123556", registerMode: "一般註冊", phone: "未驗證", payLevel: "默認層", growth: 0, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "06077790", directTeam: "0/0", vipLevel: 0, vipGrowth: 0, creditValue: 0, availableCredit: 0, commissionBal: 0, balanceBuy: 0, arrears: "-", interest: 0, thirdBal: 0, points: 0, deposit: 0, withdraw: 0, withdrawPre: "-", adminDeduct: "-", depositCount: 0, withdrawCount: 0, tags: ["異常風險", "VIP 客戶", "標籤三", "標籤四", "標籤五"], status: "停用", date: "2023-01-02 10:00:00", lastLogin: "2023-01-11 09:20:00", offlineDays: 9, ip: "192.168.1.2", remark: "-", followRemark: "-", note: "-" },
-        { uid: "1239361223", account: "vip_king", realName: "李娜", realNameAudited: true, birthdayAudited: true, nickname: "鄭姐", agentId: "AG888", inviter: "nnest123556", registerMode: "一般註冊", phone: "13812348888", payLevel: "默認層", growth: 1250, level: "鑽石會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "INV02", directTeam: "12/8", vipLevel: 3, vipGrowth: 6800, creditValue: 500, availableCredit: 2000, commissionBal: 680, balanceBuy: 8750, arrears: "0", interest: 120, thirdBal: 320, points: 450, deposit: 3200, withdraw: 1500, withdrawPre: "-", adminDeduct: "-", depositCount: 8, withdrawCount: 4, tags: ["正常", "活躍", "高消費", "標籤四", "標籤五"], status: "冻结", date: "2023-01-05 14:15:00", lastLogin: "2023-01-15 18:45:00", offlineDays: 0, ip: "192.168.1.3", remark: "-", followRemark: "-", note: "-" },
-        { uid: "1239361226", account: "test_user_1", realName: "王大明", nickname: "王大", agentId: "dl", inviter: "nnest123556", registerMode: "後台新增", phone: "0912345678", payLevel: "默認層", growth: 0, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "CODE100", directTeam: "0/0", vipLevel: 0, vipGrowth: 0, creditValue: 500, availableCredit: 0, commissionBal: 0, balanceBuy: 0, arrears: "0", interest: 0, thirdBal: 150, points: 0, deposit: 0, withdraw: 0, withdrawPre: "-", adminDeduct: "-", depositCount: 0, withdrawCount: 0, tags: ["新註冊"], status: "停用", date: "2023-02-01 10:00:00", lastLogin: "2023-03-01 15:30:00", offlineDays: 30, ip: "192.168.2.10", remark: "大戶需關注", followRemark: "-", note: "-" },
-        { uid: "1239361227", account: "test_user_2", realName: "林小華", nickname: "", agentId: "AG888", inviter: "-", registerMode: "一般註冊", phone: "0987654321", payLevel: "默認層", growth: 150, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "-", directTeam: "1/1", vipLevel: 1, vipGrowth: 50, creditValue: 0, availableCredit: 1000, commissionBal: 15, balanceBuy: 300, arrears: "0", interest: 2, thirdBal: 0, points: 25, deposit: 2000, withdraw: 500, withdrawPre: "-", adminDeduct: "-", depositCount: 1, withdrawCount: 1, tags: ["新註冊"], status: "停用", date: "2023-02-02 10:00:00", lastLogin: "2023-03-02 15:30:00", offlineDays: 1, ip: "192.168.1.100", remark: "-", followRemark: "-", note: "-" },
-        { uid: "1239361228", account: "test_user_3", realName: "周思齊", nickname: "Alice", agentId: "nnest123556", inviter: "nnest123556", registerMode: "一般註冊", phone: "13912341002", payLevel: "默認層", growth: 300, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "CODE102", directTeam: "2/2", vipLevel: 2, vipGrowth: 100, creditValue: 500, availableCredit: 2000, commissionBal: 30, balanceBuy: 600, arrears: "0", interest: 4, thirdBal: 0, points: 50, deposit: 4000, withdraw: 1000, withdrawPre: "-", adminDeduct: "-", depositCount: 2, withdrawCount: 2, tags: ["新註冊"], status: "冻结", date: "2023-02-03 10:00:00", lastLogin: "2023-03-03 15:30:00", offlineDays: 2, ip: "192.168.2.12", remark: "-", followRemark: "-", note: "-" },
-        { uid: "1239361229", account: "test_user_4", realName: "陳大文", nickname: "", agentId: "dl", inviter: "-", registerMode: "一般註冊", phone: "未綁定", payLevel: "默認層", growth: 450, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "-", directTeam: "3/0", vipLevel: 3, vipGrowth: 150, creditValue: 0, availableCredit: 3000, commissionBal: 45, balanceBuy: 900, arrears: "0", interest: 6, thirdBal: 0, points: 75, deposit: 6000, withdraw: 1500, withdrawPre: "-", adminDeduct: "-", depositCount: 3, withdrawCount: 3, tags: ["新註冊"], status: "冻结", date: "2023-02-04 10:00:00", lastLogin: "2023-03-04 15:30:00", offlineDays: 3, ip: "192.168.2.13", remark: "這是一段非常長非常長非常長的備註，用來測試單行截斷與懸停提示的效果是否正常運作。", followRemark: "-", note: "-" },
-        { uid: "1239361230", account: "test_user_5", realName: "許大茂", nickname: "小明", agentId: "AG888", inviter: "nnest123556", registerMode: "後台新增", phone: "13912341004", payLevel: "默認層", growth: 600, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "CODE104", directTeam: "4/1", vipLevel: 0, vipGrowth: 200, creditValue: 500, availableCredit: 4000, commissionBal: 60, balanceBuy: 1200, arrears: "0", interest: 8, thirdBal: 150, points: 100, deposit: 8000, withdraw: 2000, withdrawPre: "-", adminDeduct: "-", depositCount: 4, withdrawCount: 4, tags: ["新註冊"], status: "冻结", date: "2023-02-05 10:00:00", lastLogin: "2023-03-05 15:30:00", offlineDays: 4, ip: "192.168.2.14", remark: "-", followRemark: "-", note: "-" },
-        { uid: "1239361231", account: "test_user_6", realName: "陳阿明", nickname: "", agentId: "ag123", inviter: "-", registerMode: "一般註冊", phone: "待重新綁定", payLevel: "默認層", growth: 750, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "-", directTeam: "0/2", vipLevel: 1, vipGrowth: 250, creditValue: 0, availableCredit: 5000, commissionBal: 75, balanceBuy: 1500, arrears: "0", interest: 10, thirdBal: 0, points: 125, deposit: 10000, withdraw: 2500, withdrawPre: "-", adminDeduct: "-", depositCount: 5, withdrawCount: 5, tags: ["正常", "活躍"], status: "正常", date: "2023-02-06 10:00:00", lastLogin: "2023-03-06 15:30:00", offlineDays: 5, ip: "192.168.2.15", remark: "-", followRemark: "-", note: "-" },
-        { uid: "1239361232", account: "test_user_7", realName: "陳大文", nickname: "SuperAdmin", agentId: "dl", inviter: "nnest123556", registerMode: "一般註冊", phone: "審核中", payLevel: "默認層", growth: 900, level: "普通會員", accountType: "普通帳號", userType: "代理會員", inviteCode: "CODE106", directTeam: "1/0", vipLevel: 2, vipGrowth: 300, creditValue: 500, availableCredit: 6000, commissionBal: 90, balanceBuy: 1800, arrears: "0", interest: 12, thirdBal: 0, points: 150, deposit: 12000, withdraw: 3000, withdrawPre: "-", adminDeduct: "-", depositCount: 6, withdrawCount: 0, tags: ["新註冊"], status: "冻结", date: "2023-02-07 10:00:00", lastLogin: "2023-03-07 15:30:00", offlineDays: 6, ip: "192.168.2.16", remark: "-", followRemark: "-", note: "-" }
+        { uid: "1239361225", account: "mingv0717001", realName: "李小明", nickname: "", agentId: "dl", inviter: "-", registerMode: "一般注册", phone: "末绑定", payLevel: "默认层", growth: 0, level: "普通会员", accountType: "普通帐号", userType: "代理会员", inviteCode: "-", directTeam: "0/0", vipLevel: 0, vipGrowth: 0, creditValue: 0, availableCredit: 0, commissionBal: 0, balanceBuy: 0, arrears: "-", interest: 0, thirdBal: 0, points: 0, deposit: 0, withdraw: 0, withdrawPre: "-", adminDeduct: "-", depositCount: 0, withdrawCount: 0, tags: ["VIP 客户", "高频交易", "大户", "标签四", "标签五", "标签六"], status: "冻结", date: "2023-01-01 12:00:00", lastLogin: "2023-01-10 15:30:00", offlineDays: 9, ip: "192.168.1.1", remark: "-", followRemark: "-", note: "-" },
+        { uid: "1239361224", account: "albertvn021", realName: "黄大维", nickname: "阿布", agentId: "nnest123556", inviter: "nnest123556", registerMode: "一般注册", phone: "未验证", payLevel: "默认层", growth: 0, level: "普通会员", accountType: "普通帐号", userType: "代理会员", inviteCode: "06077790", directTeam: "0/0", vipLevel: 0, vipGrowth: 0, creditValue: 0, availableCredit: 0, commissionBal: 0, balanceBuy: 0, arrears: "-", interest: 0, thirdBal: 0, points: 0, deposit: 0, withdraw: 0, withdrawPre: "-", adminDeduct: "-", depositCount: 0, withdrawCount: 0, tags: ["异常风险", "VIP 客户", "标签三", "标签四", "标签五"], status: "停用", date: "2023-01-02 10:00:00", lastLogin: "2023-01-11 09:20:00", offlineDays: 9, ip: "192.168.1.2", remark: "-", followRemark: "-", note: "-" },
+        { uid: "1239361223", account: "vip_king", realName: "李娜", realNameAudited: true, birthdayAudited: true, nickname: "郑姐", agentId: "AG888", inviter: "nnest123556", registerMode: "一般注册", phone: "13812348888", payLevel: "默认层", growth: 1250, level: "钻石会员", accountType: "普通帐号", userType: "代理会员", inviteCode: "INV02", directTeam: "12/8", vipLevel: 3, vipGrowth: 6800, creditValue: 500, availableCredit: 2000, commissionBal: 680, balanceBuy: 8750, arrears: "0", interest: 120, thirdBal: 320, points: 450, deposit: 3200, withdraw: 1500, withdrawPre: "-", adminDeduct: "-", depositCount: 8, withdrawCount: 4, tags: ["正常", "活跃", "高消费", "标签四", "标签五"], status: "冻结", date: "2023-01-05 14:15:00", lastLogin: "2023-01-15 18:45:00", offlineDays: 0, ip: "192.168.1.3", remark: "-", followRemark: "-", note: "-" },
+        { uid: "1239361226", account: "test_user_1", realName: "王大明", nickname: "王大", agentId: "dl", inviter: "nnest123556", registerMode: "后台新增", phone: "0912345678", payLevel: "默认层", growth: 0, level: "普通会员", accountType: "普通帐号", userType: "代理会员", inviteCode: "CODE100", directTeam: "0/0", vipLevel: 0, vipGrowth: 0, creditValue: 500, availableCredit: 0, commissionBal: 0, balanceBuy: 0, arrears: "0", interest: 0, thirdBal: 150, points: 0, deposit: 0, withdraw: 0, withdrawPre: "-", adminDeduct: "-", depositCount: 0, withdrawCount: 0, tags: ["新注册"], status: "停用", date: "2023-02-01 10:00:00", lastLogin: "2023-03-01 15:30:00", offlineDays: 30, ip: "192.168.2.10", remark: "大户需关注", followRemark: "-", note: "-" },
+        { uid: "1239361227", account: "test_user_2", realName: "林小华", nickname: "", agentId: "AG888", inviter: "-", registerMode: "一般注册", phone: "0987654321", payLevel: "默认层", growth: 150, level: "普通会员", accountType: "普通帐号", userType: "代理会员", inviteCode: "-", directTeam: "1/1", vipLevel: 1, vipGrowth: 50, creditValue: 0, availableCredit: 1000, commissionBal: 15, balanceBuy: 300, arrears: "0", interest: 2, thirdBal: 0, points: 25, deposit: 2000, withdraw: 500, withdrawPre: "-", adminDeduct: "-", depositCount: 1, withdrawCount: 1, tags: ["新注册"], status: "停用", date: "2023-02-02 10:00:00", lastLogin: "2023-03-02 15:30:00", offlineDays: 1, ip: "192.168.1.100", remark: "-", followRemark: "-", note: "-" },
+        { uid: "1239361228", account: "test_user_3", realName: "周思齐", nickname: "Alice", agentId: "nnest123556", inviter: "nnest123556", registerMode: "一般注册", phone: "13912341002", payLevel: "默认层", growth: 300, level: "普通会员", accountType: "普通帐号", userType: "代理会员", inviteCode: "CODE102", directTeam: "2/2", vipLevel: 2, vipGrowth: 100, creditValue: 500, availableCredit: 2000, commissionBal: 30, balanceBuy: 600, arrears: "0", interest: 4, thirdBal: 0, points: 50, deposit: 4000, withdraw: 1000, withdrawPre: "-", adminDeduct: "-", depositCount: 2, withdrawCount: 2, tags: ["新注册"], status: "冻结", date: "2023-02-03 10:00:00", lastLogin: "2023-03-03 15:30:00", offlineDays: 2, ip: "192.168.2.12", remark: "-", followRemark: "-", note: "-" },
+        { uid: "1239361229", account: "test_user_4", realName: "陈大文", nickname: "", agentId: "dl", inviter: "-", registerMode: "一般注册", phone: "未绑定", payLevel: "默认层", growth: 450, level: "普通会员", accountType: "普通帐号", userType: "代理会员", inviteCode: "-", directTeam: "3/0", vipLevel: 3, vipGrowth: 150, creditValue: 0, availableCredit: 3000, commissionBal: 45, balanceBuy: 900, arrears: "0", interest: 6, thirdBal: 0, points: 75, deposit: 6000, withdraw: 1500, withdrawPre: "-", adminDeduct: "-", depositCount: 3, withdrawCount: 3, tags: ["新注册"], status: "冻结", date: "2023-02-04 10:00:00", lastLogin: "2023-03-04 15:30:00", offlineDays: 3, ip: "192.168.2.13", remark: "这是一段非常长非常长非常长的备注，用来测试单行截断与悬停提示的效果是否正常运作。", followRemark: "-", note: "-" },
+        { uid: "1239361230", account: "test_user_5", realName: "许大茂", nickname: "小明", agentId: "AG888", inviter: "nnest123556", registerMode: "后台新增", phone: "13912341004", payLevel: "默认层", growth: 600, level: "普通会员", accountType: "普通帐号", userType: "代理会员", inviteCode: "CODE104", directTeam: "4/1", vipLevel: 0, vipGrowth: 200, creditValue: 500, availableCredit: 4000, commissionBal: 60, balanceBuy: 1200, arrears: "0", interest: 8, thirdBal: 150, points: 100, deposit: 8000, withdraw: 2000, withdrawPre: "-", adminDeduct: "-", depositCount: 4, withdrawCount: 4, tags: ["新注册"], status: "冻结", date: "2023-02-05 10:00:00", lastLogin: "2023-03-05 15:30:00", offlineDays: 4, ip: "192.168.2.14", remark: "-", followRemark: "-", note: "-" },
+        { uid: "1239361231", account: "test_user_6", realName: "陈阿明", nickname: "", agentId: "ag123", inviter: "-", registerMode: "一般注册", phone: "待重新绑定", payLevel: "默认层", growth: 750, level: "普通会员", accountType: "普通帐号", userType: "代理会员", inviteCode: "-", directTeam: "0/2", vipLevel: 1, vipGrowth: 250, creditValue: 0, availableCredit: 5000, commissionBal: 75, balanceBuy: 1500, arrears: "0", interest: 10, thirdBal: 0, points: 125, deposit: 10000, withdraw: 2500, withdrawPre: "-", adminDeduct: "-", depositCount: 5, withdrawCount: 5, tags: ["正常", "活跃"], status: "正常", date: "2023-02-06 10:00:00", lastLogin: "2023-03-06 15:30:00", offlineDays: 5, ip: "192.168.2.15", remark: "-", followRemark: "-", note: "-" },
+        { uid: "1239361232", account: "test_user_7", realName: "陈大文", nickname: "SuperAdmin", agentId: "dl", inviter: "nnest123556", registerMode: "一般注册", phone: "审核中", payLevel: "默认层", growth: 900, level: "普通会员", accountType: "普通帐号", userType: "代理会员", inviteCode: "CODE106", directTeam: "1/0", vipLevel: 2, vipGrowth: 300, creditValue: 500, availableCredit: 6000, commissionBal: 90, balanceBuy: 1800, arrears: "0", interest: 12, thirdBal: 0, points: 150, deposit: 12000, withdraw: 3000, withdrawPre: "-", adminDeduct: "-", depositCount: 6, withdrawCount: 0, tags: ["新注册"], status: "冻结", date: "2023-02-07 10:00:00", lastLogin: "2023-03-07 15:30:00", offlineDays: 6, ip: "192.168.2.16", remark: "-", followRemark: "-", note: "-" }
     ];
 
     // Generate 200 items to ensure pagination works smoothly with up to 100 items per page
@@ -868,13 +829,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 dynamicTags = user.tags;
             } else {
                 if (r < 75) {
-                    dynamicTags = ["新註冊"];
+                    dynamicTags = ["新注册"];
                 } else if (r < 90) {
-                    dynamicTags = ["正常", "活躍"];
+                    dynamicTags = ["正常", "活跃"];
                 } else if (r < 97) {
-                    dynamicTags = ["大戶", "VIP 客戶"];
+                    dynamicTags = ["大户", "VIP 客户"];
                 } else {
-                    dynamicTags = ["異常風險", "VIP 客戶"];
+                    dynamicTags = ["异常风险", "VIP 客户"];
                 }
             }
 
@@ -883,11 +844,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 uid: newUid,
                 account: newAccount,
                 tags: dynamicTags,
-                nickname: user.nickname ? (i === 0 ? user.nickname : `${user.nickname}${i}`) : '',
+                nickname: user.nickname,
                 offlineDays: (user.offlineDays + i) % 15,
-                other: index % 2 === 0 ? "未充值玩家" : "測試帳號",
+                other: index % 2 !== 0 ? "未充值玩家" : "测试帐号",
                 vip: index % 3 === 0 ? "钻石会员" : index % 3 === 1 ? "黄金会员" : "白银会员",
-                level: index % 3 === 0 ? "VIP會員" : index % 3 === 1 ? "黃金會員" : "普通會員",
+                level: index % 3 === 0 ? "VIP会员" : index % 3 === 1 ? "黄金会员" : "普通会员",
                 email: `user${num}@example.com`,
                 qq: `12345${num}`,
                 wechat: `wx_${newAccount}`,
@@ -897,10 +858,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 facebook: `fb_${newAccount}`,
                 birthday: `199${num % 10}-0${(num % 9) + 1}-1${num % 9}`,
                 withdrawAccounts: index % 2 === 0 ? [
-                    { type: '銀行卡', account: '622202******1234', bank: '中國工商銀行 / CNY', address: '北京市朝陽區分行', status: '正常' },
+                    { type: '银行卡', account: '622202******1234', bank: '中国工商银行 / CNY', address: '北京市朝阳区分行', status: '正常' },
                     { type: 'USDT (TRC20)', account: 'TXYZ******7890', bank: 'USDT / USDT', address: '-', status: '正常' }
                 ] : [
-                    { type: '銀行卡', account: '621700******5678', bank: '中國建設銀行 / CNY', address: '上海市浦東新區分行', status: '正常' }
+                    { type: '银行卡', account: '621700******5678', bank: '中国建设银行 / CNY', address: '上海市浦东新区分行', status: '正常' }
                 ],
                 agentChangeRecords: (index + i) % 4 !== 0 ? [
                     { preAgent: 'd1', postAgent: 'aaaaaa1', operator: 'Wayne_test', time: '2026-08-11 09:25:24' },
@@ -946,7 +907,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const checkbox = li.querySelector('input[type="checkbox"]');
             if (checkbox) checkbox.checked = false;
         });
-        selectedValSpan.textContent = '請選擇';
+        selectedValSpan.textContent = '请选择';
     }
 
     // Read form values and update Tags & Badge count
@@ -961,16 +922,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 1. Status
         if (selectedStatusVal) {
-            tags.push({ key: 'status', label: `狀態: ${selectedStatusVal}`, type: 'single-custom', element: dropdownStatus, defaultValue: '', defaultText: '所有', valueVarSetter: (v) => selectedStatusVal = v });
+            tags.push({ key: 'status', label: `状态: ${selectedStatusVal}`, type: 'single-custom', element: dropdownStatus, defaultValue: '', defaultText: '所有', valueVarSetter: (v) => selectedStatusVal = v });
         }
         // 2. Level
         if (selectedLevelVal) {
-            tags.push({ key: 'level', label: `層級: ${selectedLevelVal}`, type: 'single-custom', element: dropdownLevel, defaultValue: '', defaultText: '全部', valueVarSetter: (v) => selectedLevelVal = v });
+            tags.push({ key: 'level', label: `层级: ${selectedLevelVal}`, type: 'single-custom', element: dropdownLevel, defaultValue: '', defaultText: '全部', valueVarSetter: (v) => selectedLevelVal = v });
         }
         // 3. VIP (Multiple Select)
         const selectedVips = getMultiSelectValues(dropdownVip);
         if (selectedVips.length > 0) {
-            tags.push({ key: 'vip', label: `等級: ${selectedVips.join(', ')}`, type: 'multi-custom', element: dropdownVip });
+            tags.push({ key: 'vip', label: `等级: ${selectedVips.join(', ')}`, type: 'multi-custom', element: dropdownVip });
         }
         // 4. Other
         const selectedOthers = getMultiSelectValues(dropdownOther);
@@ -981,14 +942,14 @@ document.addEventListener('DOMContentLoaded', () => {
         // 4.5 Tags Search
         const selectedTags = getMultiSelectValues(dropdownTagsSearch);
         if (selectedTags.length > 0) {
-            tags.push({ key: 'tagsSearch', label: `標籤: ${selectedTags.join(', ')}`, type: 'multi-custom', element: dropdownTagsSearch });
+            tags.push({ key: 'tagsSearch', label: `标签: ${selectedTags.join(', ')}`, type: 'multi-custom', element: dropdownTagsSearch });
         }
         // 5. Account
         if (inputAccount && inputAccount.value.trim()) {
-            let labelPrefix = '帳號';
-            if (currentAccountType === 'exact') labelPrefix = '帳號(精確)';
-            if (currentAccountType === 'fuzzy') labelPrefix = '帳號(模糊)';
-            if (currentAccountType === 'multi') labelPrefix = '帳號(多筆)';
+            let labelPrefix = '帐号';
+            if (currentAccountType === 'exact') labelPrefix = '帐号(精确)';
+            if (currentAccountType === 'fuzzy') labelPrefix = '帐号(模糊)';
+            if (currentAccountType === 'multi') labelPrefix = '帐号(多笔)';
             
             tags.push({ key: 'account', label: `${labelPrefix}: ${inputAccount.value.trim()}`, type: 'input', element: inputAccount });
         }
@@ -1017,7 +978,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // 6. Test Accounts Toggle
         if (filterTestAccountsToggle && filterTestAccountsToggle.checked) {
-            tags.push({ key: 'filterTestAccounts', label: `過濾測試賬號`, type: 'checkbox', element: filterTestAccountsToggle });
+            tags.push({ key: 'filterTestAccounts', label: `过滤测试账号`, type: 'checkbox', element: filterTestAccountsToggle });
         }
 
         // Advanced filter fields
@@ -1030,7 +991,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const endStr = inputDateEnd.value ? inputDateEnd.value.replace('T', ' ') : '??';
             tags.push({ 
                 key: 'dateRange', 
-                label: `時間: ${startStr} ~ ${endStr}`, 
+                label: `时间: ${startStr} ~ ${endStr}`, 
                 type: 'inputs',
                 elements: [inputDateStart, inputDateEnd] 
             });
@@ -1043,7 +1004,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const inputVipLevel = document.getElementById('inputVipLevel');
         if (inputVipLevel && inputVipLevel.value.trim()) {
-            tags.push({ key: 'vipLevel', label: `VIP等級: ${inputVipLevel.value.trim()}`, type: 'input', element: inputVipLevel });
+            tags.push({ key: 'vipLevel', label: `VIP等级: ${inputVipLevel.value.trim()}`, type: 'input', element: inputVipLevel });
             advancedCount++;
         }
         if (inputQuickLogin.value.trim()) {
@@ -1055,11 +1016,11 @@ document.addEventListener('DOMContentLoaded', () => {
             advancedCount++;
         }
         if (inputInviteCode.value.trim()) {
-            tags.push({ key: 'inviteCode', label: `邀請碼: ${inputInviteCode.value.trim()}`, type: 'input', element: inputInviteCode });
+            tags.push({ key: 'inviteCode', label: `邀请码: ${inputInviteCode.value.trim()}`, type: 'input', element: inputInviteCode });
             advancedCount++;
         }
         if (inputNickname.value.trim()) {
-            tags.push({ key: 'nickname', label: `暱稱: ${inputNickname.value.trim()}`, type: 'input', element: inputNickname });
+            tags.push({ key: 'nickname', label: `暱称: ${inputNickname.value.trim()}`, type: 'input', element: inputNickname });
             advancedCount++;
         }
         if (inputRealName.value.trim()) {
@@ -1067,11 +1028,11 @@ document.addEventListener('DOMContentLoaded', () => {
             advancedCount++;
         }
         if (inputBankCard.value.trim()) {
-            tags.push({ key: 'bankCard', label: `銀行卡末碼: *${inputBankCard.value.trim()}`, type: 'input', element: inputBankCard });
+            tags.push({ key: 'bankCard', label: `银行卡末码: *${inputBankCard.value.trim()}`, type: 'input', element: inputBankCard });
             advancedCount++;
         }
         if (inputOfflineDays.value.trim()) {
-            tags.push({ key: 'offlineDays', label: `未登入天數 > ${inputOfflineDays.value.trim()}`, type: 'input', element: inputOfflineDays });
+            tags.push({ key: 'offlineDays', label: `未登入天数 > ${inputOfflineDays.value.trim()}`, type: 'input', element: inputOfflineDays });
             advancedCount++;
         }
         if (inputIp.value.trim()) {
@@ -1090,7 +1051,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const inputVipLevelOuter = document.getElementById('inputVipLevelOuter');
         if (inputVipLevelOuter && inputVipLevelOuter.value.trim()) {
-            tags.push({ key: 'vipLevelOuter', label: `VIP等級: ${inputVipLevelOuter.value.trim()}`, type: 'input', element: inputVipLevelOuter });
+            tags.push({ key: 'vipLevelOuter', label: `VIP等级: ${inputVipLevelOuter.value.trim()}`, type: 'input', element: inputVipLevelOuter });
         }
         if (selectedBirthdayOuterVal) {
             tags.push({ key: 'birthdayOuter', label: `生日: ${selectedBirthdayOuterVal}月`, type: 'single-custom', element: dropdownBirthdayOuter, defaultValue: '', defaultText: '全部', valueVarSetter: (v) => selectedBirthdayOuterVal = v });
@@ -1100,22 +1061,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const endStr = inputDateEndOuter.value ? inputDateEndOuter.value.replace('T', ' ') : '??';
             tags.push({ 
                 key: 'dateRangeOuter', 
-                label: `新增時間: ${startStr} ~ ${endStr}`, 
+                label: `新增时间: ${startStr} ~ ${endStr}`, 
                 type: 'inputs',
                 elements: [inputDateStartOuter, inputDateEndOuter] 
             });
         }
         if (inputBankCardOuter && inputBankCardOuter.value.trim()) {
-            tags.push({ key: 'bankCardOuter', label: `綁定銀行卡: ${inputBankCardOuter.value.trim()}`, type: 'input', element: inputBankCardOuter });
+            tags.push({ key: 'bankCardOuter', label: `绑定银行卡: ${inputBankCardOuter.value.trim()}`, type: 'input', element: inputBankCardOuter });
         }
         if (inputOfflineDaysOuter && inputOfflineDaysOuter.value.trim()) {
-            tags.push({ key: 'offlineDaysOuter', label: `未登入天數 > ${inputOfflineDaysOuter.value.trim()}`, type: 'input', element: inputOfflineDaysOuter });
+            tags.push({ key: 'offlineDaysOuter', label: `未登入天数 > ${inputOfflineDaysOuter.value.trim()}`, type: 'input', element: inputOfflineDaysOuter });
         }
         if (inputIpOuter && inputIpOuter.value.trim()) {
             tags.push({ key: 'ipOuter', label: `登入 IP: ${inputIpOuter.value.trim()}`, type: 'input', element: inputIpOuter });
         }
         if (inputDepositOuter && inputDepositOuter.value.trim()) {
-            tags.push({ key: 'depositOuter', label: `存款大於 $${inputDepositOuter.value.trim()}`, type: 'input', element: inputDepositOuter });
+            tags.push({ key: 'depositOuter', label: `存款大于 $${inputDepositOuter.value.trim()}`, type: 'input', element: inputDepositOuter });
         }
 
         // Render badge count
@@ -1249,9 +1210,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const resetBtn = hasPerm(27) ? `<button class="btn btn-sm btn-outline btn-warning" onclick="handleResetAction(this, '${uid}', '${field}')" style="padding: 2px 8px; font-size: 12px; border-radius: 4px; margin-left: 8px; cursor: pointer; border: 1px solid #f59e0b; color: #f59e0b; background: transparent;">重置</button>` : '';
             return `<span class="audit-buttons-container" style="display: flex; align-items: center; justify-content: center;">
                 ${isAudited ? 
-                    `<span style="color: #64748b; font-size: 12px;">已審核</span>` :
-                    `<button class="btn btn-sm" onclick="handleAuditAction(this, '已通過審核')" style="padding: 2px 8px; font-size: 12px; background: transparent; color: #3b82f6; border: 1px solid #3b82f6; border-radius: 4px; margin-right: 8px; cursor: pointer;">通過</button>
-                     <button class="btn btn-sm" onclick="handleAuditAction(this, '已拒絕審核')" style="padding: 2px 8px; font-size: 12px; background: transparent; color: #ef4444; border: 1px solid #ef4444; border-radius: 4px; cursor: pointer;">拒絕</button>`
+                    `<span style="color: #64748b; font-size: 12px;">已审核</span>` :
+                    `<button class="btn btn-sm" onclick="handleAuditAction(this, '已通过审核')" style="padding: 2px 8px; font-size: 12px; background: transparent; color: #3b82f6; border: 1px solid #3b82f6; border-radius: 4px; margin-right: 8px; cursor: pointer;">通过</button>
+                     <button class="btn btn-sm" onclick="handleAuditAction(this, '已拒绝审核')" style="padding: 2px 8px; font-size: 12px; background: transparent; color: #ef4444; border: 1px solid #ef4444; border-radius: 4px; cursor: pointer;">拒绝</button>`
                 }
                 ${resetBtn}
             </span>`;
@@ -1265,29 +1226,29 @@ document.addEventListener('DOMContentLoaded', () => {
         if (accountSpan) accountSpan.textContent = user.account;
         
         const typeSpan = document.getElementById('detailsHeaderUserType');
-        if (typeSpan) typeSpan.textContent = user.userType || '代理會員';
+        if (typeSpan) typeSpan.textContent = user.userType || '代理会员';
         
         const levelSpan = document.getElementById('detailsHeaderUserLevel');
-        if (levelSpan) levelSpan.textContent = user.level || '普通會員';
+        if (levelSpan) levelSpan.textContent = user.level || '普通会员';
         
         const statusBadge = document.getElementById('detailsHeaderStatusBadge');
         if (statusBadge) {
             if (user.status === '正常') {
                 statusBadge.style.backgroundColor = '#dcfce7';
                 statusBadge.style.color = '#16a34a';
-                statusBadge.innerHTML = `<div style="width: 6px; height: 6px; border-radius: 50%; background-color: #16a34a;"></div>目前狀態：正常`;
+                statusBadge.innerHTML = `<div style="width: 6px; height: 6px; border-radius: 50%; background-color: #16a34a;"></div>目前状态：正常`;
             } else if (user.status === '停用') {
                 statusBadge.style.backgroundColor = '#fee2e2';
                 statusBadge.style.color = '#dc2626';
-                statusBadge.innerHTML = `<div style="width: 6px; height: 6px; border-radius: 50%; background-color: #dc2626;"></div>目前狀態：停用`;
+                statusBadge.innerHTML = `<div style="width: 6px; height: 6px; border-radius: 50%; background-color: #dc2626;"></div>目前状态：停用`;
             } else {
                 statusBadge.style.backgroundColor = '#fef3c7';
                 statusBadge.style.color = '#d97706';
-                statusBadge.innerHTML = `<div style="width: 6px; height: 6px; border-radius: 50%; background-color: #d97706;"></div>目前狀態：${user.status}`;
+                statusBadge.innerHTML = `<div style="width: 6px; height: 6px; border-radius: 50%; background-color: #d97706;"></div>目前状态：${user.status}`;
             }
         }
         
-        // Tab 1: 會員信息
+        // Tab 1: 会员信息
         const detailsBasic = document.getElementById('detailsBasic');
         if (detailsBasic) {
             detailsBasic.innerHTML = `
@@ -1297,26 +1258,26 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div style="width: 40px; height: 40px; background-color: #e0f2fe; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #0284c7; font-size: 20px;">
                             <i class="ph ph-identification-card"></i>
                         </div>
-                        <h4 style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b;">基本資料</h4>
+                        <h4 style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b;">基本资料</h4>
                     </div>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr; gap: 20px;">
                     <div style="display: flex; align-items: center;">
-                        <span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">頭像:</span>
+                        <span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">头像:</span>
                         <div style="width: 48px; height: 48px; background: #e2e8f0; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #94a3b8;">
                             <i class="ph ph-user"></i>
                         </div>
                     </div>
                     <div style="display: flex; align-items: center;">
-                        <span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">用戶暱稱:</span>
-                        <span style="color: #475569; font-size: 14px; font-family: monospace;">${(user.nickname && user.nickname !== '-') ? user.nickname : renderDataState(user.account)}</span>
+                        <span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">用户暱称:</span>
+                        <span style="color: #475569; font-size: 14px; font-family: monospace;">${(user.nickname && user.nickname !== '-') ? user.nickname : renderDataState(window.maskAccountForNickname(user.account))}</span>
                     </div>
                     <div style="display: flex; align-items: center;">
-                        <span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">帳號:</span>
+                        <span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">帐号:</span>
                         <span style="color: #475569; font-size: 14px; font-family: monospace;">${user.account}</span>
                     </div>
                     <div style="display: flex; align-items: center;">
-                        <span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">真實姓名:</span>
+                        <span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">真实姓名:</span>
                         <span id="detailsRealName" data-val="${user.realName}" style="color: #475569; font-size: 14px;">${hasPerm(37) ? (user.realName && user.realName !== '-' ? user.realName : '-') : window.maskRealName(user.realName)}</span>
                     </div>
                     <div style="display: flex; align-items: center;">
@@ -1332,11 +1293,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div style="width: 40px; height: 40px; background-color: #ede9fe; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #8b5cf6; font-size: 20px;">
                             <i class="ph ph-phone-call"></i>
                         </div>
-                        <h4 style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b;">聯絡方式</h4>
+                        <h4 style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b;">联络方式</h4>
                     </div>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">電話:</span><span id="drawer_basic_phone" style="font-size: 14px; color: #475569; font-family: monospace;">${getPhoneStatusHtml(user.phone)}</span></div>
+                    <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">电话:</span><span id="drawer_basic_phone" style="font-size: 14px; color: #475569; font-family: monospace;">${(user.phone && user.phone !== '-' && user.phone !== '未验证' && user.phone !== '末绑定' && user.phone !== '未绑定' && user.phone !== '待重新绑定' && user.phone !== '审核中') ? user.phone : '-'}</span></div>
                     <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">email:</span><span style="font-size: 14px; color: #475569;">${user.account}@example.com</span></div>
                     <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">QQ:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">88392019</span></div>
                     <div style="display: flex; align-items: center;"><span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">微信:</span><span style="font-size: 14px; color: #475569; font-family: monospace;">wx_${user.account}</span></div>
@@ -1353,23 +1314,27 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div style="width: 40px; height: 40px; background-color: #fef3c7; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #d97706; font-size: 20px;">
                             <i class="ph ph-notebook"></i>
                         </div>
-                        <h4 style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b;">備註</h4>
+                        <h4 style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b;">备注</h4>
                     </div>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr; gap: 20px;">
                     <div style="display: flex; align-items: center;">
-                        <span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">備注:</span>
-                        <span style="color: #475569; font-size: 14px;">${user.remark || '暫無備註'}</span>
+                        <span style="font-weight: 600; color: #64748b; width: 100px; flex-shrink: 0; font-size: 14px;">备注:</span>
+                        <div style="flex: 1; color: #475569; font-size: 14px; display: flex;">
+                            ${renderDataState(user.remark, 'longText')}
+                        </div>
                     </div>
-                    <div style="display: flex; align-items: center;">
-                        <span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">回訪備注:</span>
-                        <span style="color: #475569; font-size: 14px;">暫無回訪備註</span>
+                    <div style="display: flex; align-items: flex-start;">
+                        <span style="font-weight: 600; color: #64748b; width: 100px; flex-shrink: 0; font-size: 14px;">回访备注:</span>
+                        <div style="flex: 1; color: #475569; font-size: 14px; display: flex;">
+                            <span class="data-empty">暂无回访备注</span>
+                        </div>
                     </div>
                 </div>
             </div>`;
         }
         
-        // Tab 1.5: 會員審核 (Member Audit)
+        // Tab 1.5: 会员审核 (Member Audit)
         const detailsAudit = document.getElementById('detailsAudit');
         if (detailsAudit) {
             detailsAudit.innerHTML = `
@@ -1377,31 +1342,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
                     <thead>
                         <tr style="background-color: #f8fafc; color: var(--text-secondary); border-bottom: 1px solid var(--border-color);">
-                            <th style="padding: 16px; font-weight: 600;">變更項目</th>
+                            <th style="padding: 16px; font-weight: 600;">变更项目</th>
                             <th style="padding: 16px; font-weight: 600;">修改前</th>
-                            <th style="padding: 16px; font-weight: 600;">修改後</th>
-                            <th style="padding: 16px; font-weight: 600;">申請時間</th>
+                            <th style="padding: 16px; font-weight: 600;">修改后</th>
+                            <th style="padding: 16px; font-weight: 600;">申请时间</th>
                             <th style="padding: 16px; font-weight: 600; text-align: center;">操作</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr style="border-bottom: 1px solid var(--border-color);">
-                            <td style="padding: 16px; color: #475569;">真實姓名</td>
-                            <td style="padding: 16px; color: #94a3b8;">未填寫</td>
+                            <td style="padding: 16px; color: #475569;">真实姓名</td>
+                            <td style="padding: 16px; color: #94a3b8;">未填写</td>
                             <td style="padding: 16px; color: #1e293b;">${hasPerm(37) ? (user.realName && user.realName !== '-' ? user.realName : '-') : window.maskRealName(user.realName)}</td>
                             <td style="padding: 16px; color: #64748b;">2023-10-25 14:30:00</td>
                             <td style="padding: 16px; text-align: center;">${getAuditButtons(user.realNameAudited)}</td>
                         </tr>
                         <tr style="border-bottom: 1px solid var(--border-color);">
                             <td style="padding: 16px; color: #475569;">出生年月日</td>
-                            <td style="padding: 16px; color: #94a3b8;">未填寫</td>
+                            <td style="padding: 16px; color: #94a3b8;">未填写</td>
                             <td style="padding: 16px; color: #1e293b;">${user.birthday || '1995-08-18'}</td>
                             <td style="padding: 16px; color: #64748b;">2023-10-25 14:30:00</td>
                             <td style="padding: 16px; text-align: center;">${getAuditButtons(user.birthdayAudited)}</td>
                         </tr>
                         <tr style="border-bottom: 1px solid var(--border-color); ${hasPerm(20) ? '' : 'display: none;'}">
-                            <td style="padding: 16px; color: #475569;">電話</td>
-                            <td style="padding: 16px; color: #94a3b8;">未填寫</td>
+                            <td style="padding: 16px; color: #475569;">电话</td>
+                            <td style="padding: 16px; color: #94a3b8;">未填写</td>
                             <td style="padding: 16px; color: #1e293b;">${getPhoneStatusHtml(user.phone)}</td>
                             <td style="padding: 16px; color: #64748b;">2023-10-25 14:35:12</td>
                             <td style="padding: 16px; text-align: center;">${getAuditButtons(user.phoneAudited, 'phone')}</td>
@@ -1415,42 +1380,42 @@ document.addEventListener('DOMContentLoaded', () => {
                         </tr>
                         <tr style="border-bottom: 1px solid var(--border-color); ${hasPerm(20) ? '' : 'display: none;'}">
                             <td style="padding: 16px; color: #475569;">QQ</td>
-                            <td style="padding: 16px; color: #94a3b8;">未填寫</td>
+                            <td style="padding: 16px; color: #94a3b8;">未填写</td>
                             <td style="padding: 16px; color: #1e293b;">88392019</td>
                             <td style="padding: 16px; color: #64748b;">2023-10-26 09:12:00</td>
                             <td style="padding: 16px; text-align: center;">${getAuditButtons(user.qqAudited)}</td>
                         </tr>
                         <tr style="border-bottom: 1px solid var(--border-color); ${hasPerm(20) ? '' : 'display: none;'}">
                             <td style="padding: 16px; color: #475569;">微信</td>
-                            <td style="padding: 16px; color: #94a3b8;">未填寫</td>
+                            <td style="padding: 16px; color: #94a3b8;">未填写</td>
                             <td style="padding: 16px; color: #1e293b;">wx_${user.account}</td>
                             <td style="padding: 16px; color: #64748b;">2023-10-26 09:12:00</td>
                             <td style="padding: 16px; text-align: center;">${getAuditButtons(user.wechatAudited)}</td>
                         </tr>
                         <tr style="border-bottom: 1px solid var(--border-color); ${hasPerm(20) ? '' : 'display: none;'}">
                             <td style="padding: 16px; color: #475569;">Zalo</td>
-                            <td style="padding: 16px; color: #94a3b8;">未填寫</td>
+                            <td style="padding: 16px; color: #94a3b8;">未填写</td>
                             <td style="padding: 16px; color: #1e293b;">+84${user.phone.substring(2)}</td>
                             <td style="padding: 16px; color: #64748b;">2023-10-26 09:12:00</td>
                             <td style="padding: 16px; text-align: center;">${getAuditButtons(user.zaloAudited)}</td>
                         </tr>
                         <tr style="border-bottom: 1px solid var(--border-color); ${hasPerm(20) ? '' : 'display: none;'}">
                             <td style="padding: 16px; color: #475569;">WhatsApp</td>
-                            <td style="padding: 16px; color: #94a3b8;">未填寫</td>
+                            <td style="padding: 16px; color: #94a3b8;">未填写</td>
                             <td style="padding: 16px; color: #1e293b;">+84${user.phone.substring(2)}</td>
                             <td style="padding: 16px; color: #64748b;">2023-10-26 09:12:00</td>
                             <td style="padding: 16px; text-align: center;">${getAuditButtons(user.whatsappAudited)}</td>
                         </tr>
                         <tr style="border-bottom: 1px solid var(--border-color); ${hasPerm(20) ? '' : 'display: none;'}">
                             <td style="padding: 16px; color: #475569;">Telegram</td>
-                            <td style="padding: 16px; color: #94a3b8;">未填寫</td>
+                            <td style="padding: 16px; color: #94a3b8;">未填写</td>
                             <td style="padding: 16px; color: #1e293b;">@${user.account}_tg</td>
                             <td style="padding: 16px; color: #64748b;">2023-10-26 09:12:00</td>
                             <td style="padding: 16px; text-align: center;">${getAuditButtons(user.telegramAudited)}</td>
                         </tr>
                         <tr style="border-bottom: 1px solid var(--border-color); ${hasPerm(20) ? '' : 'display: none;'}">
                             <td style="padding: 16px; color: #475569;">Facebook</td>
-                            <td style="padding: 16px; color: #94a3b8;">未填寫</td>
+                            <td style="padding: 16px; color: #94a3b8;">未填写</td>
                             <td style="padding: 16px; color: #1e293b;">fb.me/${user.account}</td>
                             <td style="padding: 16px; color: #64748b;">2023-10-26 09:12:00</td>
                             <td style="padding: 16px; text-align: center;">${getAuditButtons(user.facebookAudited)}</td>
@@ -1461,7 +1426,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         
-        // Tab 2: 提現信息
+        // Tab 2: 提现信息
         const detailsWithdraw = document.getElementById('detailsWithdraw');
         if (detailsWithdraw) {
             detailsWithdraw.innerHTML = `
@@ -1469,18 +1434,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 <table style="width: 100%; border-collapse: collapse; text-align: center; font-size: 14px;">
                     <thead>
                         <tr style="background-color: #f8fafc; color: var(--text-secondary); border-bottom: 1px solid var(--border-color);">
-                            <th style="padding: 16px; font-weight: 600;">出款類型</th>
-                            <th style="padding: 16px; font-weight: 600;">卡號/錢包/支付寶帳號</th>
-                            <th style="padding: 16px; font-weight: 600;">銀行/幣種</th>
-                            <th style="padding: 16px; font-weight: 600;">銀行地址/備註</th>
+                            <th style="padding: 16px; font-weight: 600;">出款类型</th>
+                            <th style="padding: 16px; font-weight: 600;">卡号/钱包/支付宝帐号</th>
+                            <th style="padding: 16px; font-weight: 600;">银行/币种</th>
+                            <th style="padding: 16px; font-weight: 600;">银行地址/备注</th>
                         </tr>
                     </thead>
                 </table>
-                <div style="padding: 64px 0; text-align: center; color: #94a3b8; font-size: 14px;">暫無數據</div>
+                <div style="padding: 64px 0; text-align: center; color: #94a3b8; font-size: 14px;">暂无数据</div>
             </div>`;
         }
 
-        // Tab 3: 最後登錄
+        // Tab 3: 最后登录
         const detailsLogin = document.getElementById('detailsLogin');
         if (detailsLogin) {
             detailsLogin.innerHTML = `
@@ -1491,7 +1456,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div style="background: #dbeafe; color: #1d4ed8; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px;">
                             <i class="ph ph-sign-in"></i>
                         </div>
-                        <h4 style="margin: 0; font-size: 16px; font-weight: 600; color: #1e293b;">最新登入紀錄</h4>
+                        <h4 style="margin: 0; font-size: 16px; font-weight: 600; color: #1e293b;">最新登入纪录</h4>
                     </div>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 20px;">
                         <div>
@@ -1500,20 +1465,20 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div style="color: #94a3b8; font-size: 12px; margin-top: 4px;">(Japan, Tokyo)</div>
                         </div>
                         <div>
-                            <div style="color: #64748b; font-size: 13px; margin-bottom: 8px; font-weight: 500;">時間</div>
+                            <div style="color: #64748b; font-size: 13px; margin-bottom: 8px; font-weight: 500;">时间</div>
                             <div style="font-size: 14px; font-family: monospace; color: #334155;">2026-07-28</div>
                             <div style="color: #64748b; font-size: 12px; margin-top: 4px;">16:30:42</div>
                         </div>
                         <div>
-                            <div style="color: #64748b; font-size: 13px; margin-bottom: 8px; font-weight: 500;">設備號</div>
+                            <div style="color: #64748b; font-size: 13px; margin-bottom: 8px; font-weight: 500;">设备号</div>
                             <div style="font-size: 14px; font-family: monospace; color: #334155; word-break: break-all;" title="ee5868d85af7f68cf088a6780ff8882a">ee5868d85af7f68cf088a6780ff8882a <i class="ph ph-copy" style="color: #94a3b8; cursor: pointer;"></i></div>
                         </div>
                         <div>
-                            <div style="color: #64748b; font-size: 13px; margin-bottom: 8px; font-weight: 500;">同IP人數</div>
+                            <div style="color: #64748b; font-size: 13px; margin-bottom: 8px; font-weight: 500;">同IP人数</div>
                             <div><a href="#" onclick="openDetailedContentDrawer(event, 'ip')" style="color: #3b82f6; text-decoration: underline; font-weight: 600; font-size: 16px;">4,703</a></div>
                         </div>
                         <div>
-                            <div style="color: #64748b; font-size: 13px; margin-bottom: 8px; font-weight: 500;">同設備人數</div>
+                            <div style="color: #64748b; font-size: 13px; margin-bottom: 8px; font-weight: 500;">同设备人数</div>
                             <div><a href="#" onclick="openDetailedContentDrawer(event, 'device')" style="color: #3b82f6; text-decoration: underline; font-weight: 600; font-size: 16px;">28</a></div>
                         </div>
                     </div>
@@ -1525,7 +1490,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div style="background: #dcfce7; color: #15803d; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px;">
                             <i class="ph ph-user-plus"></i>
                         </div>
-                        <h4 style="margin: 0; font-size: 16px; font-weight: 600; color: #1e293b;">註冊紀錄</h4>
+                        <h4 style="margin: 0; font-size: 16px; font-weight: 600; color: #1e293b;">注册纪录</h4>
                     </div>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 20px;">
                         <div>
@@ -1534,19 +1499,19 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div style="color: #94a3b8; font-size: 12px; margin-top: 4px;">(Japan, Tokyo)</div>
                         </div>
                         <div>
-                            <div style="color: #64748b; font-size: 13px; margin-bottom: 8px; font-weight: 500;">時間</div>
+                            <div style="color: #64748b; font-size: 13px; margin-bottom: 8px; font-weight: 500;">时间</div>
                             <div style="font-size: 14px; font-family: monospace; color: #94a3b8;">-</div>
                         </div>
                         <div>
-                            <div style="color: #64748b; font-size: 13px; margin-bottom: 8px; font-weight: 500;">設備號</div>
+                            <div style="color: #64748b; font-size: 13px; margin-bottom: 8px; font-weight: 500;">设备号</div>
                             <div style="font-size: 14px; font-family: monospace; color: #334155; word-break: break-all;" title="ee5868d85af7f68cf088a6780ff8882a">ee5868d85af7f68cf088a6780ff8882a <i class="ph ph-copy" style="color: #94a3b8; cursor: pointer;"></i></div>
                         </div>
                         <div>
-                            <div style="color: #64748b; font-size: 13px; margin-bottom: 8px; font-weight: 500;">同IP人數</div>
+                            <div style="color: #64748b; font-size: 13px; margin-bottom: 8px; font-weight: 500;">同IP人数</div>
                             <div><a href="#" onclick="openDetailedContentDrawer(event, 'reg_ip')" style="color: #3b82f6; text-decoration: underline; font-weight: 600; font-size: 16px;">3,412</a></div>
                         </div>
                         <div>
-                            <div style="color: #64748b; font-size: 13px; margin-bottom: 8px; font-weight: 500;">同設備人數</div>
+                            <div style="color: #64748b; font-size: 13px; margin-bottom: 8px; font-weight: 500;">同设备人数</div>
                             <div><a href="#" onclick="openDetailedContentDrawer(event, 'reg_device')" style="color: #3b82f6; text-decoration: underline; font-weight: 600; font-size: 16px;">18</a></div>
                         </div>
                     </div>
@@ -1581,8 +1546,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
                     <thead>
                         <tr style="background-color: #f8fafc; color: var(--text-secondary); border-bottom: 1px solid var(--border-color);">
-                            <th style="padding: 12px 16px; font-weight: 600;">登錄用戶</th>
-                            <th style="padding: 12px 16px; font-weight: 600;">最後登錄詳情</th>
+                            <th style="padding: 12px 16px; font-weight: 600;">登录用户</th>
+                            <th style="padding: 12px 16px; font-weight: 600;">最后登录详情</th>
                             <th style="padding: 12px 16px; font-weight: 600;">IP</th>
                             <th style="padding: 12px 16px; font-weight: 600;">IP信息</th>
                         </tr>
@@ -1604,9 +1569,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
                     <thead>
                         <tr style="background-color: #f8fafc; color: var(--text-secondary); border-bottom: 1px solid var(--border-color);">
-                            <th style="padding: 12px 16px; font-weight: 600;">登錄用戶</th>
-                            <th style="padding: 12px 16px; font-weight: 600;">註冊時間</th>
-                            <th style="padding: 12px 16px; font-weight: 600;">設備號</th>
+                            <th style="padding: 12px 16px; font-weight: 600;">登录用户</th>
+                            <th style="padding: 12px 16px; font-weight: 600;">注册时间</th>
+                            <th style="padding: 12px 16px; font-weight: 600;">设备号</th>
                             <th style="padding: 12px 16px; font-weight: 600;">IP信息</th>
                         </tr>
                     </thead>
@@ -1643,8 +1608,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
                     <thead>
                         <tr style="background-color: #f8fafc; color: var(--text-secondary); border-bottom: 1px solid var(--border-color);">
-                            <th style="padding: 12px 16px; font-weight: 600;">登錄</th>
-                            <th style="padding: 12px 16px; font-weight: 600;">註冊時間</th>
+                            <th style="padding: 12px 16px; font-weight: 600;">登录</th>
+                            <th style="padding: 12px 16px; font-weight: 600;">注册时间</th>
                             <th style="padding: 12px 16px; font-weight: 600;">IP</th>
                         </tr>
                     </thead>
@@ -1677,9 +1642,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
                     <thead>
                         <tr style="background-color: #f8fafc; color: var(--text-secondary); border-bottom: 1px solid var(--border-color);">
-                            <th style="padding: 12px 16px; font-weight: 600;">登錄</th>
-                            <th style="padding: 12px 16px; font-weight: 600;">註冊時間</th>
-                            <th style="padding: 12px 16px; font-weight: 600;">設備號</th>
+                            <th style="padding: 12px 16px; font-weight: 600;">登录</th>
+                            <th style="padding: 12px 16px; font-weight: 600;">注册时间</th>
+                            <th style="padding: 12px 16px; font-weight: 600;">设备号</th>
                             <th style="padding: 12px 16px; font-weight: 600;">IP信息</th>
                         </tr>
                     </thead>
@@ -1688,19 +1653,19 @@ document.addEventListener('DOMContentLoaded', () => {
                             <td style="padding: 16px;">megan002</td>
                             <td style="padding: 16px; font-family: monospace;">2026-05-10<br>10:12:00</td>
                             <td style="padding: 16px; font-family: monospace; color: #475569;">ee5868d85af7f68cf088a... <i class="ph ph-copy" style="color: #94a3b8; cursor: pointer;"></i></td>
-                            <td style="padding: 16px; color: #64748b;"><i class="ph-fill ph-map-pin"></i> 日本東京都<br>東京</td>
+                            <td style="padding: 16px; color: #64748b;"><i class="ph-fill ph-map-pin"></i> 日本东京都<br>东京</td>
                         </tr>
                         <tr style="border-bottom: 1px solid var(--border-color);">
                             <td style="padding: 16px;">clone_device_01</td>
                             <td style="padding: 16px; font-family: monospace;">2026-05-10<br>10:20:00</td>
                             <td style="padding: 16px; font-family: monospace; color: #475569;">ee5868d85af7f68cf088a... <i class="ph ph-copy" style="color: #94a3b8; cursor: pointer;"></i></td>
-                            <td style="padding: 16px; color: #64748b;"><i class="ph-fill ph-map-pin"></i> 日本東京都<br>東京</td>
+                            <td style="padding: 16px; color: #64748b;"><i class="ph-fill ph-map-pin"></i> 日本东京都<br>东京</td>
                         </tr>
                         <tr style="border-bottom: 1px solid var(--border-color);">
                             <td style="padding: 16px;">clone_device_02</td>
                             <td style="padding: 16px; font-family: monospace;">2026-05-10<br>10:22:45</td>
                             <td style="padding: 16px; font-family: monospace; color: #475569;">ee5868d85af7f68cf088a... <i class="ph ph-copy" style="color: #94a3b8; cursor: pointer;"></i></td>
-                            <td style="padding: 16px; color: #64748b;"><i class="ph-fill ph-map-pin"></i> 日本東京都<br>東京</td>
+                            <td style="padding: 16px; color: #64748b;"><i class="ph-fill ph-map-pin"></i> 日本东京都<br>东京</td>
                         </tr>
                     </tbody>
                 </table>
@@ -1767,10 +1732,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
                         <thead>
                             <tr style="border-bottom: 1px solid var(--border-color); background-color: var(--bg-color); color: var(--text-secondary);">
-                                <th style="padding: 16px 12px; font-weight: 500; white-space: nowrap;">變更前代理</th>
-                                <th style="padding: 16px 12px; font-weight: 500; white-space: nowrap;">變更後代理</th>
+                                <th style="padding: 16px 12px; font-weight: 500; white-space: nowrap;">变更前代理</th>
+                                <th style="padding: 16px 12px; font-weight: 500; white-space: nowrap;">变更后代理</th>
                                 <th style="padding: 16px 12px; font-weight: 500; white-space: nowrap;">操作者</th>
-                                <th style="padding: 16px 12px; font-weight: 500; white-space: nowrap;">操作時間</th>
+                                <th style="padding: 16px 12px; font-weight: 500; white-space: nowrap;">操作时间</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1793,10 +1758,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     </table>
                 </div>`;
             } else {
-                recordsHtml = '<div style="text-align: center; color: var(--text-muted); padding-top: 100px;">無變更紀錄</div>';
+                recordsHtml = '<div style="text-align: center; color: var(--text-muted); padding-top: 100px;">无变更纪录</div>';
             }
         } else {
-            recordsHtml = '<div style="text-align: center; color: var(--text-muted); padding-top: 100px;">無變更紀錄</div>';
+            recordsHtml = '<div style="text-align: center; color: var(--text-muted); padding-top: 100px;">无变更纪录</div>';
         }
         
         const drawerContent = agentChangeRecordDrawer.querySelector('.drawer-content');
@@ -1965,15 +1930,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 let nestedHeaderHtml = `<th width="40" style="text-align: center;"><input type="checkbox" id="selectAllCheckbox"></th>`;
                 nestedColumnsConfig.forEach(col => {
                     let canShow = true;
-                    if (col.id === 'depositWithdraw' && !hasPerm(7)) canShow = false;
-                    if (col.id === 'remark' && !hasPerm(21)) canShow = false;
                     
                     if (nestedColumnVisibility[col.id] && canShow) {
                         nestedHeaderHtml += `<th>${col.label}</th>`;
                     }
                 });
                 nestedHeaderHtml += `<th style="text-align: center; width: 1%; white-space: nowrap; padding-right: 16px;">
-                    <button type="button" class="btn-custom-columns-header btn-header-columns-toggle" title="自訂欄位">
+                    <button type="button" class="btn-custom-columns-header btn-header-columns-toggle" title="自订栏位">
                         <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                             <rect x="3" y="3" width="4" height="10" rx="1" stroke="currentColor" stroke-width="1.5"/>
                             <rect x="9" y="3" width="4" height="10" rx="1" stroke="currentColor" stroke-width="1.5"/>
@@ -2009,7 +1972,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <span>${col.label}</span>
                                 ${col.sortable ? getSortBtn(col.id) : ''}
                             </div>
-                            <i class="ph ph-push-pin icon-pin active" data-id="${col.id}" title="取消釘選"></i>
+                            <i class="ph ph-push-pin icon-pin active" data-id="${col.id}" title="取消钉选"></i>
                         </div>
                     </th>`;
                     currentLeft += 110;
@@ -2021,7 +1984,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (actionCol) {
                     actionHeaderHtml = `<th class="header-group sticky-col-right" rowspan="2" data-col="action" style="min-width: 60px; z-index:12;">
                         <div style="display:flex;align-items:center;white-space:nowrap;justify-content:center;">
-                            <button type="button" class="btn-custom-columns-header btn-header-columns-toggle" title="自訂欄位">
+                            <button type="button" class="btn-custom-columns-header btn-header-columns-toggle" title="自订栏位">
                                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                                     <rect x="3" y="3" width="4" height="10" rx="1" stroke="currentColor" stroke-width="1.5"/>
                                     <rect x="9" y="3" width="4" height="10" rx="1" stroke="currentColor" stroke-width="1.5"/>
@@ -2053,7 +2016,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <span>${col.label}</span>
                                 ${col.sortable ? getSortBtn(col.id) : ''}
                             </div>
-                            <i class="ph ph-push-pin icon-pin" data-id="${col.id}" title="釘選欄位"></i>
+                            <i class="ph ph-push-pin icon-pin" data-id="${col.id}" title="钉选栏位"></i>
                         </div>
                     </th>`;
                 });
@@ -2119,7 +2082,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.renderTableTimeout = setTimeout(() => {
             userTableBody.innerHTML = '';
             if (pagedUsers.length === 0) {
-                userTableBody.innerHTML = `<tr><td colspan="${colspanForLoading}" style="text-align: center; color: var(--text-muted); padding: 32px 0;">無符合篩選條件的會員資料</td></tr>`;
+                userTableBody.innerHTML = `<tr><td colspan="${colspanForLoading}" style="text-align: center; color: var(--text-muted); padding: 32px 0;">无符合筛选条件的会员资料</td></tr>`;
                 applyColumnVisibility();
                 return;
             }
@@ -2127,17 +2090,8 @@ document.addEventListener('DOMContentLoaded', () => {
             pagedUsers.forEach(user => {
             const tr = document.createElement('tr');
             
-            let rowClass = '';
-            if (user.tags && user.tags.includes('異常風險')) {
-                rowClass = 'row-danger';
-            } else if (user.tags && (user.tags.includes('VIP 客戶') || user.tags.includes('大戶'))) {
-                rowClass = 'row-warning';
-            } else if (user.tags && (user.tags.includes('活躍') || user.tags.includes('正常'))) {
-                rowClass = 'row-success';
-            }
-            if (rowClass) {
-                tr.classList.add(rowClass);
-            }
+            // No background color changes based on tags anymore
+            // tr.classList.add(rowClass);
 
             if (currentTableMode === 'nested') {
                 // Nested Mode Layout
@@ -2145,7 +2099,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (nestedColumnVisibility['online']) {
                     nestedRowHtml += `<td style="text-align: center;">
-                        <span class="user-custom-tag ${user.offlineDays === 0 ? 'tag-yellow' : 'tag-grey'}">${user.offlineDays === 0 ? '在線' : '離線'}</span>
+                        <span class="user-custom-tag ${user.offlineDays === 0 ? 'tag-yellow' : 'tag-grey'}">${user.offlineDays === 0 ? '在线' : '离线'}</span>
                     </td>`;
                 }
                 if (nestedColumnVisibility['avatar']) {
@@ -2157,58 +2111,58 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 if (nestedColumnVisibility['memberInfo']) {
                     nestedRowHtml += `<td class="nested-cell-info">
-                        <div><span class="info-label">用戶ID :</span> ${renderDataState(user.uid, 'copyable')}</div>
-                        <div><span class="info-label">會員名 :</span> <a href="#" class="user-detail-link" data-uid="${user.uid}">${renderDataState(user.account, 'copyable')}</a></div>
-                        <div><span class="info-label">真實姓名 :</span> ${hasPerm(37) ? renderDataState(user.realName) : window.maskRealName(user.realName)}</div>
-                        <div><span class="info-label">用戶暱稱 :</span> ${(user.nickname && user.nickname !== '-') ? user.nickname : renderDataState(user.account)}</div>
+                        <div><span class="info-label">用户ID :</span> ${renderDataState(user.uid, 'copyable')}</div>
+                        <div><span class="info-label">会员名 :</span> <a href="#" class="user-detail-link" data-uid="${user.uid}">${renderDataState(user.account, 'copyable')}</a></div>
+                        <div><span class="info-label">真实姓名 :</span> ${renderDataState(user.realName)}</div>
+                        <div><span class="info-label">用户暱称 :</span> ${(user.nickname && user.nickname !== '-') ? user.nickname : renderDataState(window.maskAccountForNickname(user.account))}</div>
                         <div><span class="info-label">代理 :</span> ${renderDataState(user.agentId)}</div>
-                        <div><span class="info-label">邀請人 :</span> ${renderDataState(user.inviter)}</div>
-                        <div><span class="info-label">註冊模式 :</span> ${user.registerMode || '一般註冊'}</div>
-                        <div><span class="info-label">手機號 :</span> ${getPhoneStatusHtml(user.phone)}</div>
+                        <div><span class="info-label">邀请人 :</span> ${renderDataState(user.inviter)}</div>
+                        <div><span class="info-label">注册模式 :</span> ${user.registerMode || '一般注册'}</div>
+                        <div><span class="info-label">手机号 :</span> ${getPhoneStatusHtml(user.phone)}</div>
                     </td>`;
                 }
                 if (nestedColumnVisibility['levelTeam']) {
                     nestedRowHtml += `<td class="nested-cell-info">
-                        <div><span class="info-label">支付層級 :</span> ${hasPerm(4) ? (user.payLevel || '默認層') : '***'}</div>
-                        <div><span class="info-label">成長值 :</span> ${user.growth || 0}</div>
-                        <div><span class="info-label">等級 :</span> <strong class="${user.level === '黃金會員' ? 'level-gold' : ''}">${user.level}</strong></div>
-                        <div><span class="info-label">帳號類型 :</span> ${user.accountType || '普通帳號'}</div>
-                        <div><span class="info-label">會員類型 :</span> ${user.userType || '代理會員'}</div>
-                        <div><span class="info-label">邀請碼 :</span> ${user.inviteCode || '-'}</div>
-                        <div><span class="info-label">直屬下級/團隊人數 :</span> <a href="#" class="subordinate-link" style="color: var(--primary-color); text-decoration: underline;" data-uid="${user.uid}">${hasPerm(6) ? (user.directTeam || '0/0') : '*/*'}</a></div>
-                        <div><span class="info-label">VIP會員等級 :</span> ${user.vipLevel || 0}</div>
-                        <div><span class="info-label">VIP成長值 :</span> ${user.vipGrowth || 0}</div>
+                        <div><span class="info-label">支付层级 :</span> ${user.payLevel || '默认层'}</div>
+                        <div><span class="info-label">成长值 :</span> ${user.growth || 0}</div>
+                        <div><span class="info-label">等级 :</span> <strong class="${user.level === '黄金会员' ? 'level-gold' : ''}">${user.level}</strong></div>
+                        <div><span class="info-label">帐号类型 :</span> ${user.accountType || '普通帐号'}</div>
+                        <div><span class="info-label">会员类型 :</span> ${user.userType || '代理会员'}</div>
+                        <div><span class="info-label">邀请码 :</span> ${user.inviteCode || '-'}</div>
+                        <div><span class="info-label">直属下级/团队人数 :</span> <a href="#" class="subordinate-link" style="color: var(--primary-color); text-decoration: underline;" data-uid="${user.uid}">${user.directTeam || '0/0'}</a></div>
+                        <div><span class="info-label">VIP会员等级 :</span> ${user.vipLevel || 0}</div>
+                        <div><span class="info-label">VIP成长值 :</span> ${user.vipGrowth || 0}</div>
                     </td>`;
                 }
                 if (nestedColumnVisibility['creditLimit']) {
                     nestedRowHtml += `<td class="nested-cell-info">
                         <div><span class="info-label">信用值 :</span> ${hasPerm(7) ? (user.creditValue || 0) : '***'}</div>
-                        <div><span class="info-label">可用額度 :</span> ${user.availableCredit || 0}</div>
-                        <div><span class="info-label">佣金餘額 :</span> ${hasPerm(7) ? (user.commissionBal || 0) : '***'}</div>
-                        <div><span class="info-label">診額寶 :</span> ${user.balanceBuy || 0}</div>
-                        <div><span class="info-label">欠款 :</span> ${hasPerm(7) ? (user.arrears || '-') : '***'}</div>
-                        <div><span class="info-label">餘額寶利息 :</span> ${user.interest || 0}</div>
-                        <div><span class="info-label">三方餘額 :</span> ${user.thirdBal || 0} <a href="#" class="refresh-link" style="color:#2563eb;font-size:12px;margin-left:4px;text-decoration:none;">刷新</a></div>
-                        <div><span class="info-label">會員積分 :</span> ${user.points || 0}</div>
+                        <div><span class="info-label">可用额度 :</span> ${user.availableCredit || 0}</div>
+                        <div><span class="info-label">佣金余额 :</span> ${user.commissionBal || 0}</div>
+                        <div><span class="info-label">诊额宝 :</span> ${user.balanceBuy || 0}</div>
+                        <div><span class="info-label">欠款 :</span> ${user.arrears || '-'}</div>
+                        <div><span class="info-label">余额宝利息 :</span> ${user.interest || 0}</div>
+                        <div><span class="info-label">三方余额 :</span> ${user.thirdBal || 0} <a href="#" class="refresh-link" style="color:#2563eb;font-size:12px;margin-left:4px;text-decoration:none;">刷新</a></div>
+                        <div><span class="info-label">会员积分 :</span> ${user.points || 0}</div>
                     </td>`;
                 }
-                if (nestedColumnVisibility['depositWithdraw'] && hasPerm(7)) {
+                if (nestedColumnVisibility['depositWithdraw']) {
                     nestedRowHtml += `<td class="nested-cell-info">
-                        <div><span class="info-label">存款總額 :</span> ${user.deposit || 0}</div>
-                        <div><span class="info-label">取款總額 :</span> ${user.withdraw || 0}</div>
-                        <div><span class="info-label">提款預扣金額 :</span> ${user.withdrawPre || '-'}</div>
-                        <div><span class="info-label">后台扣款總額 :</span> ${user.adminDeduct || '-'}</div>
-                        <div><span class="info-label">存款次數 :</span> ${user.depositCount || 0}</div>
-                        <div><span class="info-label">取款次數 :</span> ${user.withdrawCount || 0}</div>
+                        <div><span class="info-label">存款总额 :</span> ${user.deposit || 0}</div>
+                        <div><span class="info-label">取款总额 :</span> ${user.withdraw || 0}</div>
+                        <div><span class="info-label">提款预扣金额 :</span> ${user.withdrawPre || '-'}</div>
+                        <div><span class="info-label">后台扣款总额 :</span> ${user.adminDeduct || '-'}</div>
+                        <div><span class="info-label">存款次数 :</span> ${user.depositCount || 0}</div>
+                        <div><span class="info-label">取款次数 :</span> ${user.withdrawCount || 0}</div>
                     </td>`;
                 }
                 if (nestedColumnVisibility['tags']) {
-                    const tagStyles = { '正常': 'tag-blue', 'VIP 客戶': 'tag-blue', 'VIP': 'tag-blue', '活躍': 'tag-green', '高頻交易': 'tag-green', '大戶': 'tag-purple', '高消費': 'tag-purple', '異常風險': 'tag-red' };
+                    const tagStyles = { '正常': 'tag-blue', 'VIP 客户': 'tag-blue', 'VIP': 'tag-blue', '活跃': 'tag-green', '高频交易': 'tag-green', '大户': 'tag-purple', '高消费': 'tag-purple', '异常风险': 'tag-red' };
                     
                     let currentTags = user.tags;
                     let nestedTagsOutput = currentTags.map(tag => {
                         let styleClass = tagStyles[tag] || 'tag-grey';
-                        if (tag === '異常風險') {
+                        if (tag === '异常风险') {
                             return `<span class="user-custom-tag ${styleClass}"><i class="ph-fill ph-warning-circle" style="margin-right: 4px; font-size: 13px;"></i>${tag}</span>`;
                         }
                         return `<span class="user-custom-tag ${styleClass}">${tag}</span>`;
@@ -2227,33 +2181,38 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 if (nestedColumnVisibility['dateInfo']) {
                     nestedRowHtml += `<td class="nested-cell-info">
-                        <div><span class="info-label">新增時間 :</span> ${renderDataState(user.date)}</div>
-                        <div><span class="info-label">最後登錄 :</span> ${renderDataState(user.lastLogin)}</div>
-                        <div><span class="info-label">離開天數 :</span> ${user.offlineDays}天</div>
-                        <div><span class="info-label">登錄IP :</span></div>
+                        <div><span class="info-label">新增时间 :</span> ${renderDataState(user.date)}</div>
+                        <div><span class="info-label">最后登录 :</span> ${renderDataState(user.lastLogin)}</div>
+                        <div><span class="info-label">离开天数 :</span> ${user.offlineDays}天</div>
+                        <div><span class="info-label">登录IP :</span></div>
                         <div class="ip-row" style="display: flex; align-items: center; gap: 4px;">
-                            ${hasPerm(17) ? renderDataState(user.ip, 'ip') : window.maskIp(user.ip)}
+                            ${renderDataState(user.ip, 'ip')}
                         </div>
                     </td>`;
                 }
-                if (nestedColumnVisibility['remark'] && hasPerm(21)) {
-                    nestedRowHtml += `<td class="nested-cell-info">
-                        <div><span class="info-label">備註 :</span> ${renderDataState(user.remark, 'longText')}</div>
-                        <div><span class="info-label">回訪備註 :</span> ${renderDataState(user.followRemark, 'longText')}</div>
-                        <div><span class="info-label">注 :</span> ${renderDataState(user.note, 'longText')}</div>
+                if (nestedColumnVisibility['remark']) {
+                    nestedRowHtml += `<td class="nested-cell-info" style="min-width: 150px;">
+                        <div style="display: flex; align-items: flex-start; white-space: normal; gap: 4px; margin-bottom: 4px;">
+                            <span class="info-label" style="flex-shrink: 0; margin-top: 2px;">备注 :</span> 
+                            <div style="flex: 1; min-width: 0;">${renderDataState(user.remark, 'longText')}</div>
+                        </div>
+                        <div style="display: flex; align-items: flex-start; white-space: normal; gap: 4px;">
+                            <span class="info-label" style="flex-shrink: 0; margin-top: 2px;">回访备注 :</span> 
+                            <div style="flex: 1; min-width: 0;">${renderDataState(user.followRemark, 'longText')}</div>
+                        </div>
                     </td>`;
                 }
 
                 const gridOps = [
-                        shouldShowOp("編輯用戶") ? `<a href="#" class="op-link user-detail-link" data-uid="${user.uid}">編輯用戶</a>` : '',
-                        shouldShowOp("查看詳情") ? `<a href="#" class="op-link user-detail-link" data-uid="${user.uid}">查看詳情</a>` : '',
-                        shouldShowOp("額度修改") ? `<a href="#" class="op-link">額度修改</a>` : '',
-                        shouldShowOp("資金明細") ? `<a href="#" class="op-link">資金明細</a>` : '',
-                        shouldShowOp("注單明細") ? `<a href="#" class="op-link">注單明細</a>` : '',
-                        shouldShowOp("修改密碼") ? `<a href="#" class="op-link">修改密碼</a>` : '',
-                        shouldShowOp("下級會員") ? `<a href="#" class="op-link">下級會員</a>` : '',
-                        shouldShowOp("下級報表") ? `<a href="#" class="op-link">下級報表</a>` : '',
-                        shouldShowOp("下級注單") ? `<a href="#" class="op-link">下級注單</a>` : ''
+                        shouldShowOp("编辑用户") ? `<a href="#" class="op-link user-detail-link" data-uid="${user.uid}">编辑用户</a>` : '',
+                        shouldShowOp("查看详情") ? `<a href="#" class="op-link user-detail-link" data-uid="${user.uid}">查看详情</a>` : '',
+                        shouldShowOp("额度修改") ? `<a href="#" class="op-link">额度修改</a>` : '',
+                        shouldShowOp("资金明细") ? `<a href="#" class="op-link">资金明细</a>` : '',
+                        shouldShowOp("注单明细") ? `<a href="#" class="op-link">注单明细</a>` : '',
+                        shouldShowOp("修改密码") ? `<a href="#" class="op-link">修改密码</a>` : '',
+                        shouldShowOp("下级会员") ? `<a href="#" class="op-link">下级会员</a>` : '',
+                        shouldShowOp("下级报表") ? `<a href="#" class="op-link">下级报表</a>` : '',
+                        shouldShowOp("下级注单") ? `<a href="#" class="op-link">下级注单</a>` : ''
                     ].filter(Boolean);
 
                     nestedRowHtml += `<td style="text-align: center; padding: 12px 16px; width: 1%; white-space: nowrap; vertical-align: middle;">`;
@@ -2265,7 +2224,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     
                     const moreOps = [
-                        '交易設定', '赔率设置', '积分修改', '代理变更', '第三方游戏',
+                        '交易设定', '赔率设置', '积分修改', '代理变更', '第三方游戏',
                         '稽核记录', '代理变更记录', '回访备注', '隐藏资金明细', '快速登录变更',
                         '校验用户任务', '谷歌验证码', '链上地址', '额度修改(链上充值)', '编辑标签',
                         '用户标签编辑记录'
@@ -2368,14 +2327,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const userCell = tr ? tr.querySelector('.user-detail-link') : null;
                 const uid = userCell ? userCell.getAttribute('data-uid') : null;
                 
-                if (text === '查看詳情' || text === '查看详情') {
+                if (text === '查看详情' || text === '查看详情') {
                     if (uid) window.openUserDetailsDrawer(uid);
-                } else if (text === '編輯用戶' || text === '编辑用户') {
+                } else if (text === '编辑用户' || text === '编辑用户') {
                     if (uid) openUserEditModal(uid);
-                } else if (text === '代理變更紀錄' || text === '代理变更记录') {
+                } else if (text === '代理变更纪录' || text === '代理变更记录') {
                     window.openAgentChangeRecordDrawer(uid);
                 } else {
-                    alert(`觸發操作：${text}`);
+                    alert(`触发操作：${text}`);
                 }
                 li.parentElement.classList.remove('show');
             });
@@ -2389,10 +2348,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const userCell = tr ? tr.querySelector('.user-detail-link') : null;
                 const uid = userCell ? userCell.getAttribute('data-uid') : null;
                 
-                if (text === '代理變更紀錄' || text === '代理变更记录') {
+                if (text === '代理变更纪录' || text === '代理变更记录') {
                     window.openAgentChangeRecordDrawer(uid);
                 } else {
-                    alert(`觸發操作：${text}`);
+                    alert(`触发操作：${text}`);
                 }
                 li.parentElement.classList.remove('show');
             });
@@ -2487,7 +2446,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="column-group-header" style="display:flex; align-items:center; justify-content:space-between; margin: 16px 0 8px 0; padding-bottom: 4px; border-bottom: 1px solid var(--border-color); font-weight: bold;">
                     <label style="display:flex; align-items:center; cursor:pointer;">
                         ${groupCbHtml}
-                        巢狀模式欄位
+                        巢状模式栏位
                     </label>
                 </div>
             `;
@@ -2499,7 +2458,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const checkboxHtml = `<input type="checkbox" class="compact-col-cb" data-id="${col.id}" ${isVisible ? 'checked' : ''}>`;
                 const labelSpanStyle = 'margin-left:8px; font-size:13px;';
-                const pinHtml = `<i class="ph ph-push-pin icon-pin ${isPinned ? 'active' : ''}" data-id="${col.id}" title="釘選欄位"></i>`;
+                const pinHtml = `<i class="ph ph-push-pin icon-pin ${isPinned ? 'active' : ''}" data-id="${col.id}" title="钉选栏位"></i>`;
 
                 html += `
                     <li>
@@ -2565,7 +2524,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     let pinHtml = '';
                     if (col.id !== 'action') {
-                        pinHtml = `<i class="ph ph-push-pin icon-pin ${isPinned ? 'active' : ''}" data-id="${col.id}" title="釘選欄位"></i>`;
+                        pinHtml = `<i class="ph ph-push-pin icon-pin ${isPinned ? 'active' : ''}" data-id="${col.id}" title="钉选栏位"></i>`;
                     }
 
                     html += `
@@ -2880,23 +2839,23 @@ document.addEventListener('DOMContentLoaded', () => {
         if (avatarEl) avatarEl.textContent = user.account.charAt(0).toUpperCase();
 
         const typeEl = document.getElementById('headerUserType');
-        if (typeEl) typeEl.textContent = user.userType || '普通會員';
+        if (typeEl) typeEl.textContent = user.userType || '普通会员';
 
         const levelEl = document.getElementById('headerUserLevel');
-        if (levelEl) levelEl.textContent = user.level || '普通會員';
+        if (levelEl) levelEl.textContent = user.level || '普通会员';
 
         const statusBadge = document.getElementById('headerStatusBadge');
         if (statusBadge) {
             if (user.status === '正常') {
-                statusBadge.innerHTML = `<div style="width: 6px; height: 6px; border-radius: 50%; background-color: #16a34a;"></div>目前狀態：正常`;
+                statusBadge.innerHTML = `<div style="width: 6px; height: 6px; border-radius: 50%; background-color: #16a34a;"></div>目前状态：正常`;
                 statusBadge.style.backgroundColor = '#dcfce7';
                 statusBadge.style.color = '#16a34a';
             } else if (user.status === '冻结') {
-                statusBadge.innerHTML = `<div style="width: 6px; height: 6px; border-radius: 50%; background-color: #eab308;"></div>目前狀態：冻结`;
+                statusBadge.innerHTML = `<div style="width: 6px; height: 6px; border-radius: 50%; background-color: #eab308;"></div>目前状态：冻结`;
                 statusBadge.style.backgroundColor = '#fef9c3';
                 statusBadge.style.color = '#eab308';
             } else {
-                statusBadge.innerHTML = `<div style="width: 6px; height: 6px; border-radius: 50%; background-color: #dc2626;"></div>目前狀態：停用`;
+                statusBadge.innerHTML = `<div style="width: 6px; height: 6px; border-radius: 50%; background-color: #dc2626;"></div>目前状态：停用`;
                 statusBadge.style.backgroundColor = '#fee2e2';
                 statusBadge.style.color = '#dc2626';
             }
@@ -2923,22 +2882,50 @@ document.addEventListener('DOMContentLoaded', () => {
                 realNameIn.value = user.realName !== '-' ? user.realName : '';
                 realNameIn.disabled = false;
             } else {
-                realNameIn.value = window.maskRealName(user.realName);
+                realNameIn.value = user.realName !== '-' ? user.realName : '';
                 realNameIn.disabled = true;
             }
         }
 
         const nicknameIn = document.getElementById('editFormNickname');
-        if (nicknameIn) nicknameIn.value = user.nickname !== '-' ? user.nickname : '';
+        if (nicknameIn) {
+            nicknameIn.value = (user.nickname && user.nickname !== '-') ? user.nickname : window.maskAccountForNickname(user.account);
+        }
 
         const phoneIn = document.getElementById('editFormPhone');
-        if (phoneIn) phoneIn.value = (user.phone !== '未驗證' && user.phone !== '末綁定') ? user.phone : '';
+        const btnVerifyPhone = document.getElementById('btnVerifyPhone');
+        if (phoneIn) {
+            phoneIn.setAttribute('data-val', user.phone);
+            const isUnverified = !user.phone || user.phone === '-' || user.phone === '未验证' || user.phone === '末绑定' || user.phone === '未绑定' || user.phone === '待重新绑定' || user.phone === '审核中';
+            if (isUnverified) {
+                phoneIn.value = '-';
+                if (btnVerifyPhone) {
+                    btnVerifyPhone.disabled = true;
+                    btnVerifyPhone.style.cursor = 'not-allowed';
+                    btnVerifyPhone.style.opacity = '0.6';
+                }
+            } else {
+                phoneIn.value = user.phone;
+                if (btnVerifyPhone) {
+                    btnVerifyPhone.disabled = false;
+                    btnVerifyPhone.style.cursor = '';
+                    btnVerifyPhone.style.opacity = '';
+                }
+            }
+            
+            // Trace 36 Permission
+            if (hasPerm(36)) {
+                phoneIn.disabled = false;
+            } else {
+                phoneIn.disabled = true;
+            }
+        }
 
         const payLevelSel = document.getElementById('editFormPayLevel');
-        if (payLevelSel) payLevelSel.value = user.payLevel || '默認層';
+        if (payLevelSel) payLevelSel.value = user.payLevel || '默认层';
 
         const levelSel = document.getElementById('editFormLevel');
-        if (levelSel) levelSel.value = user.level || '普通會員';
+        if (levelSel) levelSel.value = user.level || '普通会员';
 
         const remarkIn = document.getElementById('editFormRemark');
         if (remarkIn) remarkIn.value = user.remark !== '-' ? user.remark : '';
@@ -3015,12 +3002,12 @@ document.addEventListener('DOMContentLoaded', () => {
                             <input type="text" class="form-input" ${disabledAttr} style="width: 100%; height: 36px; padding: 0 12px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 13px; outline: none; box-sizing: border-box; ${inputStyle}" value="${acc.address || ''}">
                         </td>
                         <td style="padding: 12px; white-space: nowrap; text-align: center;">
-                            <span style="display: inline-block; background-color: #f0fdf4; color: #16a34a; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 500;">啟用</span>
+                            <span style="display: inline-block; background-color: #f0fdf4; color: #16a34a; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 500;">启用</span>
                         </td>
                         <td style="padding: 12px; white-space: nowrap; text-align: center;">
                             <div style="display: flex; gap: 8px; justify-content: center;">
-                                ${canDeleteBank ? `<button type="button" class="btn btn-sm btn-danger" style="padding: 6px 12px; background-color: #f87171; border-color: #f87171; border-radius: 4px; color: white; border: 1px solid transparent; cursor: pointer; font-size: 13px;">刪除</button>` : ''}
-                                <button type="button" class="btn btn-sm btn-primary" ${disabledAttr} style="padding: 6px 12px; border-radius: 4px; border: 1px solid transparent; font-size: 13px; ${saveBtnStyle}">儲存</button>
+                                ${canDeleteBank ? `<button type="button" class="btn btn-sm btn-danger" style="padding: 6px 12px; background-color: #f87171; border-color: #f87171; border-radius: 4px; color: white; border: 1px solid transparent; cursor: pointer; font-size: 13px;">删除</button>` : ''}
+                                <button type="button" class="btn btn-sm btn-primary" ${disabledAttr} style="padding: 6px 12px; border-radius: 4px; border: 1px solid transparent; font-size: 13px; ${saveBtnStyle}">储存</button>
                                 ${canDisableBank ? `<button type="button" class="btn btn-sm btn-outline" style="padding: 6px 12px; background-color: white; border: 1px solid #e2e8f0; border-radius: 4px; color: #475569; cursor: pointer; font-size: 13px;">禁用</button>` : ''}
                             </div>
                         </td>
@@ -3056,7 +3043,7 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const uid = link.getAttribute('data-uid');
             const text = link.textContent.trim();
-            if (text === '查看詳情' || text === '查看详情') {
+            if (text === '查看详情' || text === '查看详情') {
                 if (window.openUserDetailsDrawer) window.openUserDetailsDrawer(uid);
             } else {
                 openUserEditModal(uid);
@@ -3068,7 +3055,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnUserEditCancel) btnUserEditCancel.addEventListener('click', closeUserEditDrawer);
     if (btnUserEditSave) {
         btnUserEditSave.addEventListener('click', () => {
-            showToast('用戶詳情已更新！');
+            showToast('用户详情已更新！');
             closeUserEditDrawer();
         });
     }
@@ -3087,7 +3074,7 @@ window.showToast = function(message) {
     const toast = document.createElement('div');
     toast.textContent = message;
     toast.style.position = 'fixed';
-    toast.style.bottom = '20px';
+    toast.style.top = '-50px';
     toast.style.left = '50%';
     toast.style.transform = 'translateX(-50%)';
     toast.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
@@ -3097,11 +3084,17 @@ window.showToast = function(message) {
     toast.style.zIndex = '9999';
     toast.style.fontSize = '14px';
     toast.style.pointerEvents = 'none';
+    toast.style.transition = 'top 0.3s ease, opacity 0.3s ease';
     document.body.appendChild(toast);
     
+    // Trigger slide down
     setTimeout(() => {
+        toast.style.top = '20px';
+    }, 10);
+    
+    setTimeout(() => {
+        toast.style.top = '-50px';
         toast.style.opacity = '0';
-        toast.style.transition = 'opacity 0.3s ease';
         setTimeout(() => toast.remove(), 300);
     }, 2000);
 }
@@ -3120,7 +3113,7 @@ window.handleAuditAction = function(btn, message) {
 }
 
 window.handleResetAction = function(btn, uid, field) {
-    if(confirm('確定要重置此項資料嗎？')) {
+    if(confirm('确定要重置此项资料吗？')) {
         showToast('已重置');
         
         let newValueHtml = '-';
@@ -3129,7 +3122,7 @@ window.handleResetAction = function(btn, uid, field) {
             const user = window.mockUsers.find(u => u.uid === uid);
             if (user) {
                 if (field === 'phone') {
-                    user.phone = '待重新綁定';
+                    user.phone = '待重新绑定';
                     user.phoneAudited = false;
                     newValueHtml = getPhoneStatusHtml(user.phone);
                     
@@ -3166,15 +3159,15 @@ document.querySelector('#userTableBody')?.addEventListener('click', function(e) 
     if (e.target.closest('.ip-link')) {
         e.preventDefault();
         const ip = e.target.closest('.ip-link').dataset.ip;
-        showToast('前往 IP 統計頁面: ' + ip);
+        showToast('前往 IP 统计页面: ' + ip);
     }
     
     if (e.target.closest('.copy-ip-btn')) {
         const ip = e.target.closest('.copy-ip-btn').dataset.ip;
         navigator.clipboard.writeText(ip).then(() => {
-            showToast('已複製 IP: ' + ip);
+            showToast('已复制 IP: ' + ip);
         }).catch(err => {
-            showToast('複製失敗');
+            showToast('复制失败');
         });
     }
     
@@ -3188,7 +3181,7 @@ document.querySelector('#userTableBody')?.addEventListener('click', function(e) 
         // Simulate API call
         setTimeout(() => {
             icon.classList.remove('icon-spin');
-            showToast('三方餘額刷新成功');
+            showToast('三方余额刷新成功');
         }, 1000);
     }
 });
@@ -3247,6 +3240,15 @@ if (drawerContent) {
     });
 }
 
+const btnVerifyPhone = document.getElementById('btnVerifyPhone');
+if (btnVerifyPhone) {
+    btnVerifyPhone.addEventListener('click', () => {
+        if (!btnVerifyPhone.disabled) {
+            showToast('系统后台返回文案(照旧)');
+        }
+    });
+}
+
 // Drawer Save Button Handler
 document.getElementById('btnColumnsDrawerSave')?.addEventListener('click', () => {
     if (currentTableMode === 'nested') {
@@ -3277,16 +3279,16 @@ if (!globalActionMenu) {
             const text = target.textContent.trim();
             const uid = globalActionMenu.getAttribute('data-uid');
             
-            if (text === '查看詳情' || text === '查看详情') {
+            if (text === '查看详情' || text === '查看详情') {
                 if (uid && window.openUserDetailsDrawer) window.openUserDetailsDrawer(uid);
-            } else if (text === '編輯用戶' || text === '编辑用户') {
+            } else if (text === '编辑用户' || text === '编辑用户') {
                 if (uid) openUserEditModal(uid);
-            } else if (text === '代理變更紀錄' || text === '代理变更记录') {
+            } else if (text === '代理变更纪录' || text === '代理变更记录') {
                 if (window.openAgentChangeRecordDrawer) {
                     window.openAgentChangeRecordDrawer(uid);
                 }
             } else {
-                alert(`觸發操作：${text}`);
+                alert(`触发操作：${text}`);
             }
             hideMenu();
         }
@@ -3384,12 +3386,12 @@ if (btnAddWithdrawAccount) {
                     <input type="text" class="form-input" style="width: 100%; height: 36px; padding: 0 12px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 13px; outline: none; box-sizing: border-box;" value="">
                 </td>
                 <td style="padding: 12px; white-space: nowrap; text-align: center;">
-                    <span style="display: inline-block; background-color: #f0fdf4; color: #16a34a; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 500;">啟用</span>
+                    <span style="display: inline-block; background-color: #f0fdf4; color: #16a34a; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 500;">启用</span>
                 </td>
                 <td style="padding: 12px; white-space: nowrap; text-align: center;">
                     <div style="display: flex; gap: 8px; justify-content: center;">
-                        <button type="button" class="btn btn-sm btn-danger" style="padding: 6px 12px; background-color: #f87171; border-color: #f87171; border-radius: 4px; color: white; border: 1px solid transparent; cursor: pointer; font-size: 13px;" onclick="this.closest('tr').remove();">刪除</button>
-                        <button type="button" class="btn btn-sm btn-primary" style="padding: 6px 12px; background-color: #3b82f6; border-color: #3b82f6; border-radius: 4px; color: white; border: 1px solid transparent; cursor: pointer; font-size: 13px;">儲存</button>
+                        <button type="button" class="btn btn-sm btn-danger" style="padding: 6px 12px; background-color: #f87171; border-color: #f87171; border-radius: 4px; color: white; border: 1px solid transparent; cursor: pointer; font-size: 13px;" onclick="this.closest('tr').remove();">删除</button>
+                        <button type="button" class="btn btn-sm btn-primary" style="padding: 6px 12px; background-color: #3b82f6; border-color: #3b82f6; border-radius: 4px; color: white; border: 1px solid transparent; cursor: pointer; font-size: 13px;">储存</button>
                     </div>
                 </td>
             `;
