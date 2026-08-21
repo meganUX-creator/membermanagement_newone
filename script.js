@@ -539,6 +539,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
         return val;
     }
+    window.renderDataState = renderDataState;
 
     window.maskRealName = function(name) {
         if (!name || name === '-' || name === '未填写' || name === '***') return '-';
@@ -578,7 +579,6 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 'realName', group: '帐号', label: '真实姓名', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="realName">${renderDataState(user.realName)}</td>` },
         { id: 'nickname', group: '帐号', label: '暱称', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="nickname">${(user.nickname && user.nickname !== '-') ? user.nickname : renderDataState(window.maskAccountForNickname(user.account))}</td>` },
         { id: 'agentId', group: '会员信息（详细）', label: '代理', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="agentId">${renderDataState(user.agentId)}</td>` },
-        { id: 'inviter', group: '会员信息（详细）', label: '邀请人', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="inviter">${renderDataState(user.inviter)}</td>` },
         { id: 'registerMode', group: '会员信息（详细）', label: '注册模式', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="registerMode">${user.registerMode}</td>` },
         { id: 'phone', group: '会员信息（详细）', label: '手机号', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="phone">${getPhoneStatusHtml(user.phone)}</td>` },
         { id: 'payLevel', group: '等级 & 团队', label: '支付层级', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="payLevel">${user.payLevel}</td>` },
@@ -586,22 +586,24 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 'level', group: '等级 & 团队', label: '等级', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="level">${user.level}</td>` },
         { id: 'accountType', group: '等级 & 团队', label: '帐号类型', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="accountType">${user.accountType}</td>` },
         { id: 'userType', group: '等级 & 团队', label: '会员类型', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="userType">${user.userType}</td>` },
-        { id: 'inviteCode', group: '等级 & 团队', label: '邀请码', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="inviteCode">${user.inviteCode}</td>` },
+        { id: 'inviteCode', group: '等级 & 团队', label: '邀请码', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="inviteCode">${(user.inviteCode && user.inviteCode !== '-') ? user.inviteCode : '-'}</td>` },
+        { id: 'inviter', group: '等级 & 团队', label: '邀请人', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="inviter">${(user.inviter && user.inviter !== '-') ? user.inviter : '-'}</td>` },
         { id: 'directTeam', group: '等级 & 团队', label: '直属下级/团队数', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="directTeam"><a href="#" class="subordinate-link" style="color: var(--primary-color); text-decoration: underline;" data-uid="${user.uid}">${user.directTeam}</a></td>` },
         { id: 'vipLevel', group: '等级 & 团队', label: 'VIP等级', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="vipLevel">${user.vipLevel}</td>` },
         { id: 'vipGrowth', group: '等级 & 团队', label: 'VIP成长值', sortable: true, checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="vipGrowth">${user.vipGrowth}</td>` },
         { id: 'creditValue', group: '信用 & 额度', label: '信用值', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="creditValue">${hasPerm(7) ? user.creditValue : '***'}</td>` },
         { id: 'availableCredit', group: '信用 & 额度', label: '可用额度', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="availableCredit">${user.availableCredit}</td>` },
         { id: 'commissionBal', group: '信用 & 额度', label: '佣金余额', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-money ${user.commissionBal > 0 ? 'positive' : ''}" data-col="commissionBal">${user.commissionBal > 0 ? user.commissionBal : '0'}</td>` },
-        { id: 'balanceBuy', group: '信用 & 额度', label: '余额买', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-money ${user.balanceBuy > 0 ? 'highlight' : ''}" data-col="balanceBuy">${user.balanceBuy > 0 ? user.balanceBuy : '0'}</td>` },
+        { id: 'balanceBuy', group: '信用 & 额度', label: '余额宝', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-money ${user.balanceBuy > 0 ? 'highlight' : ''}" data-col="balanceBuy">${user.balanceBuy > 0 ? user.balanceBuy : '0'}</td>` },
         { id: 'arrears', group: '信用 & 额度', label: '欠款', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-money ${user.arrears === '0' ? 'negative' : ''}" style="color:${user.arrears === '0' ? '#ef4444' : 'inherit'};" data-col="arrears">${renderDataState(user.arrears)}</td>` },
-        { id: 'interest', group: '信用 & 额度', label: '余额买利息', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="interest">${user.interest}</td>` },
+        { id: 'interest', group: '信用 & 额度', label: '余额宝利息', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="interest">${user.interest}</td>` },
         { id: 'thirdBal', group: '信用 & 额度', label: '三方余额', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="thirdBal"><div style="display:flex;align-items:center;">${user.thirdBal > 0 ? user.thirdBal : '0'} <i class="ph ph-arrows-clockwise refresh-icon-compact" data-uid="${user.uid}" title="刷新余额"></i></div></td>` },
         { id: 'points', group: '信用 & 额度', label: '会员积分', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="points">${user.points}</td>` },
         { id: 'deposit', group: '存取款', label: '存款总额', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money ${user.deposit > 0 ? 'highlight' : ''}" data-col="deposit">${user.deposit > 0 ? user.deposit : '0'}</td>` },
         { id: 'withdraw', group: '存取款', label: '取款总额', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money" data-col="withdraw">${user.withdraw > 0 ? user.withdraw : '0'}</td>` },
         { id: 'withdrawPre', group: '存取款', label: '提款扣金额', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-val" data-col="withdrawPre">${renderDataState(user.withdrawPre)}</td>` },
         { id: 'adminDeduct', group: '存取款', label: '后台扣款总额', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-val" data-col="adminDeduct">${renderDataState(user.adminDeduct)}</td>` },
+        { id: 'adminAdd', group: '存取款', label: '后台加款总额', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-val" data-col="adminAdd">${renderDataState(user.adminAdd)}</td>` },
         { id: 'depositCount', group: '存取款', label: '存款次数', checkboxIndex: 6, render: (user) => `<td class="cell-val" data-col="depositCount">${user.depositCount}</td>` },
         { id: 'withdrawCount', group: '存取款', label: '取款次数', checkboxIndex: 6, render: (user) => `<td class="cell-val" data-col="withdrawCount">${user.withdrawCount}</td>` },
         { id: 'tags', group: '其他', label: '标签', checkboxIndex: 7, render: (user) => {
@@ -801,16 +803,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Comprehensive Mock Users Database (50 Users for pagination demonstration)
     const baseMockUsers = [
-        { uid: "1239361225", account: "mingv0717001", realName: "李小明", nickname: "", agentId: "dl", inviter: "-", registerMode: "一般注册", phone: "末绑定", payLevel: "默认层", growth: 0, level: "普通会员", accountType: "普通帐号", userType: "代理会员", inviteCode: "-", directTeam: "0/0", vipLevel: 0, vipGrowth: 0, creditValue: 0, availableCredit: 0, commissionBal: 0, balanceBuy: 0, arrears: "-", interest: 0, thirdBal: 0, points: 0, deposit: 0, withdraw: 0, withdrawPre: "-", adminDeduct: "-", depositCount: 0, withdrawCount: 0, tags: ["VIP 客户", "高频交易", "大户", "标签四", "标签五", "标签六"], status: "冻结", date: "2023-01-01 12:00:00", lastLogin: "2023-01-10 15:30:00", offlineDays: 9, ip: "192.168.1.1", remark: "-", followRemark: "-", note: "-" },
-        { uid: "1239361224", account: "albertvn021", realName: "黄大维", nickname: "阿布", agentId: "nnest123556", inviter: "nnest123556", registerMode: "一般注册", phone: "未验证", payLevel: "默认层", growth: 0, level: "普通会员", accountType: "普通帐号", userType: "代理会员", inviteCode: "06077790", directTeam: "0/0", vipLevel: 0, vipGrowth: 0, creditValue: 0, availableCredit: 0, commissionBal: 0, balanceBuy: 0, arrears: "-", interest: 0, thirdBal: 0, points: 0, deposit: 0, withdraw: 0, withdrawPre: "-", adminDeduct: "-", depositCount: 0, withdrawCount: 0, tags: ["异常风险", "VIP 客户", "标签三", "标签四", "标签五"], status: "停用", date: "2023-01-02 10:00:00", lastLogin: "2023-01-11 09:20:00", offlineDays: 9, ip: "192.168.1.2", remark: "-", followRemark: "-", note: "-" },
+        { uid: "1239361225", account: "mingv0717001", realName: "-", nickname: "", agentId: "dl", inviter: "-", registerMode: "一般注册", phone: "末绑定", payLevel: "默认层", growth: 0, level: "普通会员", accountType: "普通帐号", userType: "代理会员", inviteCode: "-", directTeam: "0/0", vipLevel: 0, vipGrowth: 0, creditValue: 0, availableCredit: 0, commissionBal: 0, balanceBuy: 0, arrears: "-", interest: 0, thirdBal: 0, points: 0, deposit: 0, withdraw: 0, withdrawPre: "-", adminDeduct: "-", depositCount: 0, withdrawCount: 0, tags: ["VIP 客户", "高频交易", "大户", "标签四", "标签五", "标签六"], status: "冻结", date: "2023-01-01 12:00:00", lastLogin: "2023-01-10 15:30:00", offlineDays: 9, ip: "192.168.1.1", remark: "-", followRemark: "-", note: "-" },
+        { uid: "1239361224", account: "albertvn021", realName: "-", nickname: "阿布", agentId: "nnest123556", inviter: "nnest123556", registerMode: "一般注册", phone: "未验证", payLevel: "默认层", growth: 0, level: "普通会员", accountType: "普通帐号", userType: "代理会员", inviteCode: "06077790", directTeam: "0/0", vipLevel: 0, vipGrowth: 0, creditValue: 0, availableCredit: 0, commissionBal: 0, balanceBuy: 0, arrears: "-", interest: 0, thirdBal: 0, points: 0, deposit: 0, withdraw: 0, withdrawPre: "-", adminDeduct: "-", depositCount: 0, withdrawCount: 0, tags: ["异常风险", "VIP 客户", "标签三", "标签四", "标签五"], status: "停用", date: "2023-01-02 10:00:00", lastLogin: "2023-01-11 09:20:00", offlineDays: 9, ip: "192.168.1.2", remark: "-", followRemark: "-", note: "-" },
         { uid: "1239361223", account: "vip_king", realName: "李娜", realNameAudited: true, birthdayAudited: true, nickname: "郑姐", agentId: "AG888", inviter: "nnest123556", registerMode: "一般注册", phone: "13812348888", payLevel: "默认层", growth: 1250, level: "钻石会员", accountType: "普通帐号", userType: "代理会员", inviteCode: "INV02", directTeam: "12/8", vipLevel: 3, vipGrowth: 6800, creditValue: 500, availableCredit: 2000, commissionBal: 680, balanceBuy: 8750, arrears: "0", interest: 120, thirdBal: 320, points: 450, deposit: 3200, withdraw: 1500, withdrawPre: "-", adminDeduct: "-", depositCount: 8, withdrawCount: 4, tags: ["正常", "活跃", "高消费", "标签四", "标签五"], status: "冻结", date: "2023-01-05 14:15:00", lastLogin: "2023-01-15 18:45:00", offlineDays: 0, ip: "192.168.1.3", remark: "-", followRemark: "-", note: "-" },
         { uid: "1239361226", account: "test_user_1", realName: "王大明", nickname: "王大", agentId: "dl", inviter: "nnest123556", registerMode: "后台新增", phone: "0912345678", payLevel: "默认层", growth: 0, level: "普通会员", accountType: "普通帐号", userType: "代理会员", inviteCode: "CODE100", directTeam: "0/0", vipLevel: 0, vipGrowth: 0, creditValue: 500, availableCredit: 0, commissionBal: 0, balanceBuy: 0, arrears: "0", interest: 0, thirdBal: 150, points: 0, deposit: 0, withdraw: 0, withdrawPre: "-", adminDeduct: "-", depositCount: 0, withdrawCount: 0, tags: ["新注册"], status: "停用", date: "2023-02-01 10:00:00", lastLogin: "2023-03-01 15:30:00", offlineDays: 30, ip: "192.168.2.10", remark: "大户需关注", followRemark: "-", note: "-" },
         { uid: "1239361227", account: "test_user_2", realName: "林小华", nickname: "", agentId: "AG888", inviter: "-", registerMode: "一般注册", phone: "0987654321", payLevel: "默认层", growth: 150, level: "普通会员", accountType: "普通帐号", userType: "代理会员", inviteCode: "-", directTeam: "1/1", vipLevel: 1, vipGrowth: 50, creditValue: 0, availableCredit: 1000, commissionBal: 15, balanceBuy: 300, arrears: "0", interest: 2, thirdBal: 0, points: 25, deposit: 2000, withdraw: 500, withdrawPre: "-", adminDeduct: "-", depositCount: 1, withdrawCount: 1, tags: ["新注册"], status: "停用", date: "2023-02-02 10:00:00", lastLogin: "2023-03-02 15:30:00", offlineDays: 1, ip: "192.168.1.100", remark: "-", followRemark: "-", note: "-" },
         { uid: "1239361228", account: "test_user_3", realName: "周思齐", nickname: "Alice", agentId: "nnest123556", inviter: "nnest123556", registerMode: "一般注册", phone: "13912341002", payLevel: "默认层", growth: 300, level: "普通会员", accountType: "普通帐号", userType: "代理会员", inviteCode: "CODE102", directTeam: "2/2", vipLevel: 2, vipGrowth: 100, creditValue: 500, availableCredit: 2000, commissionBal: 30, balanceBuy: 600, arrears: "0", interest: 4, thirdBal: 0, points: 50, deposit: 4000, withdraw: 1000, withdrawPre: "-", adminDeduct: "-", depositCount: 2, withdrawCount: 2, tags: ["新注册"], status: "冻结", date: "2023-02-03 10:00:00", lastLogin: "2023-03-03 15:30:00", offlineDays: 2, ip: "192.168.2.12", remark: "-", followRemark: "-", note: "-" },
         { uid: "1239361229", account: "test_user_4", realName: "陈大文", nickname: "", agentId: "dl", inviter: "-", registerMode: "一般注册", phone: "未绑定", payLevel: "默认层", growth: 450, level: "普通会员", accountType: "普通帐号", userType: "代理会员", inviteCode: "-", directTeam: "3/0", vipLevel: 3, vipGrowth: 150, creditValue: 0, availableCredit: 3000, commissionBal: 45, balanceBuy: 900, arrears: "0", interest: 6, thirdBal: 0, points: 75, deposit: 6000, withdraw: 1500, withdrawPre: "-", adminDeduct: "-", depositCount: 3, withdrawCount: 3, tags: ["新注册"], status: "冻结", date: "2023-02-04 10:00:00", lastLogin: "2023-03-04 15:30:00", offlineDays: 3, ip: "192.168.2.13", remark: "这是一段非常长非常长非常长的备注，用来测试单行截断与悬停提示的效果是否正常运作。", followRemark: "-", note: "-" },
-        { uid: "1239361230", account: "test_user_5", realName: "许大茂", nickname: "小明", agentId: "AG888", inviter: "nnest123556", registerMode: "后台新增", phone: "13912341004", payLevel: "默认层", growth: 600, level: "普通会员", accountType: "普通帐号", userType: "代理会员", inviteCode: "CODE104", directTeam: "4/1", vipLevel: 0, vipGrowth: 200, creditValue: 500, availableCredit: 4000, commissionBal: 60, balanceBuy: 1200, arrears: "0", interest: 8, thirdBal: 150, points: 100, deposit: 8000, withdraw: 2000, withdrawPre: "-", adminDeduct: "-", depositCount: 4, withdrawCount: 4, tags: ["新注册"], status: "冻结", date: "2023-02-05 10:00:00", lastLogin: "2023-03-05 15:30:00", offlineDays: 4, ip: "192.168.2.14", remark: "-", followRemark: "-", note: "-" },
+        { uid: "1239361230", account: "test_user_5", realName: "-", nickname: "小明", agentId: "AG888", inviter: "nnest123556", registerMode: "后台新增", phone: "13912341004", payLevel: "默认层", growth: 600, level: "普通会员", accountType: "普通帐号", userType: "代理会员", inviteCode: "CODE104", directTeam: "4/1", vipLevel: 0, vipGrowth: 200, creditValue: 500, availableCredit: 4000, commissionBal: 60, balanceBuy: 1200, arrears: "0", interest: 8, thirdBal: 150, points: 100, deposit: 8000, withdraw: 2000, withdrawPre: "-", adminDeduct: "-", depositCount: 4, withdrawCount: 4, tags: ["新注册"], status: "冻结", date: "2023-02-05 10:00:00", lastLogin: "2023-03-05 15:30:00", offlineDays: 4, ip: "192.168.2.14", remark: "-", followRemark: "-", note: "-" },
         { uid: "1239361231", account: "test_user_6", realName: "陈阿明", nickname: "", agentId: "ag123", inviter: "-", registerMode: "一般注册", phone: "待重新绑定", payLevel: "默认层", growth: 750, level: "普通会员", accountType: "普通帐号", userType: "代理会员", inviteCode: "-", directTeam: "0/2", vipLevel: 1, vipGrowth: 250, creditValue: 0, availableCredit: 5000, commissionBal: 75, balanceBuy: 1500, arrears: "0", interest: 10, thirdBal: 0, points: 125, deposit: 10000, withdraw: 2500, withdrawPre: "-", adminDeduct: "-", depositCount: 5, withdrawCount: 5, tags: ["正常", "活跃"], status: "正常", date: "2023-02-06 10:00:00", lastLogin: "2023-03-06 15:30:00", offlineDays: 5, ip: "192.168.2.15", remark: "-", followRemark: "-", note: "-" },
-        { uid: "1239361232", account: "test_user_7", realName: "陈大文", nickname: "SuperAdmin", agentId: "dl", inviter: "nnest123556", registerMode: "一般注册", phone: "审核中", payLevel: "默认层", growth: 900, level: "普通会员", accountType: "普通帐号", userType: "代理会员", inviteCode: "CODE106", directTeam: "1/0", vipLevel: 2, vipGrowth: 300, creditValue: 500, availableCredit: 6000, commissionBal: 90, balanceBuy: 1800, arrears: "0", interest: 12, thirdBal: 0, points: 150, deposit: 12000, withdraw: 3000, withdrawPre: "-", adminDeduct: "-", depositCount: 6, withdrawCount: 0, tags: ["新注册"], status: "冻结", date: "2023-02-07 10:00:00", lastLogin: "2023-03-07 15:30:00", offlineDays: 6, ip: "192.168.2.16", remark: "-", followRemark: "-", note: "-" }
+        { uid: "1239361232", account: "test_user_7", realName: "-", nickname: "SuperAdmin", agentId: "dl", inviter: "nnest123556", registerMode: "一般注册", phone: "审核中", payLevel: "默认层", growth: 900, level: "普通会员", accountType: "普通帐号", userType: "代理会员", inviteCode: "CODE106", directTeam: "1/0", vipLevel: 2, vipGrowth: 300, creditValue: 500, availableCredit: 6000, commissionBal: 90, balanceBuy: 1800, arrears: "0", interest: 12, thirdBal: 0, points: 150, deposit: 12000, withdraw: 3000, withdrawPre: "-", adminDeduct: "-", depositCount: 6, withdrawCount: 0, tags: ["新注册"], status: "冻结", date: "2023-02-07 10:00:00", lastLogin: "2023-03-07 15:30:00", offlineDays: 6, ip: "192.168.2.16", remark: "-", followRemark: "-", note: "-" }
     ];
 
     // Generate 200 items to ensure pagination works smoothly with up to 100 items per page
@@ -1278,7 +1280,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div style="display: flex; align-items: center;">
                         <span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">真实姓名:</span>
-                        <span id="detailsRealName" data-val="${user.realName}" style="color: #475569; font-size: 14px;">${hasPerm(37) ? (user.realName && user.realName !== '-' ? user.realName : '-') : window.maskRealName(user.realName)}</span>
+                        <span id="detailsRealName" data-val="${user.realName}" style="color: #475569; font-size: 14px;">${hasPerm(37) ? renderDataState(user.realName) : renderDataState(window.maskRealName(user.realName))}</span>
                     </div>
                     <div style="display: flex; align-items: center;">
                         <span style="font-weight: 600; color: #64748b; width: 100px; font-size: 14px;">出生年月日:</span>
@@ -1353,7 +1355,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <tr style="border-bottom: 1px solid var(--border-color);">
                             <td style="padding: 16px; color: #475569;">真实姓名</td>
                             <td style="padding: 16px; color: #94a3b8;">未填写</td>
-                            <td style="padding: 16px; color: #1e293b;">${hasPerm(37) ? (user.realName && user.realName !== '-' ? user.realName : '-') : window.maskRealName(user.realName)}</td>
+                            <td style="padding: 16px; color: #1e293b;">${hasPerm(37) ? renderDataState(user.realName) : renderDataState(window.maskRealName(user.realName))}</td>
                             <td style="padding: 16px; color: #64748b;">2023-10-25 14:30:00</td>
                             <td style="padding: 16px; text-align: center;">${getAuditButtons(user.realNameAudited)}</td>
                         </tr>
@@ -2116,7 +2118,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div><span class="info-label">真实姓名 :</span> ${renderDataState(user.realName)}</div>
                         <div><span class="info-label">用户暱称 :</span> ${(user.nickname && user.nickname !== '-') ? user.nickname : renderDataState(window.maskAccountForNickname(user.account))}</div>
                         <div><span class="info-label">代理 :</span> ${renderDataState(user.agentId)}</div>
-                        <div><span class="info-label">邀请人 :</span> ${renderDataState(user.inviter)}</div>
                         <div><span class="info-label">注册模式 :</span> ${user.registerMode || '一般注册'}</div>
                         <div><span class="info-label">手机号 :</span> ${getPhoneStatusHtml(user.phone)}</div>
                     </td>`;
@@ -2128,10 +2129,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div><span class="info-label">等级 :</span> <strong class="${user.level === '黄金会员' ? 'level-gold' : ''}">${user.level}</strong></div>
                         <div><span class="info-label">帐号类型 :</span> ${user.accountType || '普通帐号'}</div>
                         <div><span class="info-label">会员类型 :</span> ${user.userType || '代理会员'}</div>
-                        <div><span class="info-label">邀请码 :</span> ${user.inviteCode || '-'}</div>
+                        <div><span class="info-label">邀请码 :</span> ${(user.inviteCode && user.inviteCode !== '-') ? user.inviteCode : '-'}</div>
+                        <div><span class="info-label">邀请人 :</span> ${(user.inviter && user.inviter !== '-') ? user.inviter : '-'}</div>
                         <div><span class="info-label">直属下级/团队人数 :</span> <a href="#" class="subordinate-link" style="color: var(--primary-color); text-decoration: underline;" data-uid="${user.uid}">${user.directTeam || '0/0'}</a></div>
-                        <div><span class="info-label">VIP会员等级 :</span> ${user.vipLevel || 0}</div>
-                        <div><span class="info-label">VIP成长值 :</span> ${user.vipGrowth || 0}</div>
+                        <div>
+                            <span class="info-label">VIP会员等级 :</span> ${user.vipLevel || 0}
+                            <div style="font-size:12px; color:#64748b; margin-top:2px;"><span class="info-label" style="display:inline-block; width:auto; margin-right:4px;">VIP成长值 :</span>${user.vipGrowth || 0}</div>
+                        </div>
                     </td>`;
                 }
                 if (nestedColumnVisibility['creditLimit']) {
@@ -2139,7 +2143,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div><span class="info-label">信用值 :</span> ${hasPerm(7) ? (user.creditValue || 0) : '***'}</div>
                         <div><span class="info-label">可用额度 :</span> ${user.availableCredit || 0}</div>
                         <div><span class="info-label">佣金余额 :</span> ${user.commissionBal || 0}</div>
-                        <div><span class="info-label">诊额宝 :</span> ${user.balanceBuy || 0}</div>
+                        <div><span class="info-label">余额宝 :</span> ${user.balanceBuy || 0}</div>
                         <div><span class="info-label">欠款 :</span> ${user.arrears || '-'}</div>
                         <div><span class="info-label">余额宝利息 :</span> ${user.interest || 0}</div>
                         <div><span class="info-label">三方余额 :</span> ${user.thirdBal || 0} <a href="#" class="refresh-link" style="color:#2563eb;font-size:12px;margin-left:4px;text-decoration:none;">刷新</a></div>
@@ -2152,6 +2156,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div><span class="info-label">取款总额 :</span> ${user.withdraw || 0}</div>
                         <div><span class="info-label">提款预扣金额 :</span> ${user.withdrawPre || '-'}</div>
                         <div><span class="info-label">后台扣款总额 :</span> ${user.adminDeduct || '-'}</div>
+                        <div><span class="info-label">后台加款总额 :</span> ${user.adminAdd || '-'}</div>
                         <div><span class="info-label">存款次数 :</span> ${user.depositCount || 0}</div>
                         <div><span class="info-label">取款次数 :</span> ${user.withdrawCount || 0}</div>
                     </td>`;
@@ -2862,8 +2867,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Radio selections
-        const userTypeRadios = document.querySelectorAll('input[name="editUserType"]');
-        userTypeRadios.forEach(r => r.checked = (r.value === user.userType));
+        const editFormUserTypeInput = document.getElementById('editFormUserTypeInput');
+        if (editFormUserTypeInput) editFormUserTypeInput.value = user.userType || '代理会员';
 
         // Trace [20] contact info permission for edit drawer
         const editContactInfoCard = document.getElementById('editContactInfoCard');

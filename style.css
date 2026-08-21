@@ -1834,6 +1834,11 @@ table tr td:nth-child(9) {
     padding-left: 28px;
 }
 
+/* data empty style */
+.data-empty {
+    color: #94a3b8;
+}
+
 /* ==========================================
    显示模式切换与说明 Banner (Mode Switcher)
    ========================================== */

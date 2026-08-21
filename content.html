@@ -651,10 +651,7 @@
                             </div>
                             <div class="edit-form-group">
                                 <label>会员类型</label>
-                                <div class="radio-pill-group">
-                                    <label class="radio-pill"><input type="radio" name="editUserType" value="代理会员" checked><i class="ph ph-check-circle"></i><span>代理会员</span></label>
-                                    <label class="radio-pill"><input type="radio" name="editUserType" value="普通会员"><i class="ph ph-circle"></i><span>普通会员</span></label>
-                                </div>
+                                <input type="text" class="form-input" id="editFormUserTypeInput" value="代理会员" disabled style="background-color: #f8fafc; border-style: dashed; color: #475569; font-weight: 500;">
                             </div>
                             <div class="edit-form-group">
                                 <label>帐户状态</label>
@@ -683,8 +680,6 @@
                                     <option value="VIP层">VIP层</option>
                                 </select>
                             </div>
-                            <div class="edit-form-group"><label>国家</label><input type="text" id="editFormCountry" class="form-input" value="VN"></div>
-                            <div class="edit-form-group"><label>币种</label><input type="text" id="editFormCurrency" class="form-input" value="VND"></div>
                         </div>
                     </div>
 
@@ -1044,13 +1039,13 @@
                             <tbody>
                                 <tr style="border-bottom: 1px solid var(--border-color);">
                                     <td style="padding: 12px 8px; text-align: center;">megan002</td>
-                                    <td style="padding: 12px 8px; text-align: center;"></td>
+                                    <td style="padding: 12px 8px; text-align: center;">无数据</td>
                                     <td style="padding: 12px 8px; text-align: center;">2026-07-28 16:30:42</td>
                                     <td style="padding: 12px 8px; text-align: center;"><span
                                             class="badge badge-normal">正常</span></td>
                                     <td style="padding: 12px 8px; text-align: center;">0</td>
                                     <td style="padding: 12px 8px; text-align: center;">0</td>
-                                    <td style="padding: 12px 8px; text-align: center;"></td>
+                                    <td style="padding: 12px 8px; text-align: center;">－</td>
                                     <td style="padding: 12px 8px; text-align: center;">
                                         <a href="#" style="color: var(--primary-color); margin-right: 8px;">查看下级</a>
                                         <a href="#" style="color: var(--primary-color);">返回最上级</a>
@@ -1201,7 +1196,7 @@
                 const detailsRealName = document.getElementById('detailsRealName');
                 if (detailsRealName) {
                     const rawVal = detailsRealName.getAttribute('data-val');
-                    detailsRealName.textContent = showRealName ? (rawVal && rawVal !== '-' ? rawVal : '-') : window.maskRealName(rawVal);
+                    detailsRealName.innerHTML = showRealName ? window.renderDataState(rawVal) : window.renderDataState(window.maskRealName(rawVal));
                 }
                 const editFormRealName = document.getElementById('editFormRealName');
                 if (editFormRealName) {
