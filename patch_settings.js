@@ -70,7 +70,7 @@ let newSettingsTab = `
                             <!-- Item 4 -->
                             <div class="setting-switch-item">
                                 <div class="setting-switch-content">
-                                    <div class="setting-switch-title">邀請碼註冊 <i class="ph ph-question" style="color: #94a3b8; font-size: 14px;"></i></div>
+                                    <div class="setting-switch-title">邀請碼註冊 <span class="info-tooltip-container" style="cursor: help;"><i class="ph ph-question" style="color: #94a3b8; font-size: 14px;"></i><div class="info-tooltip">取消勾选后，此用户新增邀请码将强制更换为默认代理。</div></span></div>
                                     <div class="setting-switch-desc">此用戶為透過邀請碼完成註冊</div>
                                 </div>
                                 <label class="toggle-switch">

@@ -3189,6 +3189,8 @@ document.querySelector('#userTableBody')?.addEventListener('click', function(e) 
             showToast('三方余额刷新成功');
         }, 1000);
     }
+
+    // (Moved to global click listener)
 });
 
 const drawerContent = document.getElementById('columnsDrawerContent');
@@ -3455,4 +3457,91 @@ window.filterIpRecords = function(val) {
     });
 };
 
+});
+
+// Handle all toggle switches to show toast using event delegation
+document.addEventListener('change', (e) => {
+    if (e.target.matches('.toggle-switch input[type="checkbox"]')) {
+        const isChecked = e.target.checked;
+        if (typeof window.showToast === 'function') {
+            window.showToast(isChecked ? '已开启' : '已关闭');
+        }
+    }
+});
+
+// Global click handler for interactive elements outside the main table
+document.addEventListener('click', (e) => {
+    // Refresh third party balance link
+    if (e.target.closest('.refresh-link')) {
+        e.preventDefault();
+        if (typeof window.showToast === 'function') window.showToast('三方余额刷新成功');
+    }
+
+    // Agent team link
+    if (e.target.closest('.subordinate-link')) {
+        e.preventDefault();
+        if (typeof window.showToast === 'function') window.showToast('正在前往代理团队页面...');
+    }
+
+    // Bank card / settings buttons
+    const targetBtn = e.target.closest('.btn-sm');
+    if (targetBtn) {
+        const text = targetBtn.textContent.trim();
+        if (text.includes('储存') || text.includes('保存') || text.includes('儲存')) {
+            if (typeof window.showToast === 'function') window.showToast('保存成功');
+        } else if (text.includes('删除') || text.includes('刪除')) {
+            if (typeof window.showToast === 'function') window.showToast('删除成功');
+            // If it doesn't already have an inline onclick, remove the row here
+            if (!targetBtn.getAttribute('onclick')) {
+                const tr = targetBtn.closest('tr');
+                if (tr) tr.remove();
+            }
+        } else if (text.includes('禁用')) {
+            if (typeof window.showToast === 'function') window.showToast('已禁用该银行卡');
+            const tr = targetBtn.closest('tr');
+            if (tr) {
+                tr.style.opacity = '0.5';
+                tr.style.backgroundColor = '#f8fafc';
+                
+                // Disable inputs/selects/buttons but remember original state
+                tr.querySelectorAll('input, select, button').forEach(el => {
+                    if (el !== targetBtn && !el.disabled) {
+                        el.dataset.tempDisabled = 'true';
+                        el.disabled = true;
+                    }
+                });
+                
+                // Change status badge
+                const statusCell = tr.querySelectorAll('td')[4];
+                if (statusCell) {
+                    statusCell.innerHTML = '<span style="display: inline-block; background-color: #f1f5f9; color: #64748b; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 500;">已禁用</span>';
+                }
+                
+                targetBtn.textContent = '启用';
+            }
+        } else if (text.includes('启用') || text.includes('啟用')) {
+            if (typeof window.showToast === 'function') window.showToast('已启用该银行卡');
+            const tr = targetBtn.closest('tr');
+            if (tr) {
+                tr.style.opacity = '1';
+                tr.style.backgroundColor = '';
+                
+                // Restore inputs/selects/buttons original state
+                tr.querySelectorAll('input, select, button').forEach(el => {
+                    if (el.dataset.tempDisabled === 'true') {
+                        el.disabled = false;
+                        delete el.dataset.tempDisabled;
+                    }
+                });
+                
+                // Change status badge
+                const statusCell = tr.querySelectorAll('td')[4];
+                if (statusCell) {
+                    statusCell.innerHTML = '<span style="display: inline-block; background-color: #f0fdf4; color: #16a34a; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 500;">启用</span>';
+                }
+                
+                targetBtn.textContent = '禁用';
+            }
+        }
+    }
 });

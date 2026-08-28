@@ -826,7 +826,7 @@
                             </div>
                         </div>
                         <div class="edit-form-group" style="margin-bottom: 16px;">
-                            <label style="display: flex; align-items: center; gap: 4px;">提现费率 <i class="ph ph-question" style="color: #94a3b8; font-size: 14px;"></i></label>
+                            <label style="display: flex; align-items: center; gap: 4px;">提现费率</label>
                             <input type="text" id="settingWithdrawFee" class="form-input" placeholder="例如：0.015（支持三位小数）">
                         </div>
                         <div class="edit-form-group">
@@ -842,14 +842,12 @@
                                 <div class="icon-container indigo" style="background-color: #f5f3ff; color: #7c3aed;"><i class="ph ph-lock-key"></i></div>
                                 <h4 class="edit-card-title">权限与限制</h4>
                             </div>
-                            <span class="edit-card-subtitle">开启即代表启用该限制 / 功能</span>
                         </div>
                         <div style="display: flex; flex-direction: column;">
                             <!-- Item 1 -->
                             <div class="setting-switch-item">
                                 <div class="setting-switch-content">
                                     <div class="setting-switch-title">停止第三方返水</div>
-                                    <div class="setting-switch-desc">开启后，该用户将不再享有第三方返水优惠</div>
                                 </div>
                                 <label class="toggle-switch">
                                     <input type="checkbox" id="settingStopThirdRebate">
@@ -860,7 +858,6 @@
                             <div class="setting-switch-item">
                                 <div class="setting-switch-content">
                                     <div class="setting-switch-title">限制转入第三方</div>
-                                    <div class="setting-switch-desc">开启后，该用户帐户无法转帐至第三方平台</div>
                                 </div>
                                 <label class="toggle-switch">
                                     <input type="checkbox" id="settingLimitThirdTransfer">
@@ -871,7 +868,6 @@
                             <div class="setting-switch-item">
                                 <div class="setting-switch-content">
                                     <div class="setting-switch-title">停止彩票返水</div>
-                                    <div class="setting-switch-desc">开启后，该用户的彩票投注将不再计算返水</div>
                                 </div>
                                 <label class="toggle-switch">
                                     <input type="checkbox" id="settingStopLotteryRebate">
@@ -881,8 +877,7 @@
                             <!-- Item 4 -->
                             <div class="setting-switch-item">
                                 <div class="setting-switch-content">
-                                    <div class="setting-switch-title">邀请码注册 <i class="ph ph-question" style="color: #94a3b8; font-size: 14px;"></i></div>
-                                    <div class="setting-switch-desc">此用户为透过邀请码完成注册</div>
+                                    <div class="setting-switch-title">邀请码注册 <span class="info-tooltip-container" style="cursor: help;"><i class="ph ph-question" style="color: #94a3b8; font-size: 14px;"></i><div class="info-tooltip">取消勾选后，此用户新增邀请码将强制更换为默认代理。</div></span></div>
                                 </div>
                                 <label class="toggle-switch">
                                     <input type="checkbox" id="settingInviteReg" checked>
@@ -893,7 +888,6 @@
                             <div class="setting-switch-item">
                                 <div class="setting-switch-content">
                                     <div class="setting-switch-title">停止成长值和等级更新</div>
-                                    <div class="setting-switch-desc">开启后，该用户的成长值与会员等级将被冻结</div>
                                 </div>
                                 <label class="toggle-switch">
                                     <input type="checkbox" id="settingStopLevelUpdate">
@@ -904,7 +898,6 @@
                             <div class="setting-switch-item">
                                 <div class="setting-switch-content">
                                     <div class="setting-switch-title">能否修改下级赔率</div>
-                                    <div class="setting-switch-desc">开启后，该代理可自行调整下级会员的赔率设定</div>
                                 </div>
                                 <label class="toggle-switch">
                                     <input type="checkbox" id="settingCanEditSubOdds">
@@ -926,12 +919,10 @@
                             <div class="edit-form-group">
                                 <label>当天最大提款次数</label>
                                 <input type="text" id="settingMaxWithdraw" class="form-input" placeholder="未设置即不限制">
-                                <span style="font-size: 12px; color: #94a3b8; margin-top: 4px;">留空代表不限制提款次数</span>
                             </div>
                             <div class="edit-form-group">
                                 <label>当天最大充值返利次数</label>
                                 <input type="text" id="settingMaxRebate" class="form-input" placeholder="未设置即不限制">
-                                <span style="font-size: 12px; color: #94a3b8; margin-top: 4px;">留空代表不限制充值返利次数</span>
                             </div>
                         </div>
                     </div>

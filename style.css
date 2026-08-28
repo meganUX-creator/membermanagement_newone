@@ -3834,3 +3834,36 @@ input:checked + .toggle-slider:before {
 #agentChangeRecordDrawer.active {
     right: 0;
 }
+
+/* Custom Info Tooltip */
+.info-tooltip-container {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+.info-tooltip {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: -10px;
+    background: #334155;
+    color: #fff;
+    font-size: 13px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    z-index: 9999;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+.info-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 17px;
+    border-width: 4px;
+    border-style: solid;
+    border-color: #334155 transparent transparent transparent;
+}
+.info-tooltip-container:hover .info-tooltip {
+    display: block;
+}
