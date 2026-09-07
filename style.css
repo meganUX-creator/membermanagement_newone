@@ -779,6 +779,204 @@ input[type="checkbox"] {
     background-color: #f3f4f6;
 }
 
+/* Tags Custom Multi-select & Exact Search */
+.custom-select-tags {
+    min-height: 40px;
+    height: auto !important;
+    min-width: 260px;
+    border: 1px solid #d0d5dd;
+    border-radius: 8px;
+    background-color: #ffffff;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.custom-select-tags.active,
+.custom-select-tags:focus-within {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+}
+
+.custom-select-tags .select-selected {
+    padding: 4px 10px;
+    min-height: 38px;
+    height: auto !important;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.tags-selected-container {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-height: 28px;
+}
+
+.tags-selected-container .placeholder-text {
+    color: #94a3b8;
+    font-size: 13px;
+    line-height: 28px;
+    user-select: none;
+}
+
+.tag-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 8px;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #1e293b;
+    line-height: 20px;
+    user-select: none;
+    transition: all 0.15s ease;
+}
+
+.tag-pill:hover {
+    background-color: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.tag-pill-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.tag-pill-close {
+    cursor: pointer;
+    color: #94a3b8;
+    font-size: 15px;
+    margin-left: 2px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s ease;
+}
+
+.tag-pill-close:hover {
+    color: #ef4444;
+}
+
+.custom-select-tags .select-options {
+    min-width: 320px;
+    width: 100%;
+    padding: 0 0 6px 0;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+    z-index: 100;
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.custom-select-tags .search-input-li {
+    position: sticky;
+    top: 0;
+    background: #ffffff;
+    padding: 10px 12px;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    z-index: 10;
+    cursor: default;
+}
+
+.custom-select-tags .search-input-li input[type="text"] {
+    flex: 1;
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid #3b82f6;
+    border-radius: 6px;
+    outline: none;
+    font-size: 13px;
+    color: #1e293b;
+    background: #ffffff;
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.2);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.custom-select-tags .search-input-li input[type="text"]:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+.btn-tag-search {
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid #d0d5dd;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #344054;
+    font-size: 13px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+}
+
+.btn-tag-search:hover {
+    background-color: #f8fafc;
+    border-color: #94a3b8;
+    color: #0f172a;
+}
+
+.custom-select-tags .select-options li:not(.search-input-li) {
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: #1e293b;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.custom-select-tags .select-options li:not(.search-input-li):hover {
+    background-color: #f8fafc;
+}
+
+.tag-item-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+
+.tag-item-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.tag-item-warning {
+    color: #ea580c;
+    font-weight: 600;
+}
+
+.tag-item-warning i {
+    font-size: 16px;
+    color: #ea580c;
+    flex-shrink: 0;
+}
+
 /* Detailed table styling */
 td {
     vertical-align: top;

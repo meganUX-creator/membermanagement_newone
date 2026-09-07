@@ -164,6 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Helper: Close all dropdown menus
     function closeAllDropdowns() {
         document.querySelectorAll('.select-options').forEach(el => el.classList.remove('show'));
+        document.querySelectorAll('.custom-select-tags').forEach(el => el.classList.remove('active'));
         if (typeof accountTypeMenu !== 'undefined' && accountTypeMenu) accountTypeMenu.classList.remove('show');
         const colToggle = document.getElementById('columnToggleDropdown');
         if (colToggle) colToggle.classList.remove('show');
@@ -285,7 +286,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function initMultiSelect(element, onChange) {
         const selected = element.querySelector('.select-selected');
         const selectedValSpan = element.querySelector('.selected-val');
+        const tagsContainer = element.querySelector('.tags-selected-container');
         const optionsList = element.querySelector('.select-options');
+        const isTagsSelect = element.classList.contains('custom-select-tags');
 
         selected.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -293,37 +296,98 @@ document.addEventListener('DOMContentLoaded', () => {
             closeAllDropdowns();
             if (!isOpen) {
                 optionsList.classList.add('show');
+                if (isTagsSelect) element.classList.add('active');
             }
         });
 
-        optionsList.querySelectorAll('li').forEach(li => {
-            if (li.classList.contains('search-input-li')) {
-                // Keep dropdown open when clicking input
-                li.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                });
-                const searchInput = li.querySelector('input[type="text"]');
-                if (searchInput) {
-                    searchInput.addEventListener('input', (e) => {
-                        const val = e.target.value.trim().toLowerCase();
-                        optionsList.querySelectorAll('li:not(.search-input-li)').forEach(item => {
-                            const text = item.textContent.toLowerCase();
-                            if (text.includes(val)) {
+        // Search input & button inside dropdown (Exact Search or generic search)
+        const searchInputLi = optionsList.querySelector('.search-input-li');
+        if (searchInputLi) {
+            searchInputLi.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+
+            const searchInput = searchInputLi.querySelector('input[type="text"]');
+            const btnExactSearch = searchInputLi.querySelector('.btn-tag-search');
+
+            function performTagSearch(isExact = true) {
+                if (!searchInput) return;
+                const query = searchInput.value.trim();
+                let matchCount = 0;
+
+                optionsList.querySelectorAll('li:not(.search-input-li):not(.no-tag-match-li)').forEach(item => {
+                    const itemVal = (item.getAttribute('data-value') || '').trim();
+                    if (!query) {
+                        item.style.display = '';
+                        matchCount++;
+                    } else {
+                        if (isExact) {
+                            // 精準搜尋: 比對標籤名稱是否完全符合
+                            if (itemVal.toLowerCase() === query.toLowerCase()) {
                                 item.style.display = '';
+                                matchCount++;
                             } else {
                                 item.style.display = 'none';
                             }
-                        });
-                    });
+                        } else {
+                            if (itemVal.toLowerCase().includes(query.toLowerCase())) {
+                                item.style.display = '';
+                                matchCount++;
+                            } else {
+                                item.style.display = 'none';
+                            }
+                        }
+                    }
+                });
+
+                let noMatchLi = optionsList.querySelector('.no-tag-match-li');
+                if (query && matchCount === 0) {
+                    if (!noMatchLi) {
+                        noMatchLi = document.createElement('li');
+                        noMatchLi.className = 'no-tag-match-li';
+                        noMatchLi.style.cssText = 'padding: 16px; text-align: center; color: #94a3b8; font-size: 13px; display: block; cursor: default;';
+                        noMatchLi.textContent = '查無符合標籤';
+                        optionsList.appendChild(noMatchLi);
+                    } else {
+                        noMatchLi.style.display = 'block';
+                    }
+                } else if (noMatchLi) {
+                    noMatchLi.style.display = 'none';
                 }
-                return; // skip standard checkbox logic
             }
 
+            if (btnExactSearch) {
+                btnExactSearch.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    performTagSearch(true);
+                });
+            }
+
+            if (searchInput) {
+                searchInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        performTagSearch(isTagsSelect);
+                    }
+                });
+
+                searchInput.addEventListener('input', (e) => {
+                    if (!e.target.value.trim()) {
+                        performTagSearch(false);
+                    }
+                });
+            }
+        }
+
+        optionsList.querySelectorAll('li:not(.search-input-li)').forEach(li => {
             li.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const checkbox = li.querySelector('input[type="checkbox"]');
-                checkbox.checked = !checkbox.checked;
-                li.classList.toggle('selected', checkbox.checked);
+                if (checkbox) {
+                    checkbox.checked = !checkbox.checked;
+                    li.classList.toggle('selected', checkbox.checked);
+                }
                 
                 updateDisplay();
                 if (onChange) onChange();
@@ -331,6 +395,64 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         function updateDisplay() {
+            if (isTagsSelect && tagsContainer) {
+                const selectedLis = optionsList.querySelectorAll('li.selected');
+                if (selectedLis.length === 0) {
+                    tagsContainer.innerHTML = '<span class="placeholder-text">請選擇或輸入標籤...</span>';
+                } else {
+                    tagsContainer.innerHTML = '';
+                    let displayCount = 0;
+                    selectedLis.forEach(li => {
+                        if (displayCount >= 2) return;
+                        displayCount++;
+                        
+                        const val = li.getAttribute('data-value');
+                        const color = li.getAttribute('data-color') || '#f59e0b';
+                        const isWarning = li.getAttribute('data-icon') === 'warning' || val === '異常風險' || val === '异常风险';
+                        
+                        const pill = document.createElement('span');
+                        pill.className = 'tag-pill';
+                        pill.setAttribute('data-value', val);
+                        
+                        if (isWarning) {
+                            pill.innerHTML = `
+                                <i class="ph-fill ph-warning-circle" style="color: #ea580c; font-size: 13px;"></i>
+                                <span style="color: #ea580c; font-weight: 600;">${val}</span>
+                                <span class="tag-pill-close" title="移除">&times;</span>
+                            `;
+                        } else {
+                            pill.innerHTML = `
+                                <span class="tag-pill-dot" style="background-color: ${color};"></span>
+                                <span>${val}</span>
+                                <span class="tag-pill-close" title="移除">&times;</span>
+                            `;
+                        }
+                        
+                        const closeBtn = pill.querySelector('.tag-pill-close');
+                        closeBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            li.classList.remove('selected');
+                            const cb = li.querySelector('input[type="checkbox"]');
+                            if (cb) cb.checked = false;
+                            updateDisplay();
+                            if (onChange) onChange();
+                        });
+                        
+                        tagsContainer.appendChild(pill);
+                    });
+                    
+                    if (selectedLis.length > 2) {
+                        const morePill = document.createElement('span');
+                        morePill.className = 'tag-pill tag-pill-more';
+                        morePill.style.cssText = 'background: #f1f5f9; color: #475569; padding: 2px 8px; border-radius: 4px; font-size: 13px; border: 1px solid #e2e8f0; font-weight: 500; cursor: default;';
+                        morePill.textContent = `+${selectedLis.length - 2}`;
+                        tagsContainer.appendChild(morePill);
+                    }
+                }
+                return;
+            }
+
+            if (!selectedValSpan) return;
             const selectedItems = [];
             optionsList.querySelectorAll('li.selected').forEach(li => {
                 selectedItems.push(li.getAttribute('data-value'));
@@ -358,6 +480,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
+
+        element.updateDisplay = updateDisplay;
         
         // Initial run
         updateDisplay();
@@ -901,15 +1025,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Helper: Clear multi select choices
     function clearMultiSelectValue(element) {
-        const selectedValSpan = element.querySelector('.selected-val');
+        if (!element) return;
         const optionsList = element.querySelector('.select-options');
-        
-        optionsList.querySelectorAll('li').forEach(li => {
-            li.classList.remove('selected');
-            const checkbox = li.querySelector('input[type="checkbox"]');
-            if (checkbox) checkbox.checked = false;
-        });
-        selectedValSpan.textContent = '请选择';
+        if (optionsList) {
+            optionsList.querySelectorAll('li').forEach(li => {
+                li.classList.remove('selected');
+                const checkbox = li.querySelector('input[type="checkbox"]');
+                if (checkbox) checkbox.checked = false;
+                li.style.display = '';
+            });
+            const searchInput = optionsList.querySelector('.search-input-li input[type="text"]');
+            if (searchInput) searchInput.value = '';
+            const noMatchLi = optionsList.querySelector('.no-tag-match-li');
+            if (noMatchLi) noMatchLi.style.display = 'none';
+        }
+        if (typeof element.updateDisplay === 'function') {
+            element.updateDisplay();
+        } else {
+            const selectedValSpan = element.querySelector('.selected-val');
+            if (selectedValSpan) selectedValSpan.textContent = '请选择';
+            const tagsContainer = element.querySelector('.tags-selected-container');
+            if (tagsContainer) tagsContainer.innerHTML = '<span class="placeholder-text">請選擇或輸入標籤...</span>';
+        }
     }
 
     // Read form values and update Tags & Badge count
@@ -1813,11 +1950,34 @@ document.addEventListener('DOMContentLoaded', () => {
         const depositVal = inputDeposit && inputDeposit.value.trim() !== '' ? parseFloat(inputDeposit.value.trim()) : NaN;
 
         // Perform Filtering
+        const selectedTags = getMultiSelectValues(dropdownTagsSearch);
+
         const filtered = mockUsers.filter(user => {
             if (selectedStatusVal && user.status !== selectedStatusVal) return false;
             if (selectedLevelVal && user.level !== selectedLevelVal) return false;
             if (selectedVips.length > 0 && !selectedVips.includes(user.vip)) return false;
             if (selectedOthers.length > 0 && !selectedOthers.includes(user.other)) return false;
+            
+            // Tags Filter
+            if (selectedTags.length > 0) {
+                if (!user.tags || !Array.isArray(user.tags)) return false;
+                const normalizeTag = (t) => t.replace(/客戶|客户/g, '').trim().toLowerCase();
+                const hasMatchingTag = selectedTags.some(selTag => {
+                    const normSel = normalizeTag(selTag);
+                    return user.tags.some(userTag => {
+                        const normUser = normalizeTag(userTag);
+                        return normUser.includes(normSel) || normSel.includes(normUser) ||
+                               (normSel === '高價值' && (normUser.includes('高价值') || normUser.includes('高价值') || normUser.includes('高消费') || normUser.includes('大户'))) ||
+                               (normSel === '風險' && (normUser.includes('风险') || normUser.includes('异常风险'))) ||
+                               (normSel === '活躍' && (normUser.includes('活跃') || normUser.includes('正常'))) ||
+                               (normSel === '沉睡' && (normUser.includes('沉睡') || normUser.includes('停用') || normUser.includes('冻结'))) ||
+                               (normSel === '異常風險' && (normUser.includes('异常风险') || normUser.includes('異常風險'))) ||
+                               (normSel === 'vip' && (normUser.includes('vip') || normUser.includes('大户'))) ||
+                               (normSel === '新手' && (normUser.includes('新手') || normUser.includes('新注册')));
+                    });
+                });
+                if (!hasMatchingTag) return false;
+            }
             
             // Account filter
             if (accountVal) {

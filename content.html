@@ -125,21 +125,71 @@
                     </div>
 
                     <div class="form-group" data-filter-id="tagsSearch">
-                        <div class="custom-select-multi" id="dropdownTagsSearch">
+                        <div class="custom-select-multi custom-select-tags" id="dropdownTagsSearch">
                             <div class="select-selected">
-                                <span class="inline-label">标签搜寻：</span>
-                                <span class="selected-val" style="color: #94a3b8;">请选择或输入标签...</span>
+                                <span class="inline-label">標籤搜尋：</span>
+                                <div class="tags-selected-container">
+                                    <span class="placeholder-text">請選擇或輸入標籤...</span>
+                                </div>
                                 <i class="ph ph-caret-down"></i>
                             </div>
                             <ul class="select-options">
-                                <li class="search-input-li" style="padding: 8px; background: #fff; position: sticky; top: 0; border-bottom: 1px solid var(--border-color); z-index: 10;">
-                                    <input type="text" placeholder="输入标签搜寻..." style="width: 100%; padding: 6px 8px; border: 1px solid var(--border-color); border-radius: 4px; outline: none; font-size: 13px;">
+                                <li class="search-input-li">
+                                    <input type="text" id="inputTagSearchQuery" placeholder="輸入完整標籤名稱...">
+                                    <button type="button" id="btnTagExactSearch" class="btn-tag-search">
+                                        <i class="ph ph-magnifying-glass"></i>
+                                        <span>搜尋</span>
+                                    </button>
                                 </li>
-                                <li data-value="高价值"><input type="checkbox"> <span style="display: flex; align-items: center; gap: 6px;"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#eab308;"></span>高价值</span></li>
-                                <li data-value="风险"><input type="checkbox"> <span style="display: flex; align-items: center; gap: 6px;"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#ef4444;"></span>风险</span></li>
-                                <li data-value="活跃"><input type="checkbox"> <span style="display: flex; align-items: center; gap: 6px;"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#22c55e;"></span>活跃</span></li>
-                                <li data-value="沉睡"><input type="checkbox"> <span style="display: flex; align-items: center; gap: 6px;"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#94a3b8;"></span>沉睡</span></li>
-                                <li data-value="异常风险"><input type="checkbox"> <span style="display: flex; align-items: center; gap: 6px; color: #ea580c; font-weight: 500;"><i class="ph-fill ph-warning-circle" style="font-size: 14px;"></i>异常风险</span></li>
+                                <li data-value="高價值" data-color="#f59e0b">
+                                    <input type="checkbox">
+                                    <span class="tag-item-content">
+                                        <span class="tag-item-dot" style="background:#f59e0b;"></span>
+                                        <span>高價值</span>
+                                    </span>
+                                </li>
+                                <li data-value="風險" data-color="#ef4444">
+                                    <input type="checkbox">
+                                    <span class="tag-item-content">
+                                        <span class="tag-item-dot" style="background:#ef4444;"></span>
+                                        <span>風險</span>
+                                    </span>
+                                </li>
+                                <li data-value="活躍" data-color="#38bdf8">
+                                    <input type="checkbox">
+                                    <span class="tag-item-content">
+                                        <span class="tag-item-dot" style="background:#38bdf8;"></span>
+                                        <span>活躍</span>
+                                    </span>
+                                </li>
+                                <li data-value="沉睡" data-color="#94a3b8">
+                                    <input type="checkbox">
+                                    <span class="tag-item-content">
+                                        <span class="tag-item-dot" style="background:#94a3b8;"></span>
+                                        <span>沉睡</span>
+                                    </span>
+                                </li>
+                                <li data-value="異常風險" data-color="#ea580c" data-icon="warning">
+                                    <input type="checkbox">
+                                    <span class="tag-item-content tag-item-warning">
+                                        <i class="ph-fill ph-warning-circle"></i>
+                                        <span>異常風險</span>
+                                    </span>
+                                </li>
+                                <li data-value="VIP" data-color="#a855f7">
+                                    <input type="checkbox">
+                                    <span class="tag-item-content">
+                                        <span class="tag-item-dot" style="background:#a855f7;"></span>
+                                        <span>VIP</span>
+                                    </span>
+                                </li>
+                                <li data-value="新手" data-color="#22c55e">
+                                    <input type="checkbox">
+                                    <span class="tag-item-content">
+                                        <span class="tag-item-dot" style="background:#22c55e;"></span>
+                                        <span>新手</span>
+                                    </span>
+                                </li>
                             </ul>
                         </div>
                     </div>

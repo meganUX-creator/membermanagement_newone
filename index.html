@@ -467,9 +467,17 @@
         </main>
     </div>
 
-    <script src="script.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Sidebar Toggle
+            const btnSidebarToggle = document.getElementById('btnSidebarToggle');
+            const mainLayout = document.querySelector('.main-layout');
+            if (btnSidebarToggle && mainLayout) {
+                btnSidebarToggle.addEventListener('click', () => {
+                    mainLayout.classList.toggle('sidebar-collapsed');
+                });
+            }
+
             const statsCheckbox = document.querySelector('input[value="查看会员在线充值提现统计"]');
             const iframe = document.querySelector('iframe');
 
