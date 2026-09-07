@@ -346,7 +346,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         noMatchLi = document.createElement('li');
                         noMatchLi.className = 'no-tag-match-li';
                         noMatchLi.style.cssText = 'padding: 16px; text-align: center; color: #94a3b8; font-size: 13px; display: block; cursor: default;';
-                        noMatchLi.textContent = '查無符合標籤';
+                        noMatchLi.textContent = '查无符合标签';
                         optionsList.appendChild(noMatchLi);
                     } else {
                         noMatchLi.style.display = 'block';
@@ -398,7 +398,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isTagsSelect && tagsContainer) {
                 const selectedLis = optionsList.querySelectorAll('li.selected');
                 if (selectedLis.length === 0) {
-                    tagsContainer.innerHTML = '<span class="placeholder-text">請選擇或輸入標籤...</span>';
+                    tagsContainer.innerHTML = '<span class="placeholder-text">请选择或输入标签...</span>';
                 } else {
                     tagsContainer.innerHTML = '';
                     let displayCount = 0;
@@ -408,7 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         
                         const val = li.getAttribute('data-value');
                         const color = li.getAttribute('data-color') || '#f59e0b';
-                        const isWarning = li.getAttribute('data-icon') === 'warning' || val === '異常風險' || val === '异常风险';
+                        const isWarning = li.getAttribute('data-icon') === 'warning' || val === '异常风险';
                         
                         const pill = document.createElement('span');
                         pill.className = 'tag-pill';
