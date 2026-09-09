@@ -1765,7 +1765,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <thead>
                         <tr style="background-color: #f8fafc; color: var(--text-secondary); border-bottom: 1px solid var(--border-color);">
                             <th style="padding: 12px 16px; font-weight: 600;">登录用户</th>
-                            <th style="padding: 12px 16px; font-weight: 600;">注册时间</th>
+                            <th style="padding: 12px 16px; font-weight: 600;">新增时间</th>
                             <th style="padding: 12px 16px; font-weight: 600;">设备号</th>
                             <th style="padding: 12px 16px; font-weight: 600;">IP信息</th>
                         </tr>
@@ -1804,7 +1804,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <thead>
                         <tr style="background-color: #f8fafc; color: var(--text-secondary); border-bottom: 1px solid var(--border-color);">
                             <th style="padding: 12px 16px; font-weight: 600;">登录</th>
-                            <th style="padding: 12px 16px; font-weight: 600;">注册时间</th>
+                            <th style="padding: 12px 16px; font-weight: 600;">新增时间</th>
                             <th style="padding: 12px 16px; font-weight: 600;">IP</th>
                         </tr>
                     </thead>
@@ -1838,7 +1838,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <thead>
                         <tr style="background-color: #f8fafc; color: var(--text-secondary); border-bottom: 1px solid var(--border-color);">
                             <th style="padding: 12px 16px; font-weight: 600;">登录</th>
-                            <th style="padding: 12px 16px; font-weight: 600;">注册时间</th>
+                            <th style="padding: 12px 16px; font-weight: 600;">新增时间</th>
                             <th style="padding: 12px 16px; font-weight: 600;">设备号</th>
                             <th style="padding: 12px 16px; font-weight: 600;">IP信息</th>
                         </tr>
