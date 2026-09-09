@@ -105,6 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const dropdownVip = document.getElementById('dropdownVip');
     const dropdownOther = document.getElementById('dropdownOther');
     const dropdownTagsSearch = document.getElementById('dropdownTagsSearch');
+    const dropdownExclude = document.getElementById('dropdownExclude');
     const inputAccount = document.getElementById('inputAccount');
 
     // Account Type Dropdown Controls
@@ -257,9 +258,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Custom Dropdown single-select initializer
     function initSingleSelect(element, onChange) {
+        if (element.hasAttribute('data-initialized')) return;
+        element.setAttribute('data-initialized', 'true');
         const selected = element.querySelector('.select-selected');
         const selectedValSpan = element.querySelector('.selected-val');
         const optionsList = element.querySelector('.select-options');
+        
+        if (!selected || !optionsList) return;
         
         selected.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -270,12 +275,25 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // Set initial placeholder color
+        const activeLi = optionsList.querySelector('li.active');
+        if (activeLi && activeLi.getAttribute('data-value') === '') {
+            selectedValSpan.classList.add('is-placeholder');
+        }
+
         optionsList.querySelectorAll('li').forEach(li => {
             li.addEventListener('click', (e) => {
                 e.stopPropagation();
                 optionsList.querySelectorAll('li').forEach(l => l.classList.remove('active'));
                 li.classList.add('active');
                 selectedValSpan.textContent = li.textContent.trim();
+                
+                if (li.getAttribute('data-value') === '') {
+                    selectedValSpan.classList.add('is-placeholder');
+                } else {
+                    selectedValSpan.classList.remove('is-placeholder');
+                }
+                
                 optionsList.classList.remove('show');
                 if (onChange) onChange(li.getAttribute('data-value'));
             });
@@ -284,11 +302,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Custom Dropdown multi-select initializer
     function initMultiSelect(element, onChange) {
+        if (element.hasAttribute('data-initialized')) return;
+        element.setAttribute('data-initialized', 'true');
         const selected = element.querySelector('.select-selected');
         const selectedValSpan = element.querySelector('.selected-val');
         const tagsContainer = element.querySelector('.tags-selected-container');
         const optionsList = element.querySelector('.select-options');
         const isTagsSelect = element.classList.contains('custom-select-tags');
+
+        if (!selected || !optionsList) return;
 
         selected.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -398,7 +420,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isTagsSelect && tagsContainer) {
                 const selectedLis = optionsList.querySelectorAll('li.selected');
                 if (selectedLis.length === 0) {
-                    tagsContainer.innerHTML = '<span class="placeholder-text">请选择或输入标签...</span>';
+                    const placeholder = element.getAttribute('data-placeholder') || '请选择用户标签';
+                    tagsContainer.innerHTML = `<span class="placeholder-text">${placeholder}</span>`;
                 } else {
                     tagsContainer.innerHTML = '';
                     let displayCount = 0;
@@ -491,7 +514,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedStatusVal = '';
     let selectedLevelVal = '';
     let selectedBirthdayOuterVal = '';
-    
+
     const dropdownBirthdayOuter = document.getElementById('dropdownBirthdayOuter');
     if (dropdownBirthdayOuter) {
         initSingleSelect(dropdownBirthdayOuter, (val) => {
@@ -525,6 +548,14 @@ document.addEventListener('DOMContentLoaded', () => {
         initMultiSelect(dropdownTagsSearch, () => {
         });
     }
+
+    // Auto-initialize any missed custom selects
+    document.querySelectorAll('.custom-select-single').forEach(el => {
+        initSingleSelect(el);
+    });
+    document.querySelectorAll('.custom-select-multi').forEach(el => {
+        initMultiSelect(el);
+    });
 
     // Advanced Filter Controls
     const selectBirthday = document.getElementById('selectBirthday');
@@ -1115,9 +1146,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         
-        // 6. Test Accounts Toggle
-        if (filterTestAccountsToggle && filterTestAccountsToggle.checked) {
-            tags.push({ key: 'filterTestAccounts', label: `过滤测试账号`, type: 'checkbox', element: filterTestAccountsToggle });
+        // 6. Exclude Conditions (Multiple)
+        if (dropdownExclude) {
+            const excludeOptions = dropdownExclude.querySelectorAll('.select-options li.selected');
+            excludeOptions.forEach(li => {
+                const val = li.getAttribute('data-value');
+                if (val) {
+                    tags.push({ key: 'exclude_' + val, label: `其他: ${val}`, type: 'multi-custom-exclude', element: dropdownExclude, value: val });
+                }
+            });
         }
 
         // Advanced filter fields
@@ -1195,6 +1232,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (selectedBirthdayOuterVal) {
             tags.push({ key: 'birthdayOuter', label: `生日: ${selectedBirthdayOuterVal}月`, type: 'single-custom', element: dropdownBirthdayOuter, defaultValue: '', defaultText: '全部', valueVarSetter: (v) => selectedBirthdayOuterVal = v });
         }
+        
+        const inputDateStartOuter = document.getElementById('inputDateStartOuter');
+        const inputDateEndOuter = document.getElementById('inputDateEndOuter');
         if (inputDateStartOuter && inputDateEndOuter && (inputDateStartOuter.value || inputDateEndOuter.value)) {
             const startStr = inputDateStartOuter.value ? inputDateStartOuter.value.replace('T', ' ') : '??';
             const endStr = inputDateEndOuter.value ? inputDateEndOuter.value.replace('T', ' ') : '??';
@@ -1205,6 +1245,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 elements: [inputDateStartOuter, inputDateEndOuter] 
             });
         }
+        
         if (inputBankCardOuter && inputBankCardOuter.value.trim()) {
             tags.push({ key: 'bankCardOuter', label: `绑定银行卡: ${inputBankCardOuter.value.trim()}`, type: 'input', element: inputBankCardOuter });
         }
@@ -1237,6 +1278,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     tag.valueVarSetter(tag.defaultValue);
                 } else if (tag.type === 'multi-custom') {
                     clearMultiSelectValue(tag.element);
+                } else if (tag.type === 'multi-custom-exclude') {
+                    const li = tag.element.querySelector(`li[data-value="${tag.value}"]`);
+                    if (li) {
+                        li.classList.remove('selected');
+                        const cb = li.querySelector('input[type="checkbox"]');
+                        if (cb) cb.checked = false;
+                        if (typeof tag.element.updateDisplay === 'function') {
+                            tag.element.updateDisplay();
+                        }
+                    }
                 } else if (tag.type === 'inputs') {
                     tag.elements.forEach(el => el.value = '');
                 } else if (tag.type === 'native-select') {
@@ -1261,14 +1312,13 @@ document.addEventListener('DOMContentLoaded', () => {
         setSingleSelectValue(dropdownStatus, '', '所有');
         selectedStatusVal = '';
         
-        if (filterTestAccountsToggle) filterTestAccountsToggle.checked = false;
-        
         setSingleSelectValue(dropdownLevel, '', '全部');
         selectedLevelVal = '';
 
         clearMultiSelectValue(dropdownVip);
         clearMultiSelectValue(dropdownOther);
         clearMultiSelectValue(dropdownTagsSearch);
+        clearMultiSelectValue(dropdownExclude);
         
         const inputAccount = document.getElementById('inputAccount');
         if (inputAccount) inputAccount.value = '';
@@ -1280,6 +1330,12 @@ document.addEventListener('DOMContentLoaded', () => {
         selectBirthday.value = '';
         inputDateStart.value = '';
         inputDateEnd.value = '';
+        
+        const inputDateStartOuter = document.getElementById('inputDateStartOuter');
+        if (inputDateStartOuter) inputDateStartOuter.value = '';
+        const inputDateEndOuter = document.getElementById('inputDateEndOuter');
+        if (inputDateEndOuter) inputDateEndOuter.value = '';
+
         inputQuickLogin.value = '';
         inputUid.value = '';
         inputInviteCode.value = '';
@@ -3703,5 +3759,22 @@ document.addEventListener('click', (e) => {
                 targetBtn.textContent = '禁用';
             }
         }
+    }
+});
+
+
+// Append to end of script
+document.addEventListener('DOMContentLoaded', () => {
+    const btnSearch = document.getElementById('btnSearch');
+    const tableDataGroup = document.getElementById('tableDataGroup');
+    const emptyDataState = document.getElementById('emptyDataState');
+    const bottomStatsBar = document.getElementById('bottomStatsBar');
+    
+    if (btnSearch) {
+        btnSearch.addEventListener('click', () => {
+            if(tableDataGroup) tableDataGroup.style.display = 'flex';
+            if(emptyDataState) emptyDataState.style.display = 'none';
+            if(bottomStatsBar) bottomStatsBar.style.display = 'flex';
+        });
     }
 });

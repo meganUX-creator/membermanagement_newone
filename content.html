@@ -59,221 +59,126 @@
             <div id="filter-scroll-anchor" style="height: 1px; margin-bottom: -1px;"></div>
             <!-- 搜寻过滤区块 -->
             <section class="filter-card">
-                <div class="filter-row">
+                
+                <div class="filter-row" style="grid-template-columns: repeat(4, 1fr);">
+                    <!-- Row 1 -->
                     <div class="form-group" data-filter-id="status">
                         <div class="custom-select-single" id="dropdownStatus">
-                            <div class="select-selected">
-                                <span class="inline-label">状态：</span>
-                                <span class="selected-val">正常</span>
-                                <i class="ph ph-caret-down"></i>
-                            </div>
-                            <ul class="select-options">
-                                <li data-value="" class="active">所有</li>
-                                <li data-value="正常">正常</li>
-                                <li data-value="冻结">冻结</li>
-                                <li data-value="停用">停用</li>
-                            </ul>
+                            <div class="select-selected"><span class="selected-val">请选择状态</span><i class="ph ph-caret-down"></i></div>
+                            <ul class="select-options"><li data-value="" class="active">请选择状态</li><li data-value="正常">正常</li><li data-value="冻结">冻结</li><li data-value="停用">停用</li></ul>
                         </div>
                     </div>
                     <div class="form-group" data-filter-id="level">
                         <div class="custom-select-single" id="dropdownLevel">
-                            <div class="select-selected">
-                                <span class="inline-label">用户层级：</span>
-                                <span class="selected-val">默认层</span>
-                                <i class="ph ph-caret-down"></i>
-                            </div>
-                            <ul class="select-options">
-                                <li data-value="" class="active">全部</li>
-                                <li data-value="普通会员">普通会员</li>
-                                <li data-value="VIP会员">VIP会员</li>
-                                <li data-value="黄金会员">黄金会员</li>
-                            </ul>
+                            <div class="select-selected"><span class="selected-val">请选择用户层级</span><i class="ph ph-caret-down"></i></div>
+                            <ul class="select-options"><li data-value="" class="active">请选择用户层级</li><li data-value="普通会员">普通会员</li><li data-value="VIP会员">VIP会员</li><li data-value="黄金会员">黄金会员</li></ul>
                         </div>
                     </div>
                     <div class="form-group" data-filter-id="vip">
-                        <div class="custom-select-multi" id="dropdownVip">
-                            <div class="select-selected">
-                                <span class="inline-label">会员等级：</span>
-                                <span class="selected-val">请选择</span>
-                                <i class="ph ph-caret-down"></i>
-                            </div>
+                        <div class="custom-select-single" id="dropdownLevel2">
+                            <div class="select-selected"><span class="selected-val">请选择用户等级</span><i class="ph ph-caret-down"></i></div>
                             <ul class="select-options">
-                                <li data-value="普通会员"><input type="checkbox"> <span>普通会员</span></li>
-                                <li data-value="白银会员"><input type="checkbox"> <span>白银会员</span></li>
-                                <li data-value="黄金会员"><input type="checkbox"> <span>黄金会员</span></li>
-                                <li data-value="铂金会员"><input type="checkbox"> <span>铂金会员</span></li>
-                                <li data-value="钻石会员"><input type="checkbox"> <span>钻石会员</span></li>
-                                <li data-value="至尊会员"><input type="checkbox"> <span>至尊会员</span></li>
-                                <li data-value="管理员"><input type="checkbox"> <span>管理员</span></li>
+                                <li data-value="" class="active">请选择用户等级</li>
+                                <li data-value="普通会员">普通会员</li>
+                                <li data-value="白银会员">白银会员</li>
+                                <li data-value="黄金会员">黄金会员</li>
+                                <li data-value="铂金会员">铂金会员</li>
+                                <li data-value="钻石会员">钻石会员</li>
+                                <li data-value="至尊会员">至尊会员</li>
                             </ul>
                         </div>
                     </div>
                     <div class="form-group" data-filter-id="other">
-                        <div class="custom-select-multi" id="dropdownOther">
+                        <div class="custom-select-multi custom-select-tags" id="dropdownExclude" data-placeholder="请选择排除条件">
                             <div class="select-selected">
-                                <span class="inline-label">排除条件：</span>
-                                <span class="selected-val">测试帐号</span>
-                                <i class="ph ph-caret-down"></i>
-                            </div>
-                            <ul class="select-options">
-                                <li data-value="测试帐号" class="selected"><input type="checkbox" checked>
-                                    <span>测试帐号</span>
-                                </li>
-                                <li data-value="未充值玩家"><input type="checkbox"> <span>未充值玩家</span></li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div class="form-group" data-filter-id="tagsSearch">
-                        <div class="custom-select-multi custom-select-tags" id="dropdownTagsSearch">
-                            <div class="select-selected">
-                                <span class="inline-label">用户标签：</span>
                                 <div class="tags-selected-container">
-                                    <span class="placeholder-text">请选择或输入标签...</span>
+                                    <span class="tag-pill" data-value="测试帐号">
+                                        <span class="tag-pill-dot" style="background-color: #0ea5e9;"></span>
+                                        <span>测试帐号</span>
+                                        <span class="tag-pill-close" title="移除">×</span>
+                                    </span>
                                 </div>
                                 <i class="ph ph-caret-down"></i>
                             </div>
                             <ul class="select-options">
-                                <li class="search-input-li">
-                                    <input type="text" id="inputTagSearchQuery" placeholder="输入完整标签名称...">
-                                    <button type="button" id="btnTagExactSearch" class="btn-tag-search">
-                                        <i class="ph ph-magnifying-glass"></i>
-                                        <span>搜索</span>
-                                    </button>
-                                </li>
-                                <li data-value="高价值" data-color="#f59e0b">
-                                    <input type="checkbox">
-                                    <span class="tag-item-content">
-                                        <span class="tag-item-dot" style="background:#f59e0b;"></span>
-                                        <span>高价值</span>
-                                    </span>
-                                </li>
-                                <li data-value="风险" data-color="#ef4444">
-                                    <input type="checkbox">
-                                    <span class="tag-item-content">
-                                        <span class="tag-item-dot" style="background:#ef4444;"></span>
-                                        <span>风险</span>
-                                    </span>
-                                </li>
-                                <li data-value="活跃" data-color="#38bdf8">
-                                    <input type="checkbox">
-                                    <span class="tag-item-content">
-                                        <span class="tag-item-dot" style="background:#38bdf8;"></span>
-                                        <span>活跃</span>
-                                    </span>
-                                </li>
-                                <li data-value="沉睡" data-color="#94a3b8">
-                                    <input type="checkbox">
-                                    <span class="tag-item-content">
-                                        <span class="tag-item-dot" style="background:#94a3b8;"></span>
-                                        <span>沉睡</span>
-                                    </span>
-                                </li>
-                                <li data-value="异常风险" data-color="#ea580c" data-icon="warning">
-                                    <input type="checkbox">
-                                    <span class="tag-item-content tag-item-warning">
-                                        <i class="ph-fill ph-warning-circle"></i>
-                                        <span>异常风险</span>
-                                    </span>
-                                </li>
-                                <li data-value="VIP" data-color="#a855f7">
-                                    <input type="checkbox">
-                                    <span class="tag-item-content">
-                                        <span class="tag-item-dot" style="background:#a855f7;"></span>
-                                        <span>VIP</span>
-                                    </span>
-                                </li>
-                                <li data-value="新手" data-color="#22c55e">
-                                    <input type="checkbox">
-                                    <span class="tag-item-content">
-                                        <span class="tag-item-dot" style="background:#22c55e;"></span>
-                                        <span>新手</span>
-                                    </span>
-                                </li>
+                                <li data-value="测试帐号" data-color="#0ea5e9" class="selected"><input type="checkbox" checked> <span>测试帐号</span></li>
+                                <li data-value="未充值玩家" data-color="#0ea5e9"><input type="checkbox"> <span>未充值玩家</span></li>
                             </ul>
                         </div>
                     </div>
 
-                    <!-- 新增隐藏的过滤栏位 (自订筛选触发) -->
-                    <div class="form-group" data-filter-id="birthday">
-                        <div class="custom-select-single" id="dropdownBirthdayOuter">
+                    <!-- Row 2 -->
+                    <div class="form-group" data-filter-id="deviceType">
+                         <div class="custom-select-single" id="dropdownDeviceType">
+                             <div class="select-selected"><span class="selected-val">请选择设备类型</span><i class="ph ph-caret-down"></i></div>
+                             <ul class="select-options"><li data-value="" class="active">请选择设备类型</li><li data-value="PC">PC</li><li data-value="H5">H5</li><li data-value="APP">APP</li></ul>
+                         </div>
+                    </div>
+                    <div class="form-group" data-filter-id="country">
+                         <div class="custom-select-single" id="dropdownCountry">
+                             <div class="select-selected"><span class="selected-val">请选择国家</span><i class="ph ph-caret-down"></i></div>
+                             <ul class="select-options"><li data-value="" class="active">请选择国家</li><li data-value="中国">中国</li><li data-value="越南">越南</li></ul>
+                         </div>
+                    </div>
+                    <div class="form-group" data-filter-id="tagsSearch">
+                        <div class="custom-select-multi custom-select-tags" id="dropdownTagsSearch" data-placeholder="请选择用户标签">
                             <div class="select-selected">
-                                <span class="inline-label">生日月份：</span>
-                                <span class="selected-val">全部</span>
+                                <div class="tags-selected-container">
+                                    <span class="placeholder-text">请选择用户标签</span>
+                                </div>
                                 <i class="ph ph-caret-down"></i>
                             </div>
-                            <ul class="select-options">
-                                <li data-value="" class="active">全部</li>
-                                <li data-value="1">1月</li>
-                                <li data-value="2">2月</li>
-                                <li data-value="3">3月</li>
-                                <li data-value="4">4月</li>
-                                <li data-value="5">5月</li>
-                                <li data-value="6">6月</li>
-                                <li data-value="7">7月</li>
-                                <li data-value="8">8月</li>
-                                <li data-value="9">9月</li>
-                                <li data-value="10">10月</li>
-                                <li data-value="11">11月</li>
-                                <li data-value="12">12月</li>
+                            <ul class="select-options" style="padding-top: 0;">
+                                <li class="search-input-li" style="padding: 8px; border-bottom: 1px solid #e5e7eb; display: flex; gap: 8px; align-items: center; background-color: white;">
+                                    <input type="text" placeholder="输入完整标签名称..." style="flex: 1; height: 32px; border: 1px solid #d1d5db; border-radius: 4px; padding: 0 8px; font-size: 13px; outline: none;">
+                                    <button class="btn-tag-search" style="height: 32px; padding: 0 12px; border: 1px solid #d1d5db; border-radius: 4px; background-color: white; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 4px; color: #374151;">
+                                        <i class="ph ph-magnifying-glass"></i> 搜索
+                                    </button>
+                                </li>
+                                <li data-value="高价值" data-color="#eab308"><input type="checkbox"> <span class="tag-pill-dot" style="background-color: #eab308; margin: 0 6px 0 2px;"></span> <span>高价值</span></li>
+                                <li data-value="风险" data-color="#ef4444"><input type="checkbox"> <span class="tag-pill-dot" style="background-color: #ef4444; margin: 0 6px 0 2px;"></span> <span>风险</span></li>
+                                <li data-value="活跃" data-color="#3b82f6"><input type="checkbox"> <span class="tag-pill-dot" style="background-color: #3b82f6; margin: 0 6px 0 2px;"></span> <span>活跃</span></li>
+                                <li data-value="沉睡" data-color="#9ca3af"><input type="checkbox"> <span class="tag-pill-dot" style="background-color: #9ca3af; margin: 0 6px 0 2px;"></span> <span>沉睡</span></li>
+                                <li data-value="异常风险" data-icon="warning"><input type="checkbox"> <i class="ph-fill ph-warning-circle" style="color: #ea580c; margin: 0 6px 0 2px;"></i> <span style="color: #ea580c;">异常风险</span></li>
                             </ul>
                         </div>
                     </div>
-
-                    <div class="form-group" data-filter-id="registerTime">
-                        <div class="date-range-container">
-                            <span class="inline-label">新增时间：</span>
-                            <input type="datetime-local" class="date-text" id="inputDateStartOuter"
-                                style="border:none; outline:none; background:transparent;">
-                            <span class="date-separator-line">~</span>
-                            <input type="datetime-local" class="date-text" id="inputDateEndOuter"
-                                style="border:none; outline:none; background:transparent;">
+                    <div class="form-group" data-filter-id="agentAccount">
+                        <div class="input-with-inline-label" style="background: white; border: 1px solid #d0d5dd; border-radius: 8px; padding: 0 16px; display: flex; align-items: center; height: 38px;">
+                            <span class="inline-label" style="font-weight: 600; font-size: 13px; color: #4b5563; margin-right: 12px;">推广人账号：</span>
+                            <input type="text" placeholder="请输入推广人账号" id="inputAgentAccountOuter" style="border: none; flex: 1; outline: none; background: transparent; font-size: 13px; color: #6b7280;">
                         </div>
                     </div>
 
-                    <div class="form-group" data-filter-id="bankCard">
-                        <div class="input-with-inline-label">
-                            <span class="inline-label">绑定银行卡：</span>
-                            <input type="text" placeholder="银行卡号" id="inputBankCardOuter">
-                        </div>
-                    </div>
-
+                    <!-- Row 3 -->
                     <div class="form-group" data-filter-id="notLoginDays">
-                        <div class="input-with-suffix">
-                            <span class="inline-label">未登入天数 (大于)：</span>
-                            <input type="text" placeholder="天数" id="inputOfflineDaysOuter">
-                            <span class="suffix">天</span>
+                        <div class="input-with-inline-label" style="background: white; border: 1px solid #d0d5dd; border-radius: 8px; padding: 0 16px; display: flex; align-items: center; height: 38px;">
+                            <span class="inline-label" style="font-weight: 600; font-size: 13px; color: #4b5563; margin-right: 12px;">未登录天数：</span>
+                            <input type="text" placeholder="请输入未登录天数" id="inputOfflineDaysOuter" style="border: none; flex: 1; outline: none; background: transparent; font-size: 13px; color: #6b7280;">
                         </div>
                     </div>
-
-                    <div class="form-group" data-filter-id="agentId">
-                        <div class="input-with-inline-label">
-                            <span class="inline-label">代理Id：</span>
-                            <input type="text" placeholder="代理Id" id="inputAgentIdOuter">
+                    <div class="form-group" data-filter-id="registerTime" style="grid-column: span 2;">
+                        <div class="input-with-inline-label" style="background: white; border: 1px solid #d0d5dd; border-radius: 8px; padding: 0 16px; display: flex; align-items: center; height: 38px;">
+                            <span class="inline-label" style="font-weight: 600; font-size: 13px; color: #4b5563; margin-right: 12px;">注册时间：</span>
+                            <div class="date-range-container" style="flex:1; display: flex; align-items: center;">
+                                <div style="display: flex; align-items: center; flex: 1;">
+                                    <input type="text" class="date-text" id="inputDateStartOuter" placeholder="年 / 月 / 日" onfocus="(this.type='date')" onblur="(this.value==''?this.type='text':'')" style="border:none; outline:none; background:transparent; width: 100%; text-align: left; font-size: 13px; color: #6b7280;">
+                                    <i class="ph-bold ph-calendar-blank" style="color: #1f2937; margin-left: 8px;"></i>
+                                </div>
+                                <span class="date-separator-line" style="margin: 0 16px; color: #d1d5db; font-weight: 500;">~</span>
+                                <div style="display: flex; align-items: center; flex: 1;">
+                                    <input type="text" class="date-text" id="inputDateEndOuter" placeholder="年 / 月 / 日" onfocus="(this.type='date')" onblur="(this.value==''?this.type='text':'')" style="border:none; outline:none; background:transparent; width: 100%; text-align: left; font-size: 13px; color: #6b7280;">
+                                    <i class="ph-bold ph-calendar-blank" style="color: #1f2937; margin-left: 8px;"></i>
+                                </div>
+                            </div>
                         </div>
                     </div>
-
-                    <div class="form-group" data-filter-id="vipLevel">
-                        <div class="input-with-inline-label">
-                            <span class="inline-label">VIP会员等级：</span>
-                            <input type="text" placeholder="VIP会员等级" id="inputVipLevelOuter">
+                    <div class="form-group" data-filter-id="bankCard">
+                        <div class="input-with-inline-label" style="background: white; border: 1px solid #d0d5dd; border-radius: 8px; padding: 0 16px; display: flex; align-items: center; height: 38px;">
+                            <span class="inline-label" style="font-weight: 600; font-size: 13px; color: #4b5563; margin-right: 12px;">绑定银行卡：</span>
+                            <input type="text" placeholder="请输入银行卡号" id="inputBankCardOuter" style="border: none; flex: 1; outline: none; background: transparent; font-size: 13px; color: #6b7280;">
                         </div>
                     </div>
-
-                    <div class="form-group" data-filter-id="loginIp">
-                        <div class="input-with-inline-label">
-                            <span class="inline-label">登录IP：</span>
-                            <input type="text" placeholder="登录IP" id="inputIpOuter">
-                        </div>
-                    </div>
-
-                    <div class="form-group" data-filter-id="depositAmount">
-                        <div class="input-with-inline-label">
-                            <span class="inline-label">存款金额大于：</span>
-                            <input type="text" placeholder="金额" id="inputDepositOuter">
-                        </div>
-                    </div>
-
                 </div>
 
                 <div class="filter-actions-row">
@@ -329,7 +234,15 @@
             <!-- 列表区块 -->
             <section class="table-card">
                 <!-- 将筛选区块与表格群组在同一个 div，方便未来整体移动 -->
-                <div class="table-and-filter-group">
+                
+                <!-- 无数据状态 (Empty State) -->
+                <div class="empty-state" id="emptyDataState" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 64px 24px; background: transparent; border-radius: 12px; margin-top: 24px;">
+                    <div class="empty-icon" style="font-size: 64px; color: #94a3b8; margin-bottom: 16px;"><i class="ph-bold ph-folder-open"></i></div>
+                    <div class="empty-text" style="color: #94a3b8; font-size: 16px; font-weight: 500;">查询结果无数据</div>
+                </div>
+
+                <!-- 有数据时的列表 (Hidden initially) -->
+                <div class="table-and-filter-group" id="tableDataGroup" style="display: none;">
                     <div class="current-filters">
                         <div class="filter-tags" id="filterTagsContainer">
                             <!-- Dynamic filter tags will be rendered here -->
@@ -375,7 +288,7 @@
         </div>
 
         <!-- 底部固定数据统计栏 (Bottom Summary Stats Bar) -->
-        <div class="bottom-stats-bar" id="bottomStatsBar">
+        <div class="bottom-stats-bar" id="bottomStatsBar" style="display: none;">
             <button class="stats-toggle-btn" id="btnToggleStats" title="展开/收起统计">
                 <i class="ph ph-caret-down"></i>
             </button>

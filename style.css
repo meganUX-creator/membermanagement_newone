@@ -18,6 +18,12 @@
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
+/* Hide native calendar icon to prevent overlap with custom icons */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    display: none;
+    -webkit-appearance: none;
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -82,8 +88,8 @@ body {
 
 /* Filter Rows */
 .filter-row {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 16px 20px;
     margin-bottom: 20px;
 }
@@ -92,16 +98,27 @@ body {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    position: relative;
+    z-index: 1;
+}
+
+.form-group:hover,
+.form-group:focus-within {
+    z-index: 100;
 }
 
 .filter-row .form-group {
-    flex: 0 0 calc(25% - 15px);
-    min-width: 220px;
+    width: 100%;
 }
 
 .filter-row .form-group[data-filter-id="registerTime"] {
-    flex: 0 0 calc(50% - 10px);
-    min-width: 440px;
+    grid-column: span 2;
+}
+
+@media (max-width: 600px) {
+    .filter-row .form-group[data-filter-id="registerTime"] {
+        grid-column: span 1;
+    }
 }
 
 .form-group label {
@@ -117,7 +134,19 @@ body {
     background-color: var(--bg-card);
     display: flex;
     align-items: center;
-    height: 40px;
+    height: 32px;
+}
+
+.filter-row .form-input {
+    height: 32px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background-color: var(--bg-card);
+    padding: 0 12px;
+    width: 100%;
+    color: var(--text-main);
+    outline: none;
+    font-size: 14px;
 }
 
 .select-wrapper select, input[type="text"] {
@@ -156,7 +185,7 @@ input[type="text"]::placeholder {
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     background-color: var(--bg-card);
-    height: 40px;
+    height: 32px;
     width: 100%;
     padding-left: 12px;
     transition: border-color 0.2s;
@@ -579,7 +608,7 @@ input[type="checkbox"] {
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     padding: 0 12px;
-    height: 40px;
+    height: 32px;
     font-size: 14px;
 }
 .date-input {
@@ -598,7 +627,7 @@ input[type="checkbox"] {
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     background-color: var(--bg-card);
-    height: 40px;
+    height: 32px;
     width: 100%;
     transition: border-color 0.2s;
 }
@@ -708,7 +737,7 @@ input[type="checkbox"] {
     background-color: var(--bg-card);
     cursor: pointer;
     font-size: 14px;
-    height: 40px;
+    height: 32px;
     user-select: none;
 }
 .select-selected {
@@ -727,6 +756,9 @@ input[type="checkbox"] {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+.select-selected .selected-val.is-placeholder {
+    color: #94a3b8;
 }
 .select-options {
     position: absolute;
@@ -781,7 +813,7 @@ input[type="checkbox"] {
 
 /* Tags Custom Multi-select & Exact Search */
 .custom-select-tags {
-    min-height: 40px;
+    min-height: 32px;
     height: auto !important;
     min-width: 260px;
     border: 1px solid #d0d5dd;
@@ -1977,11 +2009,6 @@ table tr td:nth-child(9) {
 .date-range-container {
     display: flex;
     align-items: center;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    padding: 0 12px;
-    height: 38px;
-    background-color: #fff;
     cursor: pointer;
 }
 .date-range-container .date-text {
