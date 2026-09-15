@@ -1337,7 +1337,7 @@ window.toggleDropdownMode = function(mode, stateVar, e) {
             advancedCount++;
         }
         if (inputDeposit.value.trim()) {
-            tags.push({ key: 'deposit', label: `存款 > $${inputDeposit.value.trim()}`, type: 'input', element: inputDeposit });
+            tags.push({ key: 'deposit', label: `存款 > ${inputDeposit.value.trim()}`, type: 'input', element: inputDeposit });
             advancedCount++;
         }
 
@@ -1377,7 +1377,7 @@ window.toggleDropdownMode = function(mode, stateVar, e) {
             tags.push({ key: 'ipOuter', label: `登入 IP: ${inputIpOuter.value.trim()}`, type: 'input', element: inputIpOuter });
         }
         if (inputDepositOuter && inputDepositOuter.value.trim()) {
-            tags.push({ key: 'depositOuter', label: `存款大于 $${inputDepositOuter.value.trim()}`, type: 'input', element: inputDepositOuter });
+            tags.push({ key: 'depositOuter', label: `存款大于 ${inputDepositOuter.value.trim()}`, type: 'input', element: inputDepositOuter });
         }
 
         // Render badge count
@@ -2166,7 +2166,8 @@ window.toggleDropdownMode = function(mode, stateVar, e) {
         const bankCardVal = inputBankCard ? inputBankCard.value.trim() : '';
         const offlineDaysVal = inputOfflineDays && inputOfflineDays.value.trim() !== '' ? parseInt(inputOfflineDays.value.trim(), 10) : NaN;
         const ipVal = inputIp ? inputIp.value.trim() : '';
-        const depositVal = inputDeposit && inputDeposit.value.trim() !== '' ? parseFloat(inputDeposit.value.trim()) : NaN;
+        const depositRaw = (inputDeposit && inputDeposit.value.trim() !== '') ? inputDeposit.value.trim() : ((inputDepositOuter && inputDepositOuter.value.trim() !== '') ? inputDepositOuter.value.trim() : '');
+        const depositVal = depositRaw !== '' ? parseFloat(depositRaw) : NaN;
 
         // Perform Filtering
         const selectedTags = getMultiSelectValues(dropdownTagsSearch);
