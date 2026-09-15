@@ -1,5 +1,22 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+window.activeDateMode = 'date';
+window.activeYebMode = 'balanceBuy';
+window.activeDepositMode = 'deposit';
+window.activeWithdrawMode = 'withdraw';
+window.activeAdminMode = 'adminAdd';
+window.activeGrowthMode = 'growth';
+
+window.toggleDropdownMode = function(mode, stateVar, e) {
+    if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+    }
+    window[stateVar] = mode;
+    if (window.renderTable) window.renderTable();
+};
+
+
     // Permission helper for row actions
     function getTraceId(opName) {
         const mapping = {
@@ -718,49 +735,139 @@ document.addEventListener('DOMContentLoaded', () => {
         return account.substring(0, 2) + '***' + account.substring(account.length - 2);
     };
 
-    window.getPhoneStatusHtml = function(phone) {
-        if (phone && phone !== '-' && phone !== '未验证' && phone !== '末绑定' && phone !== '未绑定') {
-            return '<span style="color: #16a34a; font-weight: 500;">已验证</span>';
+    window.getPhoneStatusHtml = function(phone, forceStatusOnly = false) {
+        const isVerified = phone && phone !== '-' && phone !== '未验证' && phone !== '末绑定' && phone !== '未绑定' && phone !== '待重新绑定' && phone !== '审核中';
+        
+        if (forceStatusOnly || !hasPerm(36)) {
+            return isVerified ? '<span style="color: #16a34a; font-weight: 500;">已绑定</span>' : '<span style="color: #94a3b8;">未绑定</span>';
         }
-        return '<span style="color: #94a3b8;">未验证</span>';
+        
+        return isVerified ? `<span style="font-family: monospace; color: #475569;">${phone}</span>` : '<span style="color: #94a3b8;">-</span>';
     }
 
-    const compactColumnsConfig = [
+    let compactColumnsConfig = [
         { id: 'uid', group: '基本', label: '用户ID', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="uid">${renderDataState(user.uid, 'copyable')}</td>` },
         { id: 'account', group: '基本', label: '会员名', checkboxIndex: 3, render: (user) => `<td data-col="account"><a href="#" class="cell-username user-detail-link" data-uid="${user.uid}">${renderDataState(user.account, 'copyable')}</a></td>` },
         { id: 'online', group: '状态', label: '在线', checkboxIndex: 1, render: (user) => `<td data-col="online"><span class="status-dot-icon" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${user.offlineDays === 0 ? '#10b981' : '#9ca3af'};"></span></td>` },
         { id: 'status', group: '状态', label: '状态', checkboxIndex: 1, render: (user) => `<td data-col="status"><span class="user-custom-tag ${user.status === '正常' ? 'tag-green' : user.status === '冻结' ? 'tag-blue' : 'tag-red'}">${user.status}</span></td>` },
+        { id: 'phone', group: '状态', label: '手机号', checkboxIndex: 1, render: (user) => `<td class="cell-val" data-col="phone">${getPhoneStatusHtml(user.phone, true)}</td>` },
         { id: 'avatar', group: '状态', label: '头像', checkboxIndex: 2, render: (user) => `<td data-col="avatar"><div class="avatar-cell" style="width:24px;height:24px;border-radius:50%;background:#3b82f6;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;margin:0 auto;">${user.account.charAt(0).toLowerCase()}</div></td>` },
         { id: 'realName', group: '帐号', label: '真实姓名', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="realName">${renderDataState(user.realName)}</td>` },
         { id: 'nickname', group: '帐号', label: '暱称', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="nickname">${(user.nickname && user.nickname !== '-') ? user.nickname : renderDataState(window.maskAccountForNickname(user.account))}</td>` },
+        { id: 'vipLevel', group: '等级 & 团队', label: 'VIP等级', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="vipLevel">${user.vipLevel}</td>` },
+        { id: 'availableCredit', group: '信用 & 额度', label: '可用额度', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="availableCredit">${user.availableCredit}</td>` },
+        { id: 'thirdBal', group: '信用 & 额度', label: '三方余额', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="thirdBal"><div style="display:flex;align-items:center;">${user.thirdBal > 0 ? user.thirdBal : '0'} <i class="ph ph-arrows-clockwise refresh-icon-compact" data-uid="${user.uid}" title="刷新余额"></i></div></td>` },
+        { id: 'depositInfo', group: '存取款', 
+  label: () => `
+    <div style="position: relative; display: inline-flex; align-items: center; border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 8px 4px 10px; background: transparent; font-size: 13px; font-weight: 500; color: #475569; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'" onclick="event.stopPropagation()">
+        <select onchange="window.toggleDropdownMode(this.value, 'activeDepositMode', event)" style="appearance: none; -webkit-appearance: none; border: none; background: transparent; outline: none; font-size: 13px; font-family: inherit; color: inherit; padding-right: 18px; cursor: pointer; font-weight: 500;">
+            <option value="deposit" ${window.activeDepositMode === 'deposit' ? 'selected' : ''}>存款總額</option><option value="depositCount" ${window.activeDepositMode === 'depositCount' ? 'selected' : ''}>存款次數</option>
+        </select>
+        <i class="ph ph-caret-down" style="position: absolute; right: 8px; font-size: 12px; pointer-events: none;"></i>
+    </div>
+  `, 
+  sortable: true, checkboxIndex: 6, 
+  render: (user) => {
+    if (window.activeDepositMode === 'depositCount') return `<td class="cell-val" data-col="depositInfo">${user.depositCount}</td>`;
+    let highlight = user.deposit > 0 ? 'highlight' : '';
+    let val = user.deposit > 0 ? user.deposit : '0';
+    return `<td class="cell-money ${highlight}" data-col="depositInfo">${val}</td>`;
+  } 
+},
+        { id: 'withdrawInfo', group: '存取款', 
+  label: () => `
+    <div style="position: relative; display: inline-flex; align-items: center; border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 8px 4px 10px; background: transparent; font-size: 13px; font-weight: 500; color: #475569; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'" onclick="event.stopPropagation()">
+        <select onchange="window.toggleDropdownMode(this.value, 'activeWithdrawMode', event)" style="appearance: none; -webkit-appearance: none; border: none; background: transparent; outline: none; font-size: 13px; font-family: inherit; color: inherit; padding-right: 18px; cursor: pointer; font-weight: 500;">
+            <option value="withdraw" ${window.activeWithdrawMode === 'withdraw' ? 'selected' : ''}>取款總額</option><option value="withdrawCount" ${window.activeWithdrawMode === 'withdrawCount' ? 'selected' : ''}>取款次數</option><option value="withdrawPre" ${window.activeWithdrawMode === 'withdrawPre' ? 'selected' : ''}>提款扣金額</option>
+        </select>
+        <i class="ph ph-caret-down" style="position: absolute; right: 8px; font-size: 12px; pointer-events: none;"></i>
+    </div>
+  `, 
+  sortable: true, checkboxIndex: 6, 
+  render: (user) => {
+    if (window.activeWithdrawMode === 'withdrawCount') return `<td class="cell-val" data-col="withdrawInfo">${user.withdrawCount}</td>`;
+    if (window.activeWithdrawMode === 'withdrawPre') return `<td class="cell-val" data-col="withdrawInfo">${renderDataState(user.withdrawPre)}</td>`;
+    let val = user.withdraw > 0 ? user.withdraw : '0';
+    return `<td class="cell-money" data-col="withdrawInfo">${val}</td>`;
+  } 
+},
+        { id: 'dateInfo', group: '日期信息', 
+  label: () => `
+    <div style="position: relative; display: inline-flex; align-items: center; border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 8px 4px 10px; background: transparent; font-size: 13px; font-weight: 500; color: #475569; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'" onclick="event.stopPropagation()">
+        <select onchange="window.toggleDropdownMode(this.value, 'activeDateMode', event)" style="appearance: none; -webkit-appearance: none; border: none; background: transparent; outline: none; font-size: 13px; font-family: inherit; color: inherit; padding-right: 18px; cursor: pointer; font-weight: 500;">
+            <option value="date" ${window.activeDateMode === 'date' ? 'selected' : ''}>新增時間</option><option value="lastLogin" ${window.activeDateMode === 'lastLogin' ? 'selected' : ''}>最後登入</option><option value="offlineDays" ${window.activeDateMode === 'offlineDays' ? 'selected' : ''}>離開天數</option>
+        </select>
+        <i class="ph ph-caret-down" style="position: absolute; right: 8px; font-size: 12px; pointer-events: none;"></i>
+    </div>
+  `, 
+  sortable: true, checkboxIndex: 9, 
+  render: (user) => {
+    let val = '-';
+    if (window.activeDateMode === 'lastLogin') val = user.lastLogin;
+    else if (window.activeDateMode === 'offlineDays') val = user.offlineDays;
+    else val = user.date;
+    return `<td class="cell-val" data-col="dateInfo" style="font-family: monospace;">${val}</td>`;
+  } 
+},
+        { id: 'creditValue', group: '信用 & 额度', label: '信用值', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="creditValue">${hasPerm(7) ? user.creditValue : '***'}</td>` },
+        { id: 'arrears', group: '信用 & 额度', label: '欠款', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-money ${user.arrears === '0' ? 'negative' : ''}" style="color:${user.arrears === '0' ? '#ef4444' : 'inherit'};" data-col="arrears">${renderDataState(user.arrears)}</td>` },
+        { id: 'growthInfo', group: '等级 & 团队', 
+  label: () => `
+    <div style="position: relative; display: inline-flex; align-items: center; border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 8px 4px 10px; background: transparent; font-size: 13px; font-weight: 500; color: #475569; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'" onclick="event.stopPropagation()">
+        <select onchange="window.toggleDropdownMode(this.value, 'activeGrowthMode', event)" style="appearance: none; -webkit-appearance: none; border: none; background: transparent; outline: none; font-size: 13px; font-family: inherit; color: inherit; padding-right: 18px; cursor: pointer; font-weight: 500;">
+            <option value="growth" ${window.activeGrowthMode === 'growth' ? 'selected' : ''}>成長值</option><option value="vipGrowth" ${window.activeGrowthMode === 'vipGrowth' ? 'selected' : ''}>VIP成長值</option>
+        </select>
+        <i class="ph ph-caret-down" style="position: absolute; right: 8px; font-size: 12px; pointer-events: none;"></i>
+    </div>
+  `, 
+  sortable: true, checkboxIndex: 4, 
+  render: (user) => {
+    let val = window.activeGrowthMode === 'vipGrowth' ? user.vipGrowth : user.growth;
+    return `<td class="cell-val" data-col="growthInfo">${val}</td>`;
+  } 
+},
+        { id: 'points', group: '信用 & 额度', label: '会员积分', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="points">${user.points}</td>` },
+        { id: 'commissionBal', group: '信用 & 额度', label: '佣金余额', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-money ${user.commissionBal > 0 ? 'positive' : ''}" data-col="commissionBal">${user.commissionBal > 0 ? user.commissionBal : '0'}</td>` },
+        { id: 'yebInfo', group: '信用 & 额度', 
+  label: () => `
+    <div style="position: relative; display: inline-flex; align-items: center; border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 8px 4px 10px; background: transparent; font-size: 13px; font-weight: 500; color: #475569; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'" onclick="event.stopPropagation()">
+        <select onchange="window.toggleDropdownMode(this.value, 'activeYebMode', event)" style="appearance: none; -webkit-appearance: none; border: none; background: transparent; outline: none; font-size: 13px; font-family: inherit; color: inherit; padding-right: 18px; cursor: pointer; font-weight: 500;">
+            <option value="balanceBuy" ${window.activeYebMode === 'balanceBuy' ? 'selected' : ''}>餘額寶</option><option value="interest" ${window.activeYebMode === 'interest' ? 'selected' : ''}>餘額寶利息</option>
+        </select>
+        <i class="ph ph-caret-down" style="position: absolute; right: 8px; font-size: 12px; pointer-events: none;"></i>
+    </div>
+  `, 
+  sortable: true, checkboxIndex: 5, 
+  render: (user) => {
+    let val = window.activeYebMode === 'interest' ? user.interest : (user.balanceBuy > 0 ? user.balanceBuy : '0');
+    let highlight = (window.activeYebMode === 'balanceBuy' && user.balanceBuy > 0) ? 'highlight' : '';
+    return `<td class="cell-money ${highlight}" data-col="yebInfo">${val}</td>`;
+  } 
+},
+        { id: 'adminFundInfo', group: '存取款', 
+  label: () => `
+    <div style="position: relative; display: inline-flex; align-items: center; border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 8px 4px 10px; background: transparent; font-size: 13px; font-weight: 500; color: #475569; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'" onclick="event.stopPropagation()">
+        <select onchange="window.toggleDropdownMode(this.value, 'activeAdminMode', event)" style="appearance: none; -webkit-appearance: none; border: none; background: transparent; outline: none; font-size: 13px; font-family: inherit; color: inherit; padding-right: 18px; cursor: pointer; font-weight: 500;">
+            <option value="adminAdd" ${window.activeAdminMode === 'adminAdd' ? 'selected' : ''}>後台加款總額</option><option value="adminDeduct" ${window.activeAdminMode === 'adminDeduct' ? 'selected' : ''}>後台扣款總額</option>
+        </select>
+        <i class="ph ph-caret-down" style="position: absolute; right: 8px; font-size: 12px; pointer-events: none;"></i>
+    </div>
+  `, 
+  sortable: true, checkboxIndex: 6, 
+  render: (user) => {
+    let val = window.activeAdminMode === 'adminDeduct' ? user.adminDeduct : user.adminAdd;
+    return `<td class="cell-val" data-col="adminFundInfo">${renderDataState(val)}</td>`;
+  } 
+},
         { id: 'agentId', group: '会员信息（详细）', label: '代理', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="agentId">${renderDataState(user.agentId)}</td>` },
         { id: 'registerMode', group: '会员信息（详细）', label: '注册模式', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="registerMode">${user.registerMode}</td>` },
-        { id: 'phone', group: '会员信息（详细）', label: '手机号', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="phone">${getPhoneStatusHtml(user.phone)}</td>` },
         { id: 'payLevel', group: '等级 & 团队', label: '支付层级', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="payLevel">${user.payLevel}</td>` },
-        { id: 'growth', group: '等级 & 团队', label: '成长值', sortable: true, checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="growth">${user.growth}</td>` },
         { id: 'level', group: '等级 & 团队', label: '等级', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="level">${user.level}</td>` },
         { id: 'accountType', group: '等级 & 团队', label: '帐号类型', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="accountType">${user.accountType}</td>` },
         { id: 'userType', group: '等级 & 团队', label: '会员类型', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="userType">${user.userType}</td>` },
         { id: 'inviteCode', group: '等级 & 团队', label: '邀请码', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="inviteCode">${(user.inviteCode && user.inviteCode !== '-') ? user.inviteCode : '-'}</td>` },
         { id: 'inviter', group: '等级 & 团队', label: '邀请人', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="inviter">${(user.inviter && user.inviter !== '-') ? user.inviter : '-'}</td>` },
         { id: 'directTeam', group: '等级 & 团队', label: '直属下级/团队数', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="directTeam"><a href="#" class="subordinate-link" style="color: var(--primary-color); text-decoration: underline;" data-uid="${user.uid}">${user.directTeam}</a></td>` },
-        { id: 'vipLevel', group: '等级 & 团队', label: 'VIP等级', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="vipLevel">${user.vipLevel}</td>` },
-        { id: 'vipGrowth', group: '等级 & 团队', label: 'VIP成长值', sortable: true, checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="vipGrowth">${user.vipGrowth}</td>` },
-        { id: 'creditValue', group: '信用 & 额度', label: '信用值', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="creditValue">${hasPerm(7) ? user.creditValue : '***'}</td>` },
-        { id: 'availableCredit', group: '信用 & 额度', label: '可用额度', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="availableCredit">${user.availableCredit}</td>` },
-        { id: 'commissionBal', group: '信用 & 额度', label: '佣金余额', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-money ${user.commissionBal > 0 ? 'positive' : ''}" data-col="commissionBal">${user.commissionBal > 0 ? user.commissionBal : '0'}</td>` },
-        { id: 'balanceBuy', group: '信用 & 额度', label: '余额宝', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-money ${user.balanceBuy > 0 ? 'highlight' : ''}" data-col="balanceBuy">${user.balanceBuy > 0 ? user.balanceBuy : '0'}</td>` },
-        { id: 'arrears', group: '信用 & 额度', label: '欠款', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-money ${user.arrears === '0' ? 'negative' : ''}" style="color:${user.arrears === '0' ? '#ef4444' : 'inherit'};" data-col="arrears">${renderDataState(user.arrears)}</td>` },
-        { id: 'interest', group: '信用 & 额度', label: '余额宝利息', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="interest">${user.interest}</td>` },
-        { id: 'thirdBal', group: '信用 & 额度', label: '三方余额', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="thirdBal"><div style="display:flex;align-items:center;">${user.thirdBal > 0 ? user.thirdBal : '0'} <i class="ph ph-arrows-clockwise refresh-icon-compact" data-uid="${user.uid}" title="刷新余额"></i></div></td>` },
-        { id: 'points', group: '信用 & 额度', label: '会员积分', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="points">${user.points}</td>` },
-        { id: 'deposit', group: '存取款', label: '存款总额', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money ${user.deposit > 0 ? 'highlight' : ''}" data-col="deposit">${user.deposit > 0 ? user.deposit : '0'}</td>` },
-        { id: 'withdraw', group: '存取款', label: '取款总额', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money" data-col="withdraw">${user.withdraw > 0 ? user.withdraw : '0'}</td>` },
-        { id: 'withdrawPre', group: '存取款', label: '提款扣金额', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-val" data-col="withdrawPre">${renderDataState(user.withdrawPre)}</td>` },
-        { id: 'adminDeduct', group: '存取款', label: '后台扣款总额', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-val" data-col="adminDeduct">${renderDataState(user.adminDeduct)}</td>` },
-        { id: 'adminAdd', group: '存取款', label: '后台加款总额', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-val" data-col="adminAdd">${renderDataState(user.adminAdd)}</td>` },
-        { id: 'depositCount', group: '存取款', label: '存款次数', checkboxIndex: 6, render: (user) => `<td class="cell-val" data-col="depositCount">${user.depositCount}</td>` },
-        { id: 'withdrawCount', group: '存取款', label: '取款次数', checkboxIndex: 6, render: (user) => `<td class="cell-val" data-col="withdrawCount">${user.withdrawCount}</td>` },
         { id: 'tags', group: '其他', label: '标签', checkboxIndex: 7, render: (user) => {
             const tagStyles = {
                 '正常': 'tag-blue',
@@ -858,10 +965,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </td>`;
         } },
-
-        { id: 'date', group: '日期信息', label: '新增时间', sortable: true, checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="date">${user.date}</td>` },
-        { id: 'lastLogin', group: '日期信息', label: '最后登录', sortable: true, checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="lastLogin">${user.lastLogin}</td>` },
-        { id: 'offlineDays', group: '日期信息', label: '离开天数', sortable: true, checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="offlineDays">${user.offlineDays}</td>` },
         { id: 'ip', group: '日期信息', label: '登录IP', checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="ip"><div class="ip-row" style="display: flex; align-items: center; gap: 4px;">${renderDataState(user.ip, 'ip')}</div></td>` },
         { id: 'remark', group: '备注', label: '备注', checkboxIndex: 10, render: (user) => `<td class="cell-val" data-col="remark">${renderDataState(user.remark, 'longText')}</td>` },
         { id: 'followRemark', group: '备注', label: '回访备注', checkboxIndex: 10, render: (user) => `<td class="cell-val" data-col="followRemark">${user.followRemark}</td>` },
@@ -873,7 +976,20 @@ document.addEventListener('DOMContentLoaded', () => {
             </td>`;
         } }
     ];
-    compactColumnsConfig.forEach(col => { compactColumnVisibility[col.id] = true; });
+    const removedCompactCols = ['avatar', 'realName', 'accountType', 'ip', 'userType', 'level', 'payLevel', 'registerMode', 'agentId', 'inviter', 'inviteCode', 'directTeam', 'tags', 'remark', 'followRemark'];
+    compactColumnsConfig = compactColumnsConfig.filter(col => !removedCompactCols.includes(col.id));
+
+    compactColumnsConfig.forEach(col => {
+                const customNames = {
+                    'dateInfo': '新增時間 / 登入 / 離開天數',
+                    'yebInfo': '餘額寶 / 利息',
+                    'depositInfo': '存款總額 / 次數',
+                    'withdrawInfo': '取款總額 / 次數 / 扣款',
+                    'adminFundInfo': '後台加扣款',
+                    'growthInfo': '成長值 / VIP成長值'
+                };
+                const colName = customNames[col.id] || col.label;
+ compactColumnVisibility[col.id] = true; });
 
     // Elements for Table Mode & Pagination
     const btnModeNested = document.getElementById('btnModeNested');
@@ -1096,8 +1212,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         // 2. Level
         if (selectedLevelVal) {
-            tags.push({ key: 'level', label: `层级: ${selectedLevelVal}`, type: 'single-custom', element: dropdownLevel, defaultValue: '', defaultText: '全部', valueVarSetter: (v) => selectedLevelVal = v });
+            tags.push({ key: 'level', label: `层级: ${selectedLevelVal}`, type: 'single-custom', element: dropdownLevel, defaultValue: '', defaultText: '请选择生日月份', valueVarSetter: (v) => selectedLevelVal = v });
         }
+
         // 3. VIP (Multiple Select)
         const selectedVips = getMultiSelectValues(dropdownVip);
         if (selectedVips.length > 0) {
@@ -1207,8 +1324,12 @@ document.addEventListener('DOMContentLoaded', () => {
             tags.push({ key: 'bankCard', label: `银行卡末码: *${inputBankCard.value.trim()}`, type: 'input', element: inputBankCard });
             advancedCount++;
         }
+        const inputLoginIpOuter = document.getElementById('inputLoginIpOuter');
+        if (inputLoginIpOuter && inputLoginIpOuter.value.trim()) {
+            tags.push({ key: 'loginIpOuter', label: `登录IP: ${inputLoginIpOuter.value.trim()}`, type: 'input', element: inputLoginIpOuter });
+        }
         if (inputOfflineDays.value.trim()) {
-            tags.push({ key: 'offlineDays', label: `未登入天数 > ${inputOfflineDays.value.trim()}`, type: 'input', element: inputOfflineDays });
+            tags.push({ key: 'offlineDays', label: `未登入天数: ${inputOfflineDays.value.trim()}`, type: 'input', element: inputOfflineDays });
             advancedCount++;
         }
         if (inputIp.value.trim()) {
@@ -1230,7 +1351,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tags.push({ key: 'vipLevelOuter', label: `VIP等级: ${inputVipLevelOuter.value.trim()}`, type: 'input', element: inputVipLevelOuter });
         }
         if (selectedBirthdayOuterVal) {
-            tags.push({ key: 'birthdayOuter', label: `生日: ${selectedBirthdayOuterVal}月`, type: 'single-custom', element: dropdownBirthdayOuter, defaultValue: '', defaultText: '全部', valueVarSetter: (v) => selectedBirthdayOuterVal = v });
+            tags.push({ key: 'birthdayOuter', label: `生日: ${selectedBirthdayOuterVal}`, type: 'single-custom', element: dropdownBirthdayOuter, defaultValue: '', defaultText: '请选择生日月份', valueVarSetter: (v) => selectedBirthdayOuterVal = v });
         }
         
         const inputDateStartOuter = document.getElementById('inputDateStartOuter');
@@ -1250,7 +1371,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tags.push({ key: 'bankCardOuter', label: `绑定银行卡: ${inputBankCardOuter.value.trim()}`, type: 'input', element: inputBankCardOuter });
         }
         if (inputOfflineDaysOuter && inputOfflineDaysOuter.value.trim()) {
-            tags.push({ key: 'offlineDaysOuter', label: `未登入天数 > ${inputOfflineDaysOuter.value.trim()}`, type: 'input', element: inputOfflineDaysOuter });
+            tags.push({ key: 'offlineDaysOuter', label: `未登入天数: ${inputOfflineDaysOuter.value.trim()}`, type: 'input', element: inputOfflineDaysOuter });
         }
         if (inputIpOuter && inputIpOuter.value.trim()) {
             tags.push({ key: 'ipOuter', label: `登入 IP: ${inputIpOuter.value.trim()}`, type: 'input', element: inputIpOuter });
@@ -1315,6 +1436,12 @@ document.addEventListener('DOMContentLoaded', () => {
         setSingleSelectValue(dropdownLevel, '', '全部');
         selectedLevelVal = '';
 
+        const dropdownBirthdayOuter = document.getElementById('dropdownBirthdayOuter');
+        if (dropdownBirthdayOuter) {
+            setSingleSelectValue(dropdownBirthdayOuter, '', '请选择生日月份');
+        }
+        selectedBirthdayOuterVal = '';
+
         clearMultiSelectValue(dropdownVip);
         clearMultiSelectValue(dropdownOther);
         clearMultiSelectValue(dropdownTagsSearch);
@@ -1331,6 +1458,8 @@ document.addEventListener('DOMContentLoaded', () => {
         inputDateStart.value = '';
         inputDateEnd.value = '';
         
+        const inputLoginIpOuter = document.getElementById('inputLoginIpOuter');
+        if (inputLoginIpOuter) inputLoginIpOuter.value = '';
         const inputDateStartOuter = document.getElementById('inputDateStartOuter');
         if (inputDateStartOuter) inputDateStartOuter.value = '';
         const inputDateEndOuter = document.getElementById('inputDateEndOuter');
@@ -1394,12 +1523,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const userDetailsDrawer = document.getElementById('userDetailsDrawer');
         if (!userDetailsDrawer) return;
         
+        const user = mockUsers.find(u => u.uid === uid) || mockUsers[0];
+        
         const detailsAuditTabBtn = document.getElementById('detailsAuditTabBtn');
         if (detailsAuditTabBtn) {
             detailsAuditTabBtn.style.display = hasPerm(27) ? '' : 'none';
+            const hasPendingAudit = user.realNameAudited || user.birthdayAudited || user.phoneAudited || user.emailAudited || user.qqAudited || user.wechatAudited || user.zaloAudited;
+            
+            let redDot = detailsAuditTabBtn.querySelector('.audit-red-dot');
+            if (!redDot) {
+                detailsAuditTabBtn.style.position = 'relative';
+                redDot = document.createElement('span');
+                redDot.className = 'audit-red-dot';
+                redDot.style.cssText = 'position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; background-color: #ef4444; border-radius: 50%;';
+                detailsAuditTabBtn.appendChild(redDot);
+            }
+            redDot.style.display = hasPendingAudit ? '' : 'none';
         }
-        
-        const user = mockUsers.find(u => u.uid === uid) || mockUsers[0];
         
         const getAuditButtons = (isAudited, field = '') => {
             const resetBtn = hasPerm(27) ? `<button class="btn btn-sm btn-outline btn-warning" onclick="handleResetAction(this, '${uid}', '${field}')" style="padding: 2px 8px; font-size: 12px; border-radius: 4px; margin-left: 8px; cursor: pointer; border: 1px solid #f59e0b; color: #f59e0b; background: transparent;">重置</button>` : '';
@@ -1633,10 +1773,33 @@ document.addEventListener('DOMContentLoaded', () => {
                             <th style="padding: 16px; font-weight: 600;">卡号/钱包/支付宝帐号</th>
                             <th style="padding: 16px; font-weight: 600;">银行/币种</th>
                             <th style="padding: 16px; font-weight: 600;">银行地址/备注</th>
+                            <th style="padding: 16px; font-weight: 600;">状态</th>
                         </tr>
                     </thead>
+                    <tbody>
+                        <tr style="border-bottom: 1px solid var(--border-color); transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f8fafc'" onmouseout="this.style.backgroundColor='transparent'">
+                            <td style="padding: 16px; color: #1e293b;">银行卡</td>
+                            <td style="padding: 16px; color: #475569; font-family: monospace;">622202******1234</td>
+                            <td style="padding: 16px; color: #475569;">中国工商银行 / CNY</td>
+                            <td style="padding: 16px; color: #475569;">北京市朝阳区支行</td>
+                            <td style="padding: 16px;"><span style="display: inline-block; padding: 2px 8px; border-radius: 4px; background-color: #dcfce7; color: #166534; font-size: 12px;">启用</span></td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-color); transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f8fafc'" onmouseout="this.style.backgroundColor='transparent'">
+                            <td style="padding: 16px; color: #1e293b;">虚拟货币</td>
+                            <td style="padding: 16px; color: #475569; font-family: monospace;">TQxV9...b4A2</td>
+                            <td style="padding: 16px; color: #475569;">USDT (TRC20)</td>
+                            <td style="padding: 16px; color: #475569;">-</td>
+                            <td style="padding: 16px;"><span style="display: inline-block; padding: 2px 8px; border-radius: 4px; background-color: #dcfce7; color: #166534; font-size: 12px;">启用</span></td>
+                        </tr>
+                        <tr style="transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f8fafc'" onmouseout="this.style.backgroundColor='transparent'">
+                            <td style="padding: 16px; color: #1e293b;">支付宝</td>
+                            <td style="padding: 16px; color: #475569; font-family: monospace;">13800138000</td>
+                            <td style="padding: 16px; color: #475569;">支付宝 / CNY</td>
+                            <td style="padding: 16px; color: #475569;">王大锤</td>
+                            <td style="padding: 16px;"><span style="display: inline-block; padding: 2px 8px; border-radius: 4px; background-color: #fee2e2; color: #991b1b; font-size: 12px;">停用</span></td>
+                        </tr>
+                    </tbody>
                 </table>
-                <div style="padding: 64px 0; text-align: center; color: #94a3b8; font-size: 14px;">暂无数据</div>
             </div>`;
         }
 
@@ -2083,8 +2246,30 @@ document.addEventListener('DOMContentLoaded', () => {
         // Sorting Logic
         if (currentSortColumn) {
             filtered.sort((a, b) => {
+                
                 let valA = a[currentSortColumn];
                 let valB = b[currentSortColumn];
+                
+                if (currentSortColumn === 'dateInfo') {
+                    valA = window.activeDateMode === 'lastLogin' ? a.lastLogin : (window.activeDateMode === 'offlineDays' ? a.offlineDays : a.date);
+                    valB = window.activeDateMode === 'lastLogin' ? b.lastLogin : (window.activeDateMode === 'offlineDays' ? b.offlineDays : b.date);
+                } else if (currentSortColumn === 'growthInfo') {
+                    valA = window.activeGrowthMode === 'vipGrowth' ? a.vipGrowth : a.growth;
+                    valB = window.activeGrowthMode === 'vipGrowth' ? b.vipGrowth : b.growth;
+                } else if (currentSortColumn === 'yebInfo') {
+                    valA = window.activeYebMode === 'interest' ? a.interest : a.balanceBuy;
+                    valB = window.activeYebMode === 'interest' ? b.interest : b.balanceBuy;
+                } else if (currentSortColumn === 'depositInfo') {
+                    valA = window.activeDepositMode === 'depositCount' ? a.depositCount : a.deposit;
+                    valB = window.activeDepositMode === 'depositCount' ? b.depositCount : b.deposit;
+                } else if (currentSortColumn === 'withdrawInfo') {
+                    valA = window.activeWithdrawMode === 'withdrawCount' ? a.withdrawCount : (window.activeWithdrawMode === 'withdrawPre' ? a.withdrawPre : a.withdraw);
+                    valB = window.activeWithdrawMode === 'withdrawCount' ? b.withdrawCount : (window.activeWithdrawMode === 'withdrawPre' ? b.withdrawPre : b.withdraw);
+                } else if (currentSortColumn === 'adminFundInfo') {
+                    valA = window.activeAdminMode === 'adminDeduct' ? a.adminDeduct : a.adminAdd;
+                    valB = window.activeAdminMode === 'adminDeduct' ? b.adminDeduct : b.adminAdd;
+                }
+
                 
                 // Handle numeric conversion for arrears (e.g. "-" or numbers)
                 if (currentSortColumn === 'arrears') {
@@ -2132,14 +2317,31 @@ document.addEventListener('DOMContentLoaded', () => {
             pageNumbersList.textContent = `${currentPage} / ${totalPages}`;
         }
 
-        // Helper for Sort Icons
-        function getSortBtn(col) {
-            const isActive = currentSortColumn === col;
+        // Helper for Header Action Menu
+        function getActionMenuHtml(col, isPinned) {
+            const isActive = currentSortColumn === col.id;
             const isAsc = isActive && currentSortDirection === 'asc';
             const isDesc = isActive && currentSortDirection === 'desc';
-            return `<button type="button" class="sort-btn ${isAsc ? 'active-asc' : ''} ${isDesc ? 'active-desc' : ''}" data-sort="${col}">
-                <i class="ph-fill ph-caret-${isDesc ? 'down' : 'up'}"></i>
-            </button>`;
+            
+            let menuContent = '';
+            if (col.sortable) {
+                menuContent += `
+                    <i class="ph ph-sort-ascending sort-btn-asc" data-sort="${col.id}" title="遞增" style="padding: 4px; cursor: pointer; border-radius: 4px; ${isAsc ? 'color: #3b82f6;' : 'color: #64748b;'}"></i>
+                    <i class="ph ph-sort-descending sort-btn-desc" data-sort="${col.id}" title="遞減" style="padding: 4px; cursor: pointer; border-radius: 4px; ${isDesc ? 'color: #3b82f6;' : 'color: #64748b;'}"></i>
+                `;
+            }
+            menuContent += `
+                <i class="ph ph-push-pin icon-pin" data-id="${col.id}" title="${isPinned ? '取消固定' : '固定'}" style="padding: 4px; cursor: pointer; border-radius: 4px; ${isPinned ? 'color: #3b82f6;' : 'color: #64748b;'}"></i>
+            `;
+            
+            return `
+                <div class="header-action-container" style="position: relative; display: inline-flex; align-items: center; margin-left: 8px;">
+                    <i class="ph ph-dots-three-vertical" style="color: #94a3b8; cursor: pointer; padding: 2px 4px; border-radius: 4px;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='transparent'"></i>
+                    <div class="header-action-menu" style="display: none; position: absolute; top: 100%; right: 0; background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); z-index: 50; flex-direction: row; gap: 4px; white-space: nowrap;">
+                        ${menuContent}
+                    </div>
+                </div>
+            `;
         }
 
         // Render Table Headers according to Table Mode
@@ -2177,30 +2379,44 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
 
-                let groupRowHtml = `<th class="header-group sticky-col sticky-col-1" rowspan="2" width="40" style="left:0; z-index:12;"><input type="checkbox" id="selectAllCheckboxCompact"></th>`;
-                let subRowHtml = ``;
+                let headerHtml = `<th class="header-group sticky-col sticky-col-1" width="40" style="left:0; z-index:12;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <button class="btn-expand-all" style="background: none; border: none; cursor: pointer; color: #8c9bb3; display: flex; align-items: center; justify-content: center; padding: 2px;" title="全部展開/折疊">
+                            <i class="ph ph-caret-right" style="transition: transform 0.2s;"></i>
+                        </button>
+                        <input type="checkbox" id="selectAllCheckboxCompact">
+                    </div>
+                </th>`;
 
-                let currentLeft = 40; // Starts after checkbox
+                let currentLeft = 40;
 
-                // Pinned headers span both rows (rowspan="2")
                 pinned.forEach(col => {
-                    groupRowHtml += `<th class="header-group sticky-col" rowspan="2" style="left:${currentLeft}px; min-width:110px; z-index:12;" data-col="${col.id}">
+                    headerHtml += `<th class="header-group sticky-col" style="left:${currentLeft}px; min-width:110px; z-index:12;" data-col="${col.id}">
                         <div style="display:flex;align-items:center;white-space:nowrap;justify-content:space-between;">
                             <div style="display:flex;align-items:center;">
-                                <span>${col.label}</span>
-                                ${col.sortable ? getSortBtn(col.id) : ''}
+                                <span>${typeof col.label === 'function' ? col.label() : col.label}</span>
                             </div>
-                            <i class="ph ph-push-pin icon-pin active" data-id="${col.id}" title="取消钉选"></i>
+                            ${getActionMenuHtml(col, true)}
                         </div>
                     </th>`;
                     currentLeft += 110;
                 });
+                
+                const unpinnedWithoutAction = unpinned.filter(col => col.id !== 'action');
+                unpinnedWithoutAction.forEach(col => {
+                    headerHtml += `<th class="header-sub" data-col="${col.id}">
+                        <div style="display:flex;align-items:center;white-space:nowrap;justify-content:space-between;">
+                            <div style="display:flex;align-items:center;">
+                                <span>${typeof col.label === 'function' ? col.label() : col.label}</span>
+                            </div>
+                            ${getActionMenuHtml(col, false)}
+                        </div>
+                    </th>`;
+                });
 
-                // Action header (fixed on the right) with Image 2 Icon
                 const actionCol = visibleColumnsConfig.find(col => col.id === 'action');
-                let actionHeaderHtml = '';
                 if (actionCol) {
-                    actionHeaderHtml = `<th class="header-group sticky-col-right" rowspan="2" data-col="action" style="min-width: 60px; z-index:12;">
+                    headerHtml += `<th class="header-group sticky-col-right" data-col="action" style="min-width: 60px; z-index:12;">
                         <div style="display:flex;align-items:center;white-space:nowrap;justify-content:center;">
                             <button type="button" class="btn-custom-columns-header btn-header-columns-toggle" title="自订栏位">
                                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
@@ -2212,45 +2428,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </th>`;
                 }
 
-                // Unpinned headers grouped sequentially
-                let currentGroup = '';
-                let groupColSpan = 0;
-                
-                const unpinnedWithoutAction = unpinned.filter(col => col.id !== 'action');
-                unpinnedWithoutAction.forEach(col => {
-                    if (col.group !== currentGroup) {
-                        if (currentGroup !== '') {
-                            groupRowHtml += `<th class="header-group" colspan="${groupColSpan}">${currentGroup}</th>`;
-                        }
-                        currentGroup = col.group;
-                        groupColSpan = 1;
-                    } else {
-                        groupColSpan++;
-                    }
-
-                    subRowHtml += `<th class="header-sub" data-col="${col.id}">
-                        <div style="display:flex;align-items:center;white-space:nowrap;justify-content:space-between;">
-                            <div style="display:flex;align-items:center;">
-                                <span>${col.label}</span>
-                                ${col.sortable ? getSortBtn(col.id) : ''}
-                            </div>
-                            <i class="ph ph-push-pin icon-pin" data-id="${col.id}" title="钉选栏位"></i>
-                        </div>
-                    </th>`;
-                });
-
-                if (currentGroup !== '') {
-                    groupRowHtml += `<th class="header-group" colspan="${groupColSpan}">${currentGroup}</th>`;
-                }
-
-                if (actionHeaderHtml) {
-                    groupRowHtml += actionHeaderHtml;
-                }
-
-                userTableHeader.innerHTML = `
-                    <tr class="header-group-row">${groupRowHtml}</tr>
-                    <tr class="header-sub-row">${subRowHtml}</tr>
-                `;
+                userTableHeader.innerHTML = `<tr class="header-sub-row">${headerHtml}</tr>`;
             }
         }
 
@@ -2426,7 +2604,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const gridOps = [
                         shouldShowOp("编辑用户") ? `<a href="#" class="op-link user-detail-link" data-uid="${user.uid}">编辑用户</a>` : '',
-                        shouldShowOp("查看详情") ? `<a href="#" class="op-link user-detail-link" data-uid="${user.uid}">查看详情</a>` : '',
+                        shouldShowOp("查看详情") ? `<a href="#" class="op-link user-detail-link" data-uid="${user.uid}" style="position:relative; display:inline-flex; align-items:center;">查看详情 ${(user.realNameAudited || user.birthdayAudited || user.phoneAudited || user.emailAudited || user.qqAudited || user.wechatAudited || user.zaloAudited) ? '<span style="width: 6px; height: 6px; background-color: #ef4444; border-radius: 50%; margin-left: 2px;"></span>' : ''}</a>` : '',
                         shouldShowOp("额度修改") ? `<a href="#" class="op-link">额度修改</a>` : '',
                         shouldShowOp("资金明细") ? `<a href="#" class="op-link">资金明细</a>` : '',
                         shouldShowOp("注单明细") ? `<a href="#" class="op-link">注单明细</a>` : '',
@@ -2474,7 +2652,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     else unpinned.push(col);
                 });
 
-                let cellsHtml = `<td class="sticky-col sticky-col-1" style="left:0;"><input type="checkbox" class="user-checkbox"></td>`;
+                const hasPendingAudit = user.realNameAudited || user.birthdayAudited || user.phoneAudited || user.emailAudited || user.qqAudited || user.wechatAudited || user.zaloAudited;
+                
+                let cellsHtml = `<td class="sticky-col sticky-col-1" style="left:0;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <button class="btn-expand-row" style="position: relative; background: none; border: none; cursor: pointer; color: #8c9bb3; display: flex; align-items: center; justify-content: center; padding: 2px;">
+                            <i class="ph ph-caret-right" style="transition: transform 0.2s;"></i>
+                            ${hasPendingAudit ? '<span style="position: absolute; top: 2px; right: 0px; width: 6px; height: 6px; background-color: #ef4444; border-radius: 50%;"></span>' : ''}
+                        </button>
+                        <input type="checkbox" class="user-checkbox">
+                    </div>
+                </td>`;
                 
                 let currentLeft = 40;
                 pinned.forEach(col => {
@@ -2503,7 +2691,193 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             userTableBody.appendChild(tr);
+
+            // Render Detail Expanded Row
+            const expandTr = document.createElement('tr');
+            expandTr.className = 'member-expand-row';
+            expandTr.style.display = 'none';
+            expandTr.id = `expand-${user.uid}`;
+            
+            // Parse remark and followRemark
+            const remarkHtml = renderDataState(user.remark, 'longText');
+            const followRemarkHtml = renderDataState(user.followRemark, 'longText');
+            
+            expandTr.innerHTML = `
+                <td colspan="100%" class="member-expand-cell" style="padding: 0; background: #f8fafc; position: sticky; left: 0; z-index: 5;">
+                    <div class="member-expand-grid" style="padding: 24px 32px 24px 56px; background: #f8fafc; display: flex; flex-direction: row; overflow-x: auto; gap: 20px; border-bottom: 1px solid #e2e8f0; box-shadow: inset 0 2px 4px 0 rgb(0 0 0 / 0.02); box-sizing: border-box;">
+                        
+                        <!-- Card 1: 基本資料 -->
+                        <div style="width: max-content; flex-shrink: 0; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); overflow: hidden;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #e2e8f0;">
+                                <div style="display: flex; align-items: center; gap: 8px; color: #3b82f6; font-size: 14px; font-weight: 600;">
+                                    <i class="ph ph-user"></i> 基本資料
+                                </div>
+                                ${hasPerm(27) ? `
+                                <div onclick="if(window.openUserDetailsDrawer) { window.openUserDetailsDrawer('${user.uid}'); setTimeout(() => { const tab = document.querySelector('.user-details-tab-item[data-target=detailsAudit]'); if(tab) tab.click(); }, 50); }" style="position: relative; display: flex; align-items: center; gap: 4px; color: #3b82f6; font-size: 12px; cursor: pointer; padding: 4px 8px; border-radius: 4px; transition: background 0.2s;" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='transparent'">
+                                    會員審核 
+                                    ${(user.realNameAudited || user.birthdayAudited || user.phoneAudited || user.emailAudited || user.qqAudited || user.wechatAudited || user.zaloAudited) ? '<span style="width: 6px; height: 6px; background-color: #ef4444; border-radius: 50%; margin-left: 2px;"></span>' : ''}
+                                    <i class="ph ph-arrow-right"></i>
+                                </div>
+                                ` : ''}
+                            </div>
+                            <div style="display: flex; padding: 0 16px;">
+                                <!-- Column 1 -->
+                                <div style="min-width: max-content; margin-right: 16px; padding: 12px 16px 12px 0; border-right: 1px solid #f1f5f9;">
+                                    <div style="display: flex; padding-bottom: 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; align-items: center;">
+                                        <div style="width: 80px; color: #8c9bb3; flex-shrink: 0;">大頭照</div>
+                                        <div style="width: 28px; height: 28px; border-radius: 50%; background: #3b82f6; color: white; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold;">
+                                            ${user.account.charAt(0).toUpperCase()}
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; padding: 12px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px;">
+                                        <div style="width: 80px; color: #8c9bb3; flex-shrink: 0;">真實姓名</div>
+                                        <div style="color: #1e293b; font-weight: 500;">${renderDataState(user.realName)}</div>
+                                    </div>
+                                    <div style="display: flex; padding: 12px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px;">
+                                        <div style="width: 80px; color: #8c9bb3; flex-shrink: 0;">生日</div>
+                                        <div style="color: #1e293b; font-weight: 500; font-family: monospace;">${user.birthday || '1995-08-18'}</div>
+                                    </div>
+                                    <div style="display: flex; padding-top: 12px; font-size: 13px;">
+                                        <div style="width: 80px; color: #8c9bb3; flex-shrink: 0;">帳號類型</div>
+                                        <div style="color: #1e293b; font-weight: 500;">${user.accountType || '普通帐号'}</div>
+                                    </div>
+                                </div>
+                                <!-- Column 2 -->
+                                <div style="min-width: max-content; margin-right: 16px; padding: 12px 16px;">
+                                    <div style="display: flex; padding-bottom: 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px;">
+                                        <div style="width: 80px; color: #8c9bb3; flex-shrink: 0;">會員類型</div>
+                                        <div style="color: #1e293b; font-weight: 500;">${user.userType || '代理会员'}</div>
+                                    </div>
+                                    <div style="display: flex; padding: 12px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px;">
+                                        <div style="width: 80px; color: #8c9bb3; flex-shrink: 0;">等級</div>
+                                        <div style="color: #1e293b; font-weight: 500;">${user.level}</div>
+                                    </div>
+                                    <div style="display: flex; padding: 12px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px;">
+                                        <div style="width: 80px; color: #8c9bb3; flex-shrink: 0;">支付層級</div>
+                                        <div style="color: #1e293b; font-weight: 500;">${user.payLevel}</div>
+                                    </div>
+                                    <div style="display: flex; padding-top: 12px; font-size: 13px;">
+                                        <div style="width: 80px; color: #8c9bb3; flex-shrink: 0;">註冊模式</div>
+                                        <div style="color: #1e293b; font-weight: 500;">${user.registerMode || '一般注册'}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 2: 設備與ip -->
+                        <div style="width: 280px; flex-shrink: 0; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); overflow: hidden;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #e2e8f0;">
+                                <div style="display: flex; align-items: center; gap: 8px; color: #3b82f6; font-size: 14px; font-weight: 600;">
+                                    <i class="ph ph-desktop"></i> 設備與ip
+                                </div>
+                                <div onclick="if(window.openUserDetailsDrawer) { window.openUserDetailsDrawer('${user.uid}'); setTimeout(() => { const tab = document.querySelector('.user-details-tab-item[data-target=detailsLogin]'); if(tab) tab.click(); }, 50); }" style="display: flex; align-items: center; gap: 4px; color: #3b82f6; font-size: 12px; cursor: pointer; padding: 4px 8px; border-radius: 4px; transition: background 0.2s;" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='transparent'">
+                                    設備詳情 <i class="ph ph-arrow-right"></i>
+                                </div>
+                            </div>
+                            <div style="padding: 12px 16px;">
+                                <div style="display: flex; padding-bottom: 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px;">
+                                    <div style="width: 90px; color: #8c9bb3; flex-shrink: 0;">註冊 IP</div>
+                                    <div style="color: #1e293b; font-weight: 500; font-family: monospace;">
+                                        192.168.1.1 <i class="ph ph-copy" style="color: #cbd5e1; cursor: pointer;"></i>
+                                    </div>
+                                </div>
+                                <div style="display: flex; padding: 12px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px;">
+                                    <div style="width: 90px; color: #8c9bb3; flex-shrink: 0;">新增時間</div>
+                                    <div style="color: #1e293b; font-weight: 500; font-family: monospace;">${user.date || '-'}</div>
+                                </div>
+                                <div style="display: flex; padding: 12px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px;">
+                                    <div style="width: 90px; color: #8c9bb3; flex-shrink: 0;">登入 IP</div>
+                                    <div style="color: #1e293b; font-weight: 500; font-family: monospace;">
+                                        ${user.ip || '54.150.111.152'} <i class="ph ph-copy" style="color: #cbd5e1; cursor: pointer;"></i>
+                                    </div>
+                                </div>
+                                <div style="display: flex; padding-top: 12px; font-size: 13px;">
+                                    <div style="width: 90px; color: #8c9bb3; flex-shrink: 0;">登入時間</div>
+                                    <div style="color: #1e293b; font-weight: 500; font-family: monospace;">
+                                        ${user.lastLogin || '2026-07-28 16:30:42'}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 3: 推薦關係 -->
+                        <div style="width: 300px; flex-shrink: 0; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                            <div style="display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid #e2e8f0; color: #3b82f6; font-size: 14px; font-weight: 600;">
+                                <i class="ph ph-share-network"></i> 推薦關係
+                            </div>
+                            <div style="padding: 0 16px;">
+                                <div style="display: flex; padding: 12px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px;">
+                                    <div style="width: 80px; color: #8c9bb3; flex-shrink: 0;">代理</div>
+                                    <div style="color: #1e293b; font-weight: 500;">${renderDataState(user.agentId)}</div>
+                                </div>
+                                <div style="display: flex; padding: 12px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px;">
+                                    <div style="width: 80px; color: #8c9bb3; flex-shrink: 0;">邀請人</div>
+                                    <div style="color: #1e293b; font-weight: 500;">${user.inviter || '-'}</div>
+                                </div>
+                                <div style="display: flex; padding: 12px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px;">
+                                    <div style="width: 80px; color: #8c9bb3; flex-shrink: 0;">邀請碼</div>
+                                    <div style="color: #1e293b; font-weight: 500;">${user.inviteCode || '-'}</div>
+                                </div>
+                                <div style="display: flex; padding: 12px 0; font-size: 13px;">
+                                    <div style="width: 80px; color: #8c9bb3; flex-shrink: 0;">下級/團隊</div>
+                                    <div style="color: #3b82f6; font-weight: 500;"><a href="#" class="subordinate-link" style="color: #3b82f6; text-decoration: none;" data-uid="${user.uid}">${user.directTeam}</a></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 4: 標籤 -->
+                        <div style="width: 300px; flex-shrink: 0; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                            <div style="display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid #e2e8f0; color: #3b82f6; font-size: 14px; font-weight: 600;">
+                                <i class="ph ph-tag"></i> 標籤
+                            </div>
+                            <div style="padding: 16px;">
+                                <div class="member-detail-tags" style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                    ${(user.tags || []).map(tag => `<span class="user-custom-tag ${tag === '異常風險' || tag === '异常风险' ? 'tag-red' : tag === '活躍' || tag === '活跃' || tag === '高頻交易' || tag === '高频交易' ? 'tag-green' : tag === 'VIP' || tag === 'VIP 客戶' || tag === 'VIP 客户' ? 'tag-blue' : 'tag-grey'}">${tag}</span>`).join('')}
+                                </div>
+                            </div>
+                        </div></div>
+                </td>
+            `;
+
+            if (currentTableMode !== 'nested') {
+                userTableBody.appendChild(expandTr);
+            }
         });
+
+        // Bind expand row toggles
+        userTableBody.querySelectorAll('.btn-expand-row').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const tr = btn.closest('tr');
+                const nextTr = tr.nextElementSibling;
+                const icon = btn.querySelector('i');
+                if (nextTr && nextTr.classList.contains('member-expand-row')) {
+                    nextTr.style.display = nextTr.style.display === 'none' ? 'table-row' : 'none';
+                    icon.style.transform = nextTr.style.display === 'none' ? 'rotate(0deg)' : 'rotate(90deg)';
+                }
+            });
+        });
+
+        // Bind expand all toggle
+        const btnExpandAll = userTableHeader.querySelector('.btn-expand-all');
+        if (btnExpandAll) {
+            btnExpandAll.addEventListener('click', (e) => {
+                const icon = btnExpandAll.querySelector('i');
+                const isExpanded = icon.style.transform === 'rotate(90deg)';
+                const newDisplay = isExpanded ? 'none' : 'table-row';
+                const newTransform = isExpanded ? 'rotate(0deg)' : 'rotate(90deg)';
+                
+                icon.style.transform = newTransform;
+                
+                // Toggle all expand rows
+                userTableBody.querySelectorAll('.member-expand-row').forEach(row => {
+                    row.style.display = newDisplay;
+                });
+                // Update all individual expand button icons
+                userTableBody.querySelectorAll('.btn-expand-row i').forEach(i => {
+                    i.style.transform = newTransform;
+                });
+            });
+        }
 
         // Bind Header Columns Toggle Button (Image 2 Icon)
         document.querySelectorAll('.btn-header-columns-toggle').forEach(btn => {
@@ -2580,16 +2954,21 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Bind Sort Events
         if (userTableHeader) {
-            userTableHeader.querySelectorAll('.sort-btn').forEach(btn => {
+            userTableHeader.querySelectorAll('.sort-btn-asc').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const col = btn.getAttribute('data-sort');
-                    if (currentSortColumn === col) {
-                        currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
-                    } else {
-                        currentSortColumn = col;
-                        currentSortDirection = 'desc';
-                    }
+                    currentSortColumn = col;
+                    currentSortDirection = 'asc';
+                    renderTable();
+                });
+            });
+            userTableHeader.querySelectorAll('.sort-btn-desc').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const col = btn.getAttribute('data-sort');
+                    currentSortColumn = col;
+                    currentSortDirection = 'desc';
                     renderTable();
                 });
             });
@@ -2673,6 +3052,16 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             html += `<ul class="column-list" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">`;
             permCols.forEach(col => {
+                const customNames = {
+                    'dateInfo': '新增時間 / 登入 / 離開天數',
+                    'yebInfo': '餘額寶 / 利息',
+                    'depositInfo': '存款總額 / 次數',
+                    'withdrawInfo': '取款總額 / 次數 / 扣款',
+                    'adminFundInfo': '後台加扣款',
+                    'growthInfo': '成長值 / VIP成長值'
+                };
+                const colName = customNames[col.id] || col.label;
+
                 const isVisible = tempNestedColumnVisibility[col.id];
                 if (isVisible) visibleCount++;
                 const isPinned = tempNestedPinnedColumnIds.includes(col.id);
@@ -2684,7 +3073,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 html += `
                     <li>
                         <div class="dropdown-item-flex" style="padding-left: 8px; width: 100%;">
-                            <label style="display:flex; align-items:center; flex-grow:1; margin-right:4px;">${checkboxHtml} <span style="${labelSpanStyle}">${col.label}</span></label>
+                            <label style="display:flex; align-items:center; flex-grow:1; margin-right:4px;">${checkboxHtml} <span style="${labelSpanStyle}">${colName}</span></label>
                             ${pinHtml}
                         </div>
                     </li>
@@ -2703,6 +3092,16 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             const groupedConfig = {};
             compactColumnsConfig.forEach(col => {
+                const customNames = {
+                    'dateInfo': '新增時間 / 登入 / 離開天數',
+                    'yebInfo': '餘額寶 / 利息',
+                    'depositInfo': '存款總額 / 次數',
+                    'withdrawInfo': '取款總額 / 次數 / 扣款',
+                    'adminFundInfo': '後台加扣款',
+                    'growthInfo': '成長值 / VIP成長值'
+                };
+                const colName = customNames[col.id] || col.label;
+
                 if (!groupedConfig[col.group]) groupedConfig[col.group] = [];
                 groupedConfig[col.group].push(col);
             });
@@ -2730,6 +3129,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
                 html += `<ul class="column-list" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">`;
                 permCols.forEach(col => {
+                const customNames = {
+                    'dateInfo': '新增時間 / 登入 / 離開天數',
+                    'yebInfo': '餘額寶 / 利息',
+                    'depositInfo': '存款總額 / 次數',
+                    'withdrawInfo': '取款總額 / 次數 / 扣款',
+                    'adminFundInfo': '後台加扣款',
+                    'growthInfo': '成長值 / VIP成長值'
+                };
+                const colName = customNames[col.id] || col.label;
+
                     const isVisible = tempCompactColumnVisibility[col.id];
                     if (isVisible) visibleCount++;
                     const isPinned = tempPinnedColumnIds.includes(col.id);
@@ -2751,7 +3160,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     html += `
                         <li>
                             <div class="dropdown-item-flex" style="padding-left: 8px; width: 100%;">
-                                <label style="display:flex; align-items:center; flex-grow:1; margin-right:4px;">${checkboxHtml} <span style="${labelSpanStyle}">${col.label}</span></label>
+                                <label style="display:flex; align-items:center; flex-grow:1; margin-right:4px;">${checkboxHtml} <span style="${labelSpanStyle}">${colName}</span></label>
                                 ${pinHtml}
                             </div>
                         </li>
@@ -3430,6 +3839,16 @@ if (drawerContent) {
             const groupName = e.target.getAttribute('data-group');
             const isChecked = e.target.checked;
             compactColumnsConfig.forEach(col => {
+                const customNames = {
+                    'dateInfo': '新增時間 / 登入 / 離開天數',
+                    'yebInfo': '餘額寶 / 利息',
+                    'depositInfo': '存款總額 / 次數',
+                    'withdrawInfo': '取款總額 / 次數 / 扣款',
+                    'adminFundInfo': '後台加扣款',
+                    'growthInfo': '成長值 / VIP成長值'
+                };
+                const colName = customNames[col.id] || col.label;
+
                 if (col.group === groupName && !['uid', 'account', 'action'].includes(col.id)) {
                     tempCompactColumnVisibility[col.id] = isChecked;
                 }
@@ -3538,6 +3957,20 @@ if (!globalActionMenu) {
             const uid = icon.getAttribute('data-uid');
             if (globalActionMenu) {
                 globalActionMenu.setAttribute('data-uid', uid);
+                
+                const user = mockUsers.find(u => u.uid === uid) || mockUsers[0];
+                const hasPendingAudit = user.realNameAudited || user.birthdayAudited || user.phoneAudited || user.emailAudited || user.qqAudited || user.wechatAudited || user.zaloAudited;
+                
+                const links = globalActionMenu.querySelectorAll('a');
+                links.forEach(link => {
+                    if (link.textContent.trim().startsWith('查看详情')) {
+                        if (hasPendingAudit) {
+                            link.innerHTML = `查看详情 <span style="display:inline-block; width: 6px; height: 6px; background-color: #ef4444; border-radius: 50%; margin-left: 4px; vertical-align: middle;"></span>`;
+                        } else {
+                            link.innerHTML = `查看详情`;
+                        }
+                    }
+                });
             }
             showMenu(icon);
         } else if (e.target.closest('#globalCompactActionMenu')) {
@@ -3644,18 +4077,7 @@ document.querySelectorAll('.date-range-container, .date-range-input').forEach(co
     });
 });
 
-document.querySelectorAll('input[type="datetime-local"], input[type="date"]').forEach(input => {
-    input.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (typeof input.showPicker === 'function') {
-            try {
-                input.showPicker();
-            } catch (err) {
-                console.error("showPicker error: ", err);
-            }
-        }
-    });
-});
+
 
 window.renderTable = renderTable;
 window.renderCompactActionMenu = renderCompactActionMenu;
@@ -3765,6 +4187,7 @@ document.addEventListener('click', (e) => {
 
 // Append to end of script
 document.addEventListener('DOMContentLoaded', () => {
+
     const btnSearch = document.getElementById('btnSearch');
     const tableDataGroup = document.getElementById('tableDataGroup');
     const emptyDataState = document.getElementById('emptyDataState');

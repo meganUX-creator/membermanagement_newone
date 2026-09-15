@@ -35,11 +35,11 @@
                         <button class="btn btn-outline" id="btnBatchOperations">批量操作 <i
                                 class="ph ph-caret-down"></i></button>
                         <ul class="batch-dropdown-menu" id="batchOperationsMenu">
-                            <li id="batchItem-12">更新用户余额</li>
-                            <li id="batchItem-14">更新用户</li>
-                            <li id="batchItem-24">更新用户状态</li>
-                            <li id="batchItem-43">代理变更</li>
-                            <li id="batchItem-44">更新最大提款次数</li>
+                            <li id="batchItem-12">批量更新用户余额</li>
+                            <li id="batchItem-14">批量更新用户</li>
+                            <li id="batchItem-24">批量更新用户状态</li>
+                            <li id="batchItem-43">批量代理变更</li>
+                            <li id="batchItem-44">批量更新最大提款次数</li>
                         </ul>
                     </div>
                     <div class="topbar-divider"></div>
@@ -48,8 +48,8 @@
                         <button class="btn btn-outline" id="btnExportData">导出数据 <i
                                 class="ph ph-caret-down"></i></button>
                         <ul class="export-dropdown-menu" id="exportDataMenu">
-                            <li>已筛选用户</li>
-                            <li>用户数据</li>
+                            <li>导出已筛选用户</li>
+                            <li>导出用户数据</li>
                         </ul>
                     </div>
                 </div>
@@ -60,7 +60,7 @@
             <!-- 搜寻过滤区块 -->
             <section class="filter-card">
                 
-                <div class="filter-row" style="grid-template-columns: repeat(4, 1fr);">
+                <div class="filter-row">
                     <!-- Row 1 -->
                     <div class="form-group" data-filter-id="status">
                         <div class="custom-select-single" id="dropdownStatus">
@@ -85,6 +85,26 @@
                                 <li data-value="铂金会员">铂金会员</li>
                                 <li data-value="钻石会员">钻石会员</li>
                                 <li data-value="至尊会员">至尊会员</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="form-group" data-filter-id="birthday">
+                        <div class="custom-select-single" id="dropdownBirthdayOuter">
+                            <div class="select-selected"><span class="selected-val">请选择生日月份</span><i class="ph ph-caret-down"></i></div>
+                            <ul class="select-options" style="max-height: 200px; overflow-y: auto;">
+                                <li data-value="" class="active">请选择生日月份</li>
+                                <li data-value="1月">1月</li>
+                                <li data-value="2月">2月</li>
+                                <li data-value="3月">3月</li>
+                                <li data-value="4月">4月</li>
+                                <li data-value="5月">5月</li>
+                                <li data-value="6月">6月</li>
+                                <li data-value="7月">7月</li>
+                                <li data-value="8月">8月</li>
+                                <li data-value="9月">9月</li>
+                                <li data-value="10月">10月</li>
+                                <li data-value="11月">11月</li>
+                                <li data-value="12月">12月</li>
                             </ul>
                         </div>
                     </div>
@@ -134,39 +154,37 @@
                         </div>
                     </div>
                     <div class="form-group" data-filter-id="agentId">
-                        <div class="input-with-inline-label" style="background: white; border: 1px solid #d0d5dd; border-radius: 8px; padding: 0 16px; display: flex; align-items: center; height: 38px;">
+                        <div class="input-with-inline-label" style="background: white; border: 1px solid #d0d5dd; border-radius: 8px; padding: 0 16px; display: flex; align-items: center; height: 32px;">
                             <span class="inline-label" style="font-weight: 600; font-size: 13px; color: #4b5563; margin-right: 12px;">代理id：</span>
-                            <input type="text" placeholder="请输入代理id" id="inputAgentIdOuter" style="border: none; flex: 1; outline: none; background: transparent; font-size: 13px; color: #6b7280;">
+                            <input type="text" id="inputAgentIdOuter" aria-label="代理 ID" style="border: none; flex: 1; outline: none; background: transparent; font-size: 13px; color: #6b7280;">
                         </div>
                     </div>
 
                     <!-- Row 3 -->
                     <div class="form-group" data-filter-id="notLoginDays">
-                        <div class="input-with-inline-label" style="background: white; border: 1px solid #d0d5dd; border-radius: 8px; padding: 0 16px; display: flex; align-items: center; height: 38px;">
+                        <div class="input-with-inline-label" style="background: white; border: 1px solid #d0d5dd; border-radius: 8px; padding: 0 16px; display: flex; align-items: center; height: 32px;">
                             <span class="inline-label" style="font-weight: 600; font-size: 13px; color: #4b5563; margin-right: 12px;">未登录天数：</span>
-                            <input type="text" placeholder="请输入未登录天数" id="inputOfflineDaysOuter" style="border: none; flex: 1; outline: none; background: transparent; font-size: 13px; color: #6b7280;">
-                        </div>
-                    </div>
-                    <div class="form-group" data-filter-id="registerTime" style="grid-column: span 2;">
-                        <div class="input-with-inline-label" style="background: white; border: 1px solid #d0d5dd; border-radius: 8px; padding: 0 16px; display: flex; align-items: center; height: 38px;">
-                            <span class="inline-label" style="font-weight: 600; font-size: 13px; color: #4b5563; margin-right: 12px;">新增时间：</span>
-                            <div class="date-range-container" style="flex:1; display: flex; align-items: center;">
-                                <div style="display: flex; align-items: center; flex: 1;">
-                                    <input type="text" class="date-text" id="inputDateStartOuter" placeholder="年 / 月 / 日" onfocus="(this.type='date')" onblur="(this.value==''?this.type='text':'')" style="border:none; outline:none; background:transparent; width: 100%; text-align: left; font-size: 13px; color: #6b7280;">
-                                    <i class="ph-bold ph-calendar-blank" style="color: #1f2937; margin-left: 8px;"></i>
-                                </div>
-                                <span class="date-separator-line" style="margin: 0 16px; color: #d1d5db; font-weight: 500;">~</span>
-                                <div style="display: flex; align-items: center; flex: 1;">
-                                    <input type="text" class="date-text" id="inputDateEndOuter" placeholder="年 / 月 / 日" onfocus="(this.type='date')" onblur="(this.value==''?this.type='text':'')" style="border:none; outline:none; background:transparent; width: 100%; text-align: left; font-size: 13px; color: #6b7280;">
-                                    <i class="ph-bold ph-calendar-blank" style="color: #1f2937; margin-left: 8px;"></i>
-                                </div>
-                            </div>
+                            <input type="text" id="inputOfflineDaysOuter" aria-label="未登录天数" style="border: none; flex: 1; outline: none; background: transparent; font-size: 13px; color: #6b7280;">
                         </div>
                     </div>
                     <div class="form-group" data-filter-id="bankCard">
-                        <div class="input-with-inline-label" style="background: white; border: 1px solid #d0d5dd; border-radius: 8px; padding: 0 16px; display: flex; align-items: center; height: 38px;">
+                        <div class="input-with-inline-label" style="background: white; border: 1px solid #d0d5dd; border-radius: 8px; padding: 0 16px; display: flex; align-items: center; height: 32px;">
                             <span class="inline-label" style="font-weight: 600; font-size: 13px; color: #4b5563; margin-right: 12px;">绑定银行卡：</span>
-                            <input type="text" placeholder="请输入银行卡号" id="inputBankCardOuter" style="border: none; flex: 1; outline: none; background: transparent; font-size: 13px; color: #6b7280;">
+                            <input type="text" id="inputBankCardOuter" aria-label="绑定银行卡" style="border: none; flex: 1; outline: none; background: transparent; font-size: 13px; color: #6b7280;">
+                        </div>
+                    </div>
+                    <div class="form-group" data-filter-id="loginIp">
+                        <div class="input-with-inline-label" style="background: white; border: 1px solid #d0d5dd; border-radius: 8px; padding: 0 16px; display: flex; align-items: center; height: 32px;">
+                            <span class="inline-label" style="font-weight: 600; font-size: 13px; color: #4b5563; margin-right: 12px;">登录IP：</span>
+                            <input type="text" id="inputLoginIpOuter" aria-label="登录IP" style="border: none; flex: 1; outline: none; background: transparent; font-size: 13px; color: #6b7280;">
+                        </div>
+                    </div>
+                    <div class="form-group" data-filter-id="registerTime" style="flex: 2 1 260px;">
+                        <div class="date-range-compact" aria-label="新增时间" >
+                            <span class="date-range-title">新增时间</span>
+                            <input type="datetime-local" lang="en-CA" id="inputDateStartOuter" aria-label="开始日期">
+                            <span class="date-range-separator">至</span>
+                            <input type="datetime-local" lang="en-CA" id="inputDateEndOuter" aria-label="结束日期">
                         </div>
                     </div>
                 </div>
@@ -210,7 +228,7 @@
                         <i class="ph ph-sliders-horizontal"></i> 进阶筛选条件 <span class="badge" id="advancedBadge">0</span>
                     </button>
                     <button class="btn btn-primary" id="btnSearch">
-                        <i class="ph ph-magnifying-glass"></i> 搜寻
+                        <i class="ph ph-magnifying-glass"></i> 搜索
                     </button>
                     <button class="btn btn-outline" id="btnReset">
                         <i class="ph ph-arrow-counter-clockwise"></i> 重置
@@ -426,10 +444,10 @@
                     <div class="form-group">
                         <label>新增时间范围</label>
                         <div class="date-range-input">
-                            <input type="datetime-local" id="inputDateStart" value=""
+                            <input type="datetime-local" lang="en-CA" id="inputDateStart" value=""
                                 style="border:none; padding:0; width:170px; font-size:12px;">
                             <span class="separator">~</span>
-                            <input type="datetime-local" id="inputDateEnd" value=""
+                            <input type="datetime-local" lang="en-CA" id="inputDateEnd" value=""
                                 style="border:none; padding:0; width:170px; font-size:12px;">
                         </div>
                     </div>
@@ -727,9 +745,47 @@
                                     </tr>
                                 </thead>
                                 <tbody id="editFormWithdrawInfoTableBody">
-                                    <tr style="height: 60px;">
-                                        <td colspan="6" style="text-align: center; color: #94a3b8; font-size: 13px;">
-                                            暂无数据</td>
+                                    <!-- Mock Row 1: 银行卡 -->
+                                    <tr style="height: 48px; border-bottom: 1px solid #e2e8f0; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f8fafc'" onmouseout="this.style.backgroundColor='transparent'">
+                                        <td style="padding: 8px 12px; color: #1e293b;">银行卡</td>
+                                        <td style="padding: 8px 12px; color: #475569; font-family: monospace;">622202******1234</td>
+                                        <td style="padding: 8px 12px; color: #475569;">中国工商银行 / CNY</td>
+                                        <td style="padding: 8px 12px; color: #475569;">北京市朝阳区支行</td>
+                                        <td style="padding: 8px 12px;"><span style="display: inline-block; padding: 2px 8px; border-radius: 4px; background-color: #dcfce7; color: #166534; font-size: 12px;">启用</span></td>
+                                        <td style="padding: 8px 12px;">
+                                            <div style="display: flex; gap: 8px; justify-content: center;">
+                                                <button type="button" style="background: transparent; border: none; color: #3b82f6; cursor: pointer; display: flex; align-items: center; gap: 4px;" title="编辑"><i class="ph ph-pencil-simple"></i></button>
+                                                <button type="button" style="background: transparent; border: none; color: #ef4444; cursor: pointer; display: flex; align-items: center; gap: 4px;" title="删除"><i class="ph ph-trash"></i></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <!-- Mock Row 2: 虚拟货币 -->
+                                    <tr style="height: 48px; border-bottom: 1px solid #e2e8f0; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f8fafc'" onmouseout="this.style.backgroundColor='transparent'">
+                                        <td style="padding: 8px 12px; color: #1e293b;">虚拟货币</td>
+                                        <td style="padding: 8px 12px; color: #475569; font-family: monospace;">TQxV9...b4A2</td>
+                                        <td style="padding: 8px 12px; color: #475569;">USDT (TRC20)</td>
+                                        <td style="padding: 8px 12px; color: #475569;">-</td>
+                                        <td style="padding: 8px 12px;"><span style="display: inline-block; padding: 2px 8px; border-radius: 4px; background-color: #dcfce7; color: #166534; font-size: 12px;">启用</span></td>
+                                        <td style="padding: 8px 12px;">
+                                            <div style="display: flex; gap: 8px; justify-content: center;">
+                                                <button type="button" style="background: transparent; border: none; color: #3b82f6; cursor: pointer; display: flex; align-items: center; gap: 4px;" title="编辑"><i class="ph ph-pencil-simple"></i></button>
+                                                <button type="button" style="background: transparent; border: none; color: #ef4444; cursor: pointer; display: flex; align-items: center; gap: 4px;" title="删除"><i class="ph ph-trash"></i></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <!-- Mock Row 3: 支付宝 -->
+                                    <tr style="height: 48px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f8fafc'" onmouseout="this.style.backgroundColor='transparent'">
+                                        <td style="padding: 8px 12px; color: #1e293b;">支付宝</td>
+                                        <td style="padding: 8px 12px; color: #475569; font-family: monospace;">13800138000</td>
+                                        <td style="padding: 8px 12px; color: #475569;">支付宝 / CNY</td>
+                                        <td style="padding: 8px 12px; color: #475569;">王大锤</td>
+                                        <td style="padding: 8px 12px;"><span style="display: inline-block; padding: 2px 8px; border-radius: 4px; background-color: #fee2e2; color: #991b1b; font-size: 12px;">停用</span></td>
+                                        <td style="padding: 8px 12px;">
+                                            <div style="display: flex; gap: 8px; justify-content: center;">
+                                                <button type="button" style="background: transparent; border: none; color: #3b82f6; cursor: pointer; display: flex; align-items: center; gap: 4px;" title="编辑"><i class="ph ph-pencil-simple"></i></button>
+                                                <button type="button" style="background: transparent; border: none; color: #ef4444; cursor: pointer; display: flex; align-items: center; gap: 4px;" title="删除"><i class="ph ph-trash"></i></button>
+                                            </div>
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -1091,20 +1147,13 @@
                 });
 
                 // 下拉选单项目
-                // Trace 14, 20 (邮箱, Zalo, WhatsApp, Telegram)
-                const p14_dropdown = localStorage.getItem('perm-14') !== 'false';
-                const p20 = localStorage.getItem('perm-20') !== 'false';
-                const showContactInfo = p14_dropdown || p20;
-                const contactInfoItems = ['email', 'zalo', 'whatsapp', 'telegram'];
+                // Trace 20 (手机号, 邮箱, Zalo, WhatsApp, Telegram)
+                const showContactInfo = localStorage.getItem('perm-20') !== 'false';
+                const contactInfoItems = ['phone', 'email', 'zalo', 'whatsapp', 'telegram'];
                 contactInfoItems.forEach(value => {
                     const el = document.querySelector(`#accountTypeMenu li[data-value="${value}"]`);
                     if (el) el.style.display = showContactInfo ? '' : 'none';
                 });
-
-                // Trace 36 (手机号)
-                const showPhone = localStorage.getItem('perm-36') !== 'false';
-                const phoneEl = document.querySelector(`#accountTypeMenu li[data-value="phone"]`);
-                if (phoneEl) phoneEl.style.display = showPhone ? '' : 'none';
 
                 // Trace 37 (真实姓名)
                 const showRealName = localStorage.getItem('perm-37') !== 'false';
@@ -1112,10 +1161,8 @@
                 if (realNameEl) realNameEl.style.display = showRealName ? '' : 'none';
 
 
-                // Trace 31, 32 (谷歌验证码)
-                const p31 = localStorage.getItem('perm-31') !== 'false';
-                const p32 = localStorage.getItem('perm-32') !== 'false';
-                const showGoogleCode = p31 || p32;
+                // Trace 31 (谷歌验证码)
+                const showGoogleCode = localStorage.getItem('perm-31') !== 'false';
                 const googleCodeEl = document.querySelector(`#accountTypeMenu li[data-value="googleCode"]`);
                 if (googleCodeEl) googleCodeEl.style.display = showGoogleCode ? '' : 'none';
 
@@ -1134,6 +1181,13 @@
                         editFormPayLevel.style.cursor = '';
                         editFormPayLevel.style.opacity = '';
                     }
+                }
+                
+                // If the currently active dropdown option is hidden, reset to 'exact'
+                const activeAccountType = document.querySelector('#accountTypeMenu li.active');
+                if (activeAccountType && activeAccountType.style.display === 'none') {
+                    const exactItem = document.querySelector('#accountTypeMenu li[data-value="exact"]');
+                    if (exactItem) exactItem.click();
                 }
                 
                 // Trace 37 (Real Name form and details toggle)
@@ -1186,6 +1240,7 @@
                 }
                 
                 // Trace 20 (Contact Info Card toggle)
+                const p20 = localStorage.getItem('perm-20') !== 'false';
                 const detailsContactInfoCard = document.getElementById('detailsContactInfoCard');
                 if (detailsContactInfoCard) {
                     detailsContactInfoCard.style.display = p20 ? '' : 'none';
@@ -1215,6 +1270,17 @@
             });
         });
     </script>
+    <!-- Drawer for Note Details -->
+    <div class="note-drawer-overlay" id="noteDrawerOverlay"></div>
+    <div class="note-drawer" id="noteDrawer">
+        <div class="drawer-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 16px;">
+            <h3 id="noteDrawerTitle" style="margin: 0; font-size: 16px; color: #1e293b;">備註詳情</h3>
+            <button class="btn-close" id="closeNoteDrawer" style="background: transparent; border: none; font-size: 20px; cursor: pointer; color: #64748b;"><i class="ph ph-x"></i></button>
+        </div>
+        <div class="drawer-content" style="color: #475569; line-height: 1.6; font-size: 14px; white-space: pre-wrap; word-break: break-all;" id="noteDrawerContent">
+            <!-- Content injected here -->
+        </div>
+    </div>
 </body>
 
 </html>

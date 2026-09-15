@@ -138,3 +138,4 @@ if (tabEnd === -1) {
 let finalHtml = html.substring(0, tabStart) + newSettingsTab + html.substring(tabEnd);
 fs.writeFileSync('content.html', finalHtml);
 console.log('Settings Tab Restructured successfully');
+-0
