@@ -4199,6 +4199,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if(tableDataGroup) tableDataGroup.style.display = 'flex';
             if(emptyDataState) emptyDataState.style.display = 'none';
             if(bottomStatsBar) bottomStatsBar.style.display = 'flex';
+            
+            // 收起篩選列
+            const filterCard = document.querySelector('.filter-card');
+            if (filterCard) {
+                filterCard.classList.add('collapsed');
+            }
         });
     }
 });

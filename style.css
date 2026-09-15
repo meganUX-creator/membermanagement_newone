@@ -106,7 +106,8 @@ body {
 }
 
 .form-group:hover,
-.form-group:focus-within {
+.form-group:focus-within,
+.form-group:has(.show) {
     z-index: 100;
 }
 

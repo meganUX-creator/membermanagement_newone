@@ -64,14 +64,14 @@
                     <!-- Row 1 -->
                     <div class="form-group" data-filter-id="status">
                         <div class="custom-select-single" id="dropdownStatus">
-                            <div class="select-selected"><span class="selected-val">请选择状态</span><i class="ph ph-caret-down"></i></div>
-                            <ul class="select-options"><li data-value="" class="active">请选择状态</li><li data-value="正常">正常</li><li data-value="冻结">冻结</li><li data-value="停用">停用</li></ul>
+                            <div class="select-selected"><span class="selected-val">全部状态</span><i class="ph ph-caret-down"></i></div>
+                            <ul class="select-options"><li data-value="" class="active">全部状态</li><li data-value="正常">正常</li><li data-value="冻结">冻结</li><li data-value="停用">停用</li></ul>
                         </div>
                     </div>
                     <div class="form-group" data-filter-id="level">
                         <div class="custom-select-single" id="dropdownLevel">
-                            <div class="select-selected"><span class="selected-val">请选择用户层级</span><i class="ph ph-caret-down"></i></div>
-                            <ul class="select-options"><li data-value="" class="active">请选择用户层级</li><li data-value="普通会员">普通会员</li><li data-value="VIP会员">VIP会员</li><li data-value="黄金会员">黄金会员</li></ul>
+                            <div class="select-selected"><span class="selected-val">全部用户层级</span><i class="ph ph-caret-down"></i></div>
+                            <ul class="select-options"><li data-value="" class="active">全部用户层级</li><li data-value="普通会员">普通会员</li><li data-value="VIP会员">VIP会员</li><li data-value="黄金会员">黄金会员</li></ul>
                         </div>
                     </div>
                     <div class="form-group" data-filter-id="vip">
@@ -105,6 +105,24 @@
                                 <li data-value="10月">10月</li>
                                 <li data-value="11月">11月</li>
                                 <li data-value="12月">12月</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="form-group" data-filter-id="vipLevel">
+                        <div class="custom-select-single" id="dropdownVipLevelOuter">
+                            <div class="select-selected"><span class="selected-val">全部VIP等级</span><i class="ph ph-caret-down"></i></div>
+                            <ul class="select-options" style="max-height: 200px; overflow-y: auto;">
+                                <li data-value="" class="active">全部VIP等级</li>
+                                <li data-value="VIP 1">VIP 1</li>
+                                <li data-value="VIP 2">VIP 2</li>
+                                <li data-value="VIP 3">VIP 3</li>
+                                <li data-value="VIP 4">VIP 4</li>
+                                <li data-value="VIP 5">VIP 5</li>
+                                <li data-value="VIP 6">VIP 6</li>
+                                <li data-value="VIP 7">VIP 7</li>
+                                <li data-value="VIP 8">VIP 8</li>
+                                <li data-value="VIP 9">VIP 9</li>
+                                <li data-value="VIP 10">VIP 10</li>
                             </ul>
                         </div>
                     </div>
@@ -169,8 +187,8 @@
                     </div>
                     <div class="form-group" data-filter-id="bankCard">
                         <div class="input-with-inline-label" style="background: white; border: 1px solid #d0d5dd; border-radius: 8px; padding: 0 16px; display: flex; align-items: center; height: 32px;">
-                            <span class="inline-label" style="font-weight: 600; font-size: 13px; color: #4b5563; margin-right: 12px;">绑定银行卡：</span>
-                            <input type="text" id="inputBankCardOuter" aria-label="绑定银行卡" style="border: none; flex: 1; outline: none; background: transparent; font-size: 13px; color: #6b7280;">
+                            <span class="inline-label" style="font-weight: 600; font-size: 13px; color: #4b5563; margin-right: 12px;">绑定银行卡号：</span>
+                            <input type="text" id="inputBankCardOuter" aria-label="绑定银行卡号" style="border: none; flex: 1; outline: none; background: transparent; font-size: 13px; color: #6b7280;">
                         </div>
                     </div>
                     <div class="form-group" data-filter-id="loginIp">
@@ -466,7 +484,7 @@
                 <h4 class="section-title text-secondary"><i class="ph-fill ph-shield-check"></i> 交易与安全维度</h4>
                 <div class="form-row-2">
                     <div class="form-group">
-                        <label>绑定银行卡</label>
+                        <label>绑定银行卡号</label>
                         <input type="text" id="inputBankCard" value="" placeholder="银行卡号">
                     </div>
                     <div class="form-group">
@@ -543,7 +561,7 @@
                     </label>
                     <label class="checkbox-item">
                         <input type="checkbox" value="bankCard" checked>
-                        <span>绑定银行卡</span>
+                        <span>绑定银行卡号</span>
                     </label>
                     <label class="checkbox-item">
                         <input type="checkbox" value="notLoginDays" checked>
