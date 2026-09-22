@@ -1,49 +1,49 @@
-查看会员列表
-新增会员
-修改会员
-支付層級
-删除会员
-返点设定
-资金明细
-注单明细
-修改余额
-交易设定
-变更代理
-批量更新用户余额
-导出用户数据
-批量更新用户联系方式
-第三方游戏
-积分调整
-查看会员详情
-清除稽核记录
-代理变更历程
-查看会员联络资讯
-回访备注
-隐藏资金明细
-用户三方RTP配置
-批量更新用户状态
-快速登录变更
-新增银行卡
-会员信息审核
-编辑代理下会员可玩游戏
-修改银行卡
-删除银行卡
-会员谷歌验证码查看
-移除会员谷歌验证码
-用户钱包展示
-额度修改(链上充值)
-會員敏感資訊（密碼）
-會員敏感資訊（手機）
-會員敏感資訊（姓名）
-会员赔率设置-查看
-会员赔率设置-保存
-会员返水快捷设置
-会员设置最大赔付上限
-会员赔率设置-重置
-批量代理变更
-批量更新最大提款次数
-校验用户任务
-禁用銀行卡
-编辑标签
-标签编辑纪录
-查看会员在线充值提现统计
+- 查看会员列表 `TRACE_PERM_11FB`
+- 新增会员 `TRACE_PERM_6D00`
+- 修改会员 `TRACE_PERM_E884`
+- 支付层级 `TRACE_PERM_1EDA`
+- 删除会员 `TRACE_PERM_EB34`
+- 返点设定 `TRACE_PERM_F7C1`
+- 资金明细 `TRACE_PERM_9DB0`
+- 注单明细 `TRACE_PERM_0B6F`
+- 修改余额 `TRACE_PERM_2AD1`
+- 交易设定 `TRACE_PERM_E854`
+- 变更代理 `TRACE_PERM_068B`
+- 批量更新用户余额 `TRACE_PERM_E760`
+- 导出用户数据 `TRACE_PERM_9CB8`
+- 批量更新用户联系方式 `TRACE_PERM_F116`
+- 第三方游戏 `TRACE_PERM_76B4`
+- 积分调整 `TRACE_PERM_5546`
+- 查看会员详情 `TRACE_PERM_3FEA`
+- 清除稽核记录 `TRACE_PERM_F2E5`
+- 代理变更历程 `TRACE_PERM_37A5`
+- 查看会员联络资讯 `TRACE_PERM_2ACB`
+- 回访备注 `TRACE_PERM_DB05`
+- 隐藏资金明细 `TRACE_PERM_AA83`
+- 用户三方RTP配置 `TRACE_PERM_707E`
+- 批量更新用户状态 `TRACE_PERM_F0CC`
+- 快速登录变更 `TRACE_PERM_B03A`
+- 新增提现信息 `TRACE_PERM_BC8E`
+- 会员信息审核 `TRACE_PERM_3EB6`
+- 编辑代理下会员可玩游戏 `TRACE_PERM_A333`
+- 修改提现信息 `TRACE_PERM_342D`
+- 删除提现信息 `TRACE_PERM_90AE`
+- 会员谷歌验证码查看 `TRACE_PERM_537E`
+- 移除会员谷歌验证码 `TRACE_PERM_BB89`
+- 用户钱包展示 `TRACE_PERM_FBF8`
+- 额度修改(链上充值) `TRACE_PERM_E91D`
+- 会员敏感资讯（密码） `TRACE_PERM_16B6`
+- 会员敏感资讯（手机） `TRACE_PERM_5A2F`
+- 会员敏感资讯（姓名） `TRACE_PERM_B9EA`
+- 会员赔率设置-查看 `TRACE_PERM_8E99`
+- 会员赔率设置-保存 `TRACE_PERM_C694`
+- 会员返水快捷设置 `TRACE_PERM_8E6F`
+- 会员设置最大赔付上限 `TRACE_PERM_0919`
+- 会员赔率设置-重置 `TRACE_PERM_25AC`
+- 批量代理变更 `TRACE_PERM_2882`
+- 批量更新最大提款次数 `TRACE_PERM_9203`
+- 校验用户任务 `TRACE_PERM_8D00`
+- 禁用提现信息 `TRACE_PERM_3A5E`
+- 编辑标签 `TRACE_PERM_4F3B`
+- 标签编辑纪录 `TRACE_PERM_25E8`
+- 查看会员在线充值提现统计 `TRACE_PERM_E597`
