@@ -137,12 +137,12 @@
                         <div class="custom-select-multi" id="dropdownOther">
                             <div class="select-selected">
                                 <span class="inline-label">排除条件：</span>
-                                <span class="selected-val">测试帐号</span>
+                                <span class="selected-val">测试账号</span>
                                 <i class="ph ph-caret-down"></i>
                             </div>
                             <ul class="select-options">
-                                <li data-value="测试帐号" class="selected"><input type="checkbox" checked>
-                                    <span>测试帐号</span>
+                                <li data-value="测试账号" class="selected"><input type="checkbox" checked>
+                                    <span>测试账号</span>
                                 </li>
                                 <li data-value="未充值玩家"><input type="checkbox"> <span>未充值玩家</span></li>
                             </ul>
@@ -231,13 +231,13 @@
                     <div class="account-input-group">
                         <div class="account-type-dropdown" id="accountTypeDropdown">
                             <div class="dropdown-selected" id="accountTypeSelected">
-                                <span id="accountTypeText">帐号 (精确匹配)</span> <i class="ph ph-caret-down"></i>
+                                <span id="accountTypeText">账号 (精确匹配)</span> <i class="ph ph-caret-down"></i>
                             </div>
                             <ul class="dropdown-menu" id="accountTypeMenu" style="max-height: 250px; overflow-y: auto;">
-                                <li data-value="exact" class="active"><span>帐号 (精确匹配)</span></li>
-                                <li data-value="fuzzy"><span>帐号 (模糊匹配)</span></li>
-                                <li data-value="multi"><span>帐号 (多帐号筛选)</span></li>
-                                <li data-value="quickLogin"><span>快速登录帐号</span></li>
+                                <li data-value="exact" class="active"><span>账号 (精确匹配)</span></li>
+                                <li data-value="fuzzy"><span>账号 (模糊匹配)</span></li>
+                                <li data-value="multi"><span>账号 (多账号筛选)</span></li>
+                                <li data-value="quickLogin"><span>快速登录账号</span></li>
                                 <li data-value="uid"><span>用户ID</span></li>
                                 <li data-value="inviteCode"><span>邀请码</span></li>
                                 <li data-value="nickname"><span>用户昵称</span></li>
@@ -251,7 +251,7 @@
                                 <li data-value="googleCode"><span>谷歌验证码</span></li>
                             </ul>
                         </div>
-                        <input type="text" id="inputAccount" placeholder="请输入精确帐号">
+                        <input type="text" id="inputAccount" placeholder="请输入精确账号">
                     </div>
                     <button class="btn btn-outline" id="openAdvancedFilter" style="display: none;">
                         <i class="ph ph-sliders-horizontal"></i> 进阶筛选条件 <span class="badge" id="advancedBadge">0</span>
@@ -351,7 +351,7 @@
                 </div>
             </div>
             <div class="bottom-stats-right">
-                <span class="stats-exclude-badge">数据已排除测试帐号</span>
+                <span class="stats-exclude-badge">数据已排除测试账号</span>
             </div>
         </div>
     </main>
@@ -458,7 +458,7 @@
                 <div class="checkbox-list">
                     <label class="checkbox-item">
                         <input type="checkbox" value="status" checked>
-                        <span>帐号状态 (原类型分类)</span>
+                        <span>账号状态 (原类型分类)</span>
                     </label>
                     <label class="checkbox-item">
                         <input type="checkbox" value="level" checked>
@@ -548,26 +548,26 @@
             <!-- ===== Tab 1: 基本信息 ===== -->
             <div class="tab-content-panel active" id="tabContentBasic">
 
-                <!-- 帐户概况卡片 -->
+                <!-- 账户概况卡片 -->
                 <div class="ued-card">
                     <div class="ued-card-title">
                         <i class="ph-fill ph-user-circle" style="color:#6366f1;"></i>
-                        帐户概况
-                        <span class="ued-card-subtitle">帐号・状态・会员类型・等级</span>
+                        账户概况
+                        <span class="ued-card-subtitle">账号・状态・会员类型・等级</span>
                     </div>
                     <div class="ued-form-grid">
-                        <!-- 帐号 (全宽) -->
+                        <!-- 账号 (全宽) -->
                         <div class="ued-form-field ued-field-full">
-                            <label class="ued-label">帐号</label>
+                            <label class="ued-label">账号</label>
                             <input type="text" class="ued-input" id="editFormAccount" readonly value="test_user_1">
                         </div>
-                        <!-- 会员类型 + 帐户状态 -->
+                        <!-- 会员类型 + 账户状态 -->
                         <div class="ued-form-field">
                             <label class="ued-label">会员类型</label>
                             <input type="text" class="ued-input" id="editFormMemberType" readonly value="代理会员">
                         </div>
                         <div class="ued-form-field">
-                            <label class="ued-label">帐户状态</label>
+                            <label class="ued-label">账户状态</label>
                             <div class="ued-status-radio-group" id="ued-status-radio">
                                 <label class="ued-radio-btn" data-val="正常">
                                     <input type="radio" name="editStatus" value="正常"> 正常
@@ -697,7 +697,7 @@
                             <thead>
                                 <tr>
                                     <th>出款类型</th>
-                                    <th>卡号 / 钱包 / 支付宝帐号</th>
+                                    <th>卡号 / 钱包 / 支付宝账号</th>
                                     <th>银行 / 币种</th>
                                     <th>银行地址 / 备注</th>
                                     <th>操作</th>
@@ -922,7 +922,7 @@
                             <div class="ued-readonly-text">mi***01</div>
                         </div>
                         <div class="ued-form-field">
-                            <label class="ued-label">帐号</label>
+                            <label class="ued-label">账号</label>
                             <div class="ued-readonly-text">mingv0717001</div>
                         </div>
                         <div class="ued-form-field">
@@ -1040,7 +1040,7 @@
                         <thead>
                             <tr>
                                 <th>出款类型</th>
-                                <th>卡号/钱包/支付宝帐号</th>
+                                <th>卡号/钱包/支付宝账号</th>
                                 <th>银行/币种</th>
                                 <th>银行地址/备注</th>
                                 <th>状态</th>

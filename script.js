@@ -78,11 +78,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Change placeholder and clear value
                 if (inputAccount) {
                     if (value === 'exact') {
-                        inputAccount.placeholder = '请输入精确帐号';
+                        inputAccount.placeholder = '请输入精确账号';
                     } else if (value === 'fuzzy') {
-                        inputAccount.placeholder = '请输入模糊帐号关键字';
+                        inputAccount.placeholder = '请输入模糊账号关键字';
                     } else if (value === 'multi') {
-                        inputAccount.placeholder = "帐号以';'隔开，上限限制 50 个帐号";
+                        inputAccount.placeholder = "账号以';'隔开，上限限制 50 个账号";
                     } else {
                         inputAccount.placeholder = `请输入${selectedText}`;
                     }
@@ -412,7 +412,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const options = Array.from(el.querySelectorAll('li')).filter(li => li.getAttribute('data-value') !== '');
                     if (options.length > 0) {
                         if (id === 'accountTypeDropdown') {
-                            options[0].click(); // Select the first option for account type (帐号精确匹配)
+                            options[0].click(); // Select the first option for account type (账号精确匹配)
                         } else {
                             options[options.length - 1].click();
                         }
@@ -568,6 +568,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Data State Rendering Helper ---
     function renderDataState(val, type = 'text') {
         if (window.dataMode === 'nodata' || val === '-' || val === null || val === undefined || val === '' || val === '无数据') {
+            if (type === 'na') {
+                return `<span class="data-na">N/A</span>`;
+            }
             return `<span class="data-empty">-</span>`;
         }
         if (type === 'phone') {
@@ -610,10 +613,11 @@ document.addEventListener('DOMContentLoaded', () => {
         return val;
     }
 
+
     let compactColumnsConfig = [
         { id: 'online', group: '状态', label: '在线', checkboxIndex: 1, render: (user) => `<td data-col="online" style="text-align: center;">${dataMode === 'nodata' ? '-' : `<span class="status-dot-icon ${user.offlineDays === 0 ? 'online' : 'offline'}" title="${user.offlineDays === 0 ? '在线' : '离线'}"></span>`}</td>` },
         { id: 'uid', group: '基本', label: '用户ID', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="uid">${dataMode === 'nodata' ? '-' : renderDataState(user.uid, 'copyable')}</td>` },
-        { id: 'account', group: '基本', label: '会员名', checkboxIndex: 3, render: (user) => `<td data-col="account"><a href="#" class="cell-username user-detail-link" data-uid="${user.uid}">${renderDataState(user.account, 'copyable')}</a></td>` },
+        { id: 'account', group: '基本', label: '会员名', checkboxIndex: 3, render: (user) => `<td data-col="account"><a href="#" class="cell-username user-detail-link" data-uid="${user.uid}">${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : renderDataState(user.account, 'copyable')}</a></td>` },
         { id: 'agentId', group: '基本', label: '代理', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="agentId">${renderDataState(user.agentId)}</td>` },
         { id: 'status', group: '状态', label: '状态', checkboxIndex: 1, render: (user) => `<td data-col="status"><span class="user-custom-tag ${user.status === '正常' ? 'tag-green' : user.status === '冻结' ? 'tag-blue' : 'tag-red'}">${user.status}</span></td>` },
         { id: 'vipLevel', group: '等级', label: 'VIP等级', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="vipLevel">${user.vipLevel || 'VIP ' + (user.vipLevel || 1)}</td>` },
@@ -783,7 +787,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 account: newAccount,
                 tags: window.dataMode === 'nodata' ? [] : dynamicTags,
                 offlineDays: window.dataMode === 'nodata' ? '-' : (user.offlineDays + i) % 15,
-                other: window.dataMode === 'nodata' ? '-' : (index % 2 === 0 ? "未充值玩家" : "测试帐号"),
+                other: window.dataMode === 'nodata' ? '-' : (index % 2 === 0 ? "未充值玩家" : "测试账号"),
                 vip: window.dataMode === 'nodata' ? '-' : (index % 3 === 0 ? "钻石会员" : index % 3 === 1 ? "黄金会员" : "白银会员"),
                 level: window.dataMode === 'nodata' ? '-' : (index % 3 === 0 ? "VIP会员" : index % 3 === 1 ? "黄金会员" : "普通会员")
             });
@@ -857,10 +861,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         // 5. Account
         if (inputAccount && inputAccount.value.trim()) {
-            let labelPrefix = '帐号';
-            if (currentAccountType === 'exact') labelPrefix = '帐号(精确)';
-            if (currentAccountType === 'fuzzy') labelPrefix = '帐号(模糊)';
-            if (currentAccountType === 'multi') labelPrefix = '帐号(多笔)';
+            let labelPrefix = '账号';
+            if (currentAccountType === 'exact') labelPrefix = '账号(精确)';
+            if (currentAccountType === 'fuzzy') labelPrefix = '账号(模糊)';
+            if (currentAccountType === 'multi') labelPrefix = '账号(多笔)';
 
             tags.push({ key: 'account', label: `${labelPrefix}: ${inputAccount.value.trim()}`, type: 'input', element: inputAccount });
         }
@@ -1342,9 +1346,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Pinned headers
                 pinned.forEach(col => {
                     const isMoney = ['availableCredit', 'thirdBal', 'deposit', 'withdraw'].includes(col.id);
-                    const justifyAttr = isMoney ? 'flex-end' : 'space-between';
+                    const justifyAttr = 'space-between';
                     headerHtml += `<th class="header-sub sticky-col" style="left:${currentLeft}px; min-width:110px; z-index:12;" data-col="${col.id}">
-                        <div style="display:flex;align-items:center;white-space:nowrap;justify-content:${justifyAttr};${isMoney ? ' gap: 4px;' : ''}">
+                        <div style="display:flex;align-items:center;white-space:nowrap;justify-content:${justifyAttr};">
                             <div style="display:flex;align-items:center;">
                                 <span>${col.label}</span>
                             </div>
@@ -1384,9 +1388,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const unpinnedWithoutAction = unpinned.filter(col => col.id !== 'action');
                 unpinnedWithoutAction.forEach(col => {
                     const isMoney = ['availableCredit', 'thirdBal', 'deposit', 'withdraw'].includes(col.id);
-                    const justifyAttr = isMoney ? 'flex-end' : 'space-between';
+                    const justifyAttr = 'space-between';
                     headerHtml += `<th class="header-sub" data-col="${col.id}">
-                        <div style="display:flex;align-items:center;white-space:nowrap;justify-content:${justifyAttr};${isMoney ? ' gap: 4px;' : ''}">
+                        <div style="display:flex;align-items:center;white-space:nowrap;justify-content:${justifyAttr};">
                             <div style="display:flex;align-items:center;">
                                 <span>${col.label}</span>
                             </div>
@@ -1504,7 +1508,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         } else if (col.id === 'memberInfo') {
                             nestedRowHtml += `<td class="nested-cell-info ${stickyClass}">
                             <div><span class="info-label">用户ID :</span> ${dataMode === 'nodata' ? '-' : renderDataState(user.uid, 'copyable')}</div>
-                            <div><span class="info-label">会员名 :</span> <a href="#" class="user-detail-link" data-uid="${user.uid}">${renderDataState(user.account, 'copyable')}</a></div>
+                            <div><span class="info-label">会员名 :</span> <a href="#" class="user-detail-link" data-uid="${user.uid}">${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : renderDataState(user.account, 'copyable')}</a></div>
                             <div><span class="info-label">真实姓名 :</span> ${renderDataState(user.realName)}</div>
                             <div><span class="info-label">用户暱称 :</span> ${renderDataState(user.nickname)}</div>
                             <div><span class="info-label">代理 :</span> ${renderDataState(user.agentId)}</div>
@@ -1517,7 +1521,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div><span class="info-label">支付层级 :</span> ${user.payLevel || '默认层'}</div>
                             <div><span class="info-label">成长值 :</span> ${user.growth || 0}</div>
                             <div><span class="info-label">等级 :</span> <strong class="${user.level === '黄金会员' ? 'level-gold' : ''}">${user.level}</strong></div>
-                            <div><span class="info-label">帐号类型 :</span> ${user.accountType || '普通帐号'}</div>
+                            <div><span class="info-label">账号类型 :</span> ${user.accountType || '普通账号'}</div>
                             <div><span class="info-label">会员类型 :</span> ${user.userType || '代理会员'}</div>
                             <div><span class="info-label">邀请码 :</span> ${user.inviteCode || '-'}</div>
                             <div><span class="info-label">直属下级/团队人数 :</span> <a href="#" class="subordinate-link" style="color: var(--primary-color); text-decoration: underline;" data-uid="${user.uid}">${user.directTeam || '0/0'}</a></div>
@@ -1575,8 +1579,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         </td>`;
                         } else if (col.id === 'remark') {
                             nestedRowHtml += `<td class="nested-cell-info ${stickyClass}">
-                            <div><span class="info-label">备注 :</span> ${renderDataState(user.remark, 'longText')}</div>
-                            <div><span class="info-label">回访备注 :</span> ${renderDataState(user.followRemark, 'longText')}</div>
+                            <div><span class="info-label">备注 :</span> ${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : renderDataState(user.remark, 'longText')}</div>
+                            <div><span class="info-label">回访备注 :</span> ${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : renderDataState(user.followRemark, 'longText')}</div>
                             <div><span class="info-label">注 :</span> ${renderDataState(user.note, 'longText')}</div>
                         </td>`;
                         }
@@ -1679,7 +1683,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <div class="detail-card-body grid-2-col">
                                     <div class="ds-field" data-ds-id="ds_realname" style="display:${dataSourceFieldVisibility['ds_realname'] !== false ? '' : 'none'}"><span class="lbl">真实姓名</span> <span class="val">${user.realName}</span></div>
                                     <div class="ds-field" data-ds-id="ds_birthday" style="display:${dataSourceFieldVisibility['ds_birthday'] !== false ? '' : 'none'}"><span class="lbl">生日</span> <span class="val">${dataMode === 'nodata' ? '-' : '1991-02-11'}</span></div>
-                                    <div class="ds-field" data-ds-id="ds_accountType" style="display:${dataSourceFieldVisibility['ds_accountType'] !== false ? '' : 'none'}"><span class="lbl">帐号类型</span> <span class="val">${user.userType || '代理会员'}</span></div>
+                                    <div class="ds-field" data-ds-id="ds_accountType" style="display:${dataSourceFieldVisibility['ds_accountType'] !== false ? '' : 'none'}"><span class="lbl">账号类型</span> <span class="val">${user.userType || '代理会员'}</span></div>
                                     <div class="ds-field" data-ds-id="ds_memberType" style="display:${dataSourceFieldVisibility['ds_memberType'] !== false ? '' : 'none'}"><span class="lbl">会员类型</span> <span class="val">${user.payLevel || '默认层'}</span></div>
                                     <div class="ds-field" data-ds-id="ds_level" style="display:${dataSourceFieldVisibility['ds_level'] !== false ? '' : 'none'}"><span class="lbl">等级</span> <span class="val">${dataMode === 'nodata' ? '-' : (user.vipLevel ? 'VIP ' + user.vipLevel : 'VIP 1')}</span></div>
                                     <div class="ds-field" data-ds-id="ds_regMode" style="display:${dataSourceFieldVisibility['ds_regMode'] !== false ? '' : 'none'}"><span class="lbl">注册模式</span> <span class="val">${user.registerMode || '一般注册'}</span></div>
@@ -1747,8 +1751,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="detail-card" data-category="其他" style="display: ${drawerCategoryVisibility['其他'] !== false ? 'block' : 'none'}; border: none; box-shadow: none; background: transparent; padding: 0;">
                             <div style="width:100%; border-bottom: 1px dashed #e2e8f0; margin: 16px 0;"></div>
                             <div style="width:100%; display:flex; gap:32px; margin-bottom: 8px; padding: 0 40px;">
-                                <div style="display:flex; gap:8px;"><span style="color:#64748b;">备注</span> <span title="${user.remark || ''}">${user.remark ? (user.remark.length > 20 ? user.remark.substring(0, 20) + '...' : user.remark) : '-'}</span></div>
-                                <div style="display:flex; gap:8px;"><span style="color:#64748b;">回访备注</span> <span title="${user.followRemark || ''}">${user.followRemark ? (user.followRemark.length > 20 ? user.followRemark.substring(0, 20) + '...' : user.followRemark) : '-'}</span></div>
+                                <div style="display:flex; gap:8px;"><span style="color:#64748b;">备注</span> ${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : `<span title="${user.remark || ''}">${user.remark ? (user.remark.length > 20 ? user.remark.substring(0, 20) + '...' : user.remark) : '-'}</span>`}</div>
+                                <div style="display:flex; gap:8px;"><span style="color:#64748b;">回访备注</span> ${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : `<span title="${user.followRemark || ''}">${user.followRemark ? (user.followRemark.length > 20 ? user.followRemark.substring(0, 20) + '...' : user.followRemark) : '-'}</span>`}</div>
                             </div>
                         </div>
                     </td>
@@ -3061,7 +3065,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let availableDataSource = [
         { id: 'ds_realname', label: '真实姓名', category: '基本资料' },
         { id: 'ds_birthday', label: '生日', category: '基本资料' },
-        { id: 'ds_accountType', label: '帐号类型', category: '基本资料' },
+        { id: 'ds_accountType', label: '账号类型', category: '基本资料' },
         { id: 'ds_memberType', label: '会员类型', category: '基本资料' },
         { id: 'ds_level', label: '等级', category: '基本资料' },
         { id: 'ds_regMode', label: '注册模式', category: '基本资料' },
