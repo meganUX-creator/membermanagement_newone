@@ -597,8 +597,13 @@ input[type="checkbox"] {
     transition: right 0.3s ease;
 }
 
+#columnsDrawer {
+    width: 320px;
+    right: -320px;
+}
+
 .advanced-filter-drawer.active {
-    right: 0;
+    right: 0 !important;
 }
 
 .drawer-header {
@@ -2330,6 +2335,7 @@ body.hide-contact-info #viewContactCard {
 .compact-mode-table .cell-val {
     font-family: inherit;
     font-weight: 500;
+    line-height: 1.8;
 }
 
 .compact-mode-table .cell-money {
@@ -2358,6 +2364,7 @@ body.hide-contact-info #viewContactCard {
     color: #2563eb;
     font-weight: 600;
     cursor: pointer;
+    line-height: 1.8;
 }
 
 .compact-mode-table .cell-username:hover {
@@ -3945,6 +3952,7 @@ td {
     display: inline-flex;
     align-items: center;
     cursor: pointer;
+    line-height: 1.8;
 }
 
 .copyable-text .copy-icon {
@@ -4096,6 +4104,7 @@ td {
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     overflow: hidden;
     margin-bottom: 16px;
+    min-width: 280px;
 }
 
 .detail-card-header {
@@ -4118,6 +4127,19 @@ td {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 12px;
+    column-gap: 24px;
+    position: relative;
+}
+
+.grid-2-col::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+    background-color: #eaecf0;
+    transform: translateX(-50%);
 }
 
 .grid-2-col>div {
@@ -4575,7 +4597,10 @@ body.has-nested-open .user-edit-drawer {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 16px 24px;
+    position: relative;
 }
+
+
 .ued-card-title {
     display: flex;
     align-items: center;
@@ -5147,4 +5172,9 @@ input.ued-input-sm {
     font-weight: bold;
     /* Maintain the translate for the checked state */
     transform: translateX(18px);
+}.ds-field .val {
+    word-break: break-all;
+    overflow-wrap: break-word;
+    white-space: normal;
+    text-align: right;
 }

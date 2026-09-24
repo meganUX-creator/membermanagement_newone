@@ -1,6 +1,101 @@
 document.addEventListener('DOMContentLoaded', () => {
-    let drawerCategoryVisibility = { '信贷': false };
+    let tableFieldVisibility = {};
+window.toggleTableFieldVisibility = function(id, isVisible) {
+    tableFieldVisibility[id] = isVisible;
+    renderDrawerStates();
+            window.applyDrawerOrderToTable();
+        };
+let drawerCategoryOrder = ['基本资料', '资金与存取款', '成长与积分', '推荐关系', '余额宝', '用户标签', '信贷', '其他'];
+let drawerCategoryVisibility = { '信贷': false };
     
+    window.moveCategoryUp = function(cat) {
+        const idx = drawerCategoryOrder.indexOf(cat);
+        if (idx > 0) {
+            const temp = drawerCategoryOrder[idx - 1];
+            drawerCategoryOrder[idx - 1] = drawerCategoryOrder[idx];
+            drawerCategoryOrder[idx] = temp;
+            renderDrawerStates();
+            window.applyDrawerOrderToTable();
+        }
+    };
+
+    window.moveCategoryDown = function(cat) {
+        const idx = drawerCategoryOrder.indexOf(cat);
+        if (idx > -1 && idx < drawerCategoryOrder.length - 1) {
+            const temp = drawerCategoryOrder[idx + 1];
+            drawerCategoryOrder[idx + 1] = drawerCategoryOrder[idx];
+            drawerCategoryOrder[idx] = temp;
+            renderDrawerStates();
+            window.applyDrawerOrderToTable();
+        }
+    };
+
+    window.applyDrawerOrderToTable = function() {
+        document.querySelectorAll('.expanded-detail-row').forEach(row => {
+            const wrapper = row.querySelector('.detail-cards-wrapper');
+            if (wrapper) {
+                const cards = Array.from(wrapper.querySelectorAll('.detail-card[data-category]'));
+                cards.sort((a, b) => {
+                    const catA = a.getAttribute('data-category');
+                    const catB = b.getAttribute('data-category');
+                    let idxA = drawerCategoryOrder.indexOf(catA);
+                    let idxB = drawerCategoryOrder.indexOf(catB);
+                    if (idxA === -1) idxA = 999;
+                    if (idxB === -1) idxB = 999;
+                    return idxA - idxB;
+                });
+                cards.forEach(card => wrapper.appendChild(card));
+
+                const activeLists = typeof getActiveLists === 'function' ? getActiveLists() : { frozen: [], scroll: [] };
+
+                cards.forEach(card => {
+                    const cat = card.getAttribute('data-category');
+                    if (card.classList.contains('ds-field')) {
+                        const dsId = card.getAttribute('data-ds-id');
+                        const isCol1 = activeLists.frozen.some(c => c.id === dsId) || activeLists.scroll.some(c => c.id === dsId);
+                        const isVisible = dataSourceFieldVisibility[dsId] !== false && !isCol1 && drawerCategoryVisibility[cat] !== false;
+                        card.style.display = isVisible ? '' : 'none'; 
+                    } else {
+                        const body = card.querySelector('.detail-card-body');
+                        if (body) {
+                            const fields = Array.from(body.querySelectorAll('.ds-field[data-ds-id]'));
+                            fields.sort((a, b) => {
+                                const idA = a.getAttribute('data-ds-id');
+                                const idB = b.getAttribute('data-ds-id');
+                                let idxA = availableDataSource.findIndex(c => c.id === idA);
+                                let idxB = availableDataSource.findIndex(c => c.id === idB);
+                                if (idxA === -1) idxA = 999;
+                                if (idxB === -1) idxB = 999;
+                                return idxA - idxB;
+                            });
+                            
+                            let hasVisibleField = false;
+                            fields.forEach(f => {
+                                body.appendChild(f);
+                                const dsId = f.getAttribute('data-ds-id');
+                                const isCol1 = activeLists.frozen.some(c => c.id === dsId) || activeLists.scroll.some(c => c.id === dsId);
+                                const isVisible = dataSourceFieldVisibility[dsId] !== false && !isCol1;
+                                
+                                if (isVisible) {
+                                    f.style.display = f.style.gap ? 'flex' : '';
+                                    hasVisibleField = true;
+                                } else {
+                                    f.style.display = 'none';
+                                }
+                            });
+
+                            if (drawerCategoryVisibility[cat] === false || !hasVisibleField) {
+                                card.style.display = 'none';
+                            } else {
+                                card.style.display = 'block';
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    };
+
     window.toggleCategoryVisibility = function(cat) {
         if (drawerCategoryVisibility[cat] === undefined) {
             drawerCategoryVisibility[cat] = false;
@@ -19,6 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Re-render drawer to update eye icon
         if (typeof renderDrawerStates === 'function') {
             renderDrawerStates();
+            window.applyDrawerOrderToTable();
         }
     };
     
@@ -518,6 +614,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
     if (overlay) overlay.addEventListener('click', closeDrawer);
     document.getElementById('btnColumnsDrawerClose')?.addEventListener('click', closeDrawer);
+    document.getElementById('btnColumnsDrawerCloseX')?.addEventListener('click', closeDrawer);
+
+    document.addEventListener('click', (e) => {
+        const columnsDrawer = document.getElementById('columnsDrawer');
+        if (columnsDrawer && columnsDrawer.classList.contains('active')) {
+            if (!columnsDrawer.contains(e.target) && !e.target.closest('.btn-header-columns-toggle')) {
+                columnsDrawer.classList.remove('active');
+            }
+        }
+    });
 
     // Table Mode & Pagination States
     let currentTableMode = 'nested'; // 'nested' or 'compact'
@@ -607,7 +713,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return `<span class="copyable-text" onclick="alert('已复制：' + '${val}')" title="点击复制">${val}<i class="ph-bold ph-copy copy-icon"></i></span>`;
         }
         if (type === 'ip') {
-            return `<a href="#" class="ip-link" data-ip="${val}" style="color: var(--primary-color); text-decoration: none;">${val}</a> <i class="ph ph-copy copy-ip-btn" data-ip="${val}" style="cursor: pointer; color: var(--text-muted);" title="复制IP"></i>`;
+            return `<a href="#" class="ip-link" data-ip="${val}" style="color: var(--primary-color); text-decoration: none;">${val}</a> <i class="ph ph-copy copy-ip-btn" data-ip="${val}" style="cursor: pointer; color: var(--text-muted);" title="复制IP"></i> <i class="ph ph-link ip-link-icon" data-ip="${val}" style="cursor: pointer; color: #3b82f6; margin-left: 4px;" title="前往IP统计页面"></i>`;
         }
 
         return val;
@@ -1036,7 +1142,6 @@ document.addEventListener('DOMContentLoaded', () => {
             clearAllBtn.className = 'btn btn-icon btn-sm btn-clear-all-tags';
             clearAllBtn.title = '清除所有标签';
             clearAllBtn.innerHTML = '<i class="ph ph-trash"></i>';
-            clearAllBtn.style.marginLeft = 'auto';
             clearAllBtn.style.color = '#ef4444';
             clearAllBtn.style.border = 'none';
             clearAllBtn.style.background = 'transparent';
@@ -1509,8 +1614,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             nestedRowHtml += `<td class="nested-cell-info ${stickyClass}">
                             <div><span class="info-label">用户ID :</span> ${dataMode === 'nodata' ? '-' : renderDataState(user.uid, 'copyable')}</div>
                             <div><span class="info-label">会员名 :</span> <a href="#" class="user-detail-link" data-uid="${user.uid}">${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : renderDataState(user.account, 'copyable')}</a></div>
-                            <div><span class="info-label">真实姓名 :</span> ${renderDataState(user.realName)}</div>
-                            <div><span class="info-label">用户暱称 :</span> ${renderDataState(user.nickname)}</div>
+                            <div><span class="info-label">真实姓名 :</span> ${renderDataState(user.realName, 'na')}</div>
+                            <div><span class="info-label">用户暱称 :</span> ${renderDataState(user.nickname, 'na')}</div>
                             <div><span class="info-label">代理 :</span> ${renderDataState(user.agentId)}</div>
                             <div><span class="info-label">邀请人 :</span> ${renderDataState(user.inviter)}</div>
                             <div><span class="info-label">注册模式 :</span> ${user.registerMode || '一般注册'}</div>
@@ -1678,21 +1783,21 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <div style="width:60px; height:60px; background:#6366f1; color:white; border-radius:8px; display:flex; justify-content:center; align-items:center; font-size:24px; font-weight:bold;">${user.account.charAt(0).toUpperCase()}</div>
                             </div>
                             <!-- 基本资料 -->
-                            <div class="detail-card" data-category="基本资料" style="flex: 0 0 auto; width: max-content; display: ${drawerCategoryVisibility['基本资料'] !== false ? 'block' : 'none'};">
+                            <div class="detail-card" data-category="基本资料" style="flex: 0 0 auto; width: 510px; display: ${drawerCategoryVisibility['基本资料'] !== false ? 'block' : 'none'};">
                                 <div class="detail-card-header"><i class="ph ph-user"></i> 基本资料</div>
                                 <div class="detail-card-body grid-2-col">
-                                    <div class="ds-field" data-ds-id="ds_realname" style="display:${dataSourceFieldVisibility['ds_realname'] !== false ? '' : 'none'}"><span class="lbl">真实姓名</span> <span class="val">${user.realName}</span></div>
+                                    <div class="ds-field" data-ds-id="ds_realname" style="display:${dataSourceFieldVisibility['ds_realname'] !== false ? '' : 'none'}"><span class="lbl">真实姓名</span> <span class="val" title="${dataMode === 'nodata' ? '' : user.realName}">${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : (user.realName && user.realName.length > 15 ? user.realName.substring(0, 15) + '...' : user.realName)}</span></div>
                                     <div class="ds-field" data-ds-id="ds_birthday" style="display:${dataSourceFieldVisibility['ds_birthday'] !== false ? '' : 'none'}"><span class="lbl">生日</span> <span class="val">${dataMode === 'nodata' ? '-' : '1991-02-11'}</span></div>
                                     <div class="ds-field" data-ds-id="ds_accountType" style="display:${dataSourceFieldVisibility['ds_accountType'] !== false ? '' : 'none'}"><span class="lbl">账号类型</span> <span class="val">${user.userType || '代理会员'}</span></div>
                                     <div class="ds-field" data-ds-id="ds_memberType" style="display:${dataSourceFieldVisibility['ds_memberType'] !== false ? '' : 'none'}"><span class="lbl">会员类型</span> <span class="val">${user.payLevel || '默认层'}</span></div>
                                     <div class="ds-field" data-ds-id="ds_level" style="display:${dataSourceFieldVisibility['ds_level'] !== false ? '' : 'none'}"><span class="lbl">等级</span> <span class="val">${dataMode === 'nodata' ? '-' : (user.vipLevel ? 'VIP ' + user.vipLevel : 'VIP 1')}</span></div>
                                     <div class="ds-field" data-ds-id="ds_regMode" style="display:${dataSourceFieldVisibility['ds_regMode'] !== false ? '' : 'none'}"><span class="lbl">注册模式</span> <span class="val">${user.registerMode || '一般注册'}</span></div>
-                                    <div class="ds-field" data-ds-id="ds_nickname" style="display:${dataSourceFieldVisibility['ds_nickname'] !== false ? '' : 'none'}"><span class="lbl">昵称</span> <span class="val">${user.nickname || '-'}</span></div>
+                                    <div class="ds-field" data-ds-id="ds_nickname" style="display:${dataSourceFieldVisibility['ds_nickname'] !== false ? '' : 'none'}"><span class="lbl">昵称</span> <span class="val" style="line-height: 1.8; padding: 2px 0;">${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : (user.nickname || '-')}</span></div>
                                     <div class="ds-field" data-ds-id="ds_phone" style="display:${dataSourceFieldVisibility['ds_phone'] !== false ? '' : 'none'}"><span class="lbl">手机号</span> <span class="val">${dataMode === 'nodata' ? '-' : renderDataState(user.phone, 'phone')}</span></div>
                                 </div>
                             </div>
                             <!-- 资金与存取款 -->
-                            <div class="detail-card" data-category="资金与存取款" style="flex: 0 0 auto; width: max-content; display: ${drawerCategoryVisibility['资金与存取款'] !== false ? 'block' : 'none'};">
+                            <div class="detail-card" data-category="资金与存取款" style="flex: 0 0 auto; width: 510px; display: ${drawerCategoryVisibility['资金与存取款'] !== false ? 'block' : 'none'};">
                                 <div class="detail-card-header"><i class="ph ph-coins"></i> 资金与存取款</div>
                                 <div class="detail-card-body grid-2-col">
                                     <div class="ds-field" data-ds-id="ds_depTotal" style="display:${dataSourceFieldVisibility['ds_depTotal'] !== false ? '' : 'none'}"><span class="lbl">存款总额</span> <span class="val text-blue">${formatAmount(user.deposit)}</span></div>
@@ -1705,7 +1810,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </div>
                             </div>
                             <!-- 成长与积分 -->
-                            <div class="detail-card" data-category="成长与积分" style="flex: 0 0 auto; width: max-content; display: ${drawerCategoryVisibility['成长与积分'] !== false ? 'block' : 'none'};">
+                            <div class="detail-card" data-category="成长与积分" style="flex: 0 0 auto; width: 240px; display: ${drawerCategoryVisibility['成长与积分'] !== false ? 'block' : 'none'};">
                                 <div class="detail-card-header"><i class="ph ph-trend-up"></i> 成长与积分</div>
                                 <div class="detail-card-body flex-list-col">
                                     <div class="ds-field" data-ds-id="ds_growth" style="display:${dataSourceFieldVisibility['ds_growth'] !== false ? '' : 'none'}"><span class="lbl">成长值</span> <span class="val">${user.growth || '0'}</span></div>
@@ -1714,17 +1819,17 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </div>
                             </div>
                             <!-- 推荐关系 -->
-                            <div class="detail-card" data-category="推荐关系" style="flex: 0 0 auto; width: max-content; display: ${drawerCategoryVisibility['推荐关系'] !== false ? 'block' : 'none'};">
+                            <div class="detail-card" data-category="推荐关系" style="flex: 0 0 auto; width: 240px; display: ${drawerCategoryVisibility['推荐关系'] !== false ? 'block' : 'none'};">
                                 <div class="detail-card-header"><i class="ph ph-share-network"></i> 推荐关系</div>
                                 <div class="detail-card-body flex-list-col">
-                                    <div class="ds-field" data-ds-id="ds_inviter" style="display:${dataSourceFieldVisibility['ds_inviter'] !== false ? '' : 'none'}"><span class="lbl">邀请人</span> <span class="val">${user.inviter || '-'}</span></div>
+                                    <div class="ds-field" data-ds-id="ds_inviter" style="display:${dataSourceFieldVisibility['ds_inviter'] !== false ? '' : 'none'}"><span class="lbl">邀请人</span> <span class="val" style="line-height: 1.8; padding: 2px 0;">${user.inviter || '-'}</span></div>
                                     <div class="ds-field" data-ds-id="ds_inviteCode" style="display:${dataSourceFieldVisibility['ds_inviteCode'] !== false ? '' : 'none'}"><span class="lbl">邀请码</span> <span class="val">${user.inviteCode || '-'}</span></div>
                                     <div class="ds-field" data-ds-id="ds_team" style="display:${dataSourceFieldVisibility['ds_team'] !== false ? '' : 'none'}"><span class="lbl">下级/团队</span> <a href="#" class="val subordinate-link text-blue" style="text-decoration: underline;" data-uid="${user.uid}">${user.directTeam || '0/0'}</a></div>
                                     <div class="ds-field" data-ds-id="ds_commBal" style="display:${dataSourceFieldVisibility['ds_commBal'] !== false ? '' : 'none'}"><span class="lbl">佣金余额</span> <span class="val text-red">${formatAmount(user.commissionBal)}</span></div>
                                 </div>
                             </div>
                             <!-- 余额宝 -->
-                            <div class="detail-card" data-category="余额宝" style="flex: 0 0 auto; width: max-content; display: ${drawerCategoryVisibility['余额宝'] !== false ? 'block' : 'none'};">
+                            <div class="detail-card" data-category="余额宝" style="flex: 0 0 auto; width: 240px; display: ${drawerCategoryVisibility['余额宝'] !== false ? 'block' : 'none'};">
                                 <div class="detail-card-header"><i class="ph ph-wallet"></i> 余额宝</div>
                                 <div class="detail-card-body flex-list-col">
                                     <div class="ds-field" data-ds-id="ds_balTreas" style="display:${dataSourceFieldVisibility['ds_balTreas'] !== false ? '' : 'none'}"><span class="lbl">余额</span> <span class="val">${dataMode === 'nodata' ? '-' : '15000'}</span></div>
@@ -1732,14 +1837,14 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </div>
                             </div>
                             <!-- 用户标签 -->
-                            <div class="detail-card ds-field" data-ds-id="ds_tags" style="flex: 0 1 auto; width: max-content; display:${dataSourceFieldVisibility['ds_tags'] !== false ? '' : 'none'}">
+                            <div class="detail-card ds-field" data-category="用户标签" data-ds-id="ds_tags" style="flex: 1 1 auto; min-width: 240px; width: fit-content; max-width: 100%; display:${dataSourceFieldVisibility['ds_tags'] !== false ? '' : 'none'}">
                                 <div class="detail-card-header"><i class="ph ph-tag"></i> 用户标签</div>
-                                <div class="detail-card-body" style="display:flex; flex-direction:column; flex-wrap:wrap; align-content:flex-start; gap:8px; max-height: 116px;">
-                                    ${(user.tags && user.tags.length > 0) ? user.tags.map(t => `<span class="user-custom-tag tag-blue">${t}</span>`).join('') : '<span style="color:#94a3b8; font-size:13px;">无标签</span>'}
+                                <div class="detail-card-body" style="display:flex; flex-direction:row; flex-wrap:wrap; align-content:flex-start; gap:8px;">
+                                    ${(user.tags && user.tags.length > 0) ? user.tags.map(t => `<span class="user-custom-tag tag-blue" style="max-width: 100%; overflow: hidden; text-overflow: ellipsis;" title="${t}">${t}</span>`).join('') : '<span style="color:#94a3b8; font-size:13px;">无标签</span>'}
                                 </div>
                             </div>
                             <!-- 信贷 -->
-                            <div class="detail-card" data-category="信贷" style="flex: 0 0 auto; width: max-content; display: ${drawerCategoryVisibility['信贷'] !== false ? 'block' : 'none'};">
+                            <div class="detail-card" data-category="信贷" style="flex: 0 0 auto; width: 240px; display: ${drawerCategoryVisibility['信贷'] !== false ? 'block' : 'none'};">
                                 <div class="detail-card-header"><i class="ph ph-credit-card"></i> 信贷</div>
                                 <div class="detail-card-body flex-list-col">
                                     <div class="ds-field" data-ds-id="ds_debt" style="display:${dataSourceFieldVisibility['ds_debt'] !== false ? '' : 'none'}"><span class="lbl">欠款</span> <span class="val text-red">${formatAmount(user.arrears)}</span></div>
@@ -1748,11 +1853,12 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                         </div>
                         <!-- 其他 (备注等底部信息) -->
+                        <!-- 其他 (备注等底部信息) -->
                         <div class="detail-card" data-category="其他" style="display: ${drawerCategoryVisibility['其他'] !== false ? 'block' : 'none'}; border: none; box-shadow: none; background: transparent; padding: 0;">
                             <div style="width:100%; border-bottom: 1px dashed #e2e8f0; margin: 16px 0;"></div>
-                            <div style="width:100%; display:flex; gap:32px; margin-bottom: 8px; padding: 0 40px;">
-                                <div style="display:flex; gap:8px;"><span style="color:#64748b;">备注</span> ${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : `<span title="${user.remark || ''}">${user.remark ? (user.remark.length > 20 ? user.remark.substring(0, 20) + '...' : user.remark) : '-'}</span>`}</div>
-                                <div style="display:flex; gap:8px;"><span style="color:#64748b;">回访备注</span> ${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : `<span title="${user.followRemark || ''}">${user.followRemark ? (user.followRemark.length > 20 ? user.followRemark.substring(0, 20) + '...' : user.followRemark) : '-'}</span>`}</div>
+                            <div class="detail-card-body" style="width:100%; display:flex; gap:32px; margin-bottom: 8px; padding: 0 40px;">
+                                <div class="ds-field" data-ds-id="ds_remark" style="display:${dataSourceFieldVisibility['ds_remark'] !== false ? 'flex' : 'none'}; gap:8px;"><span style="color:#64748b;">备注</span> ${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : `<span title="${user.remark || ''}">${user.remark ? (user.remark.length > 20 ? user.remark.substring(0, 20) + '...' : user.remark) : '-'}</span>`}</div>
+                                <div class="ds-field" data-ds-id="ds_followup" style="display:${dataSourceFieldVisibility['ds_followup'] !== false ? 'flex' : 'none'}; gap:8px;"><span style="color:#64748b;">回访备注</span> ${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : `<span title="${user.followRemark || ''}">${user.followRemark ? (user.followRemark.length > 20 ? user.followRemark.substring(0, 20) + '...' : user.followRemark) : '-'}</span>`}</div>
                             </div>
                         </div>
                     </td>
@@ -1769,7 +1875,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const columnsDrawer = document.getElementById('columnsDrawer');
                     const customColumnDrawer = document.getElementById('customColumnDrawer');
                     
-                    if (currentTableMode === 'nested') {
+                    if (currentTableMode === 'compact') {
                         if (customColumnDrawer) {
                             const tableHeader = document.querySelector('#userTable thead th');
                             if (tableHeader) {
@@ -1778,17 +1884,28 @@ document.addEventListener('DOMContentLoaded', () => {
                                 customColumnDrawer.style.setProperty('--max-drawer-height', `${availableSpace}px`);
                             }
                             customColumnDrawer.classList.add('show');
+                            const customColumnOverlay = document.getElementById('customColumnOverlay');
+                            if (customColumnOverlay) {
+                                customColumnOverlay.style.display = 'block';
+                                setTimeout(() => customColumnOverlay.style.opacity = '1', 10);
+                            }
                             if (typeof renderDrawerStates === 'function') {
                                 renderDrawerStates();
+                                window.applyDrawerOrderToTable();
                             }
                         }
                     } else {
                         if (columnsDrawer) {
-                            tempCompactColumnVisibility = { ...compactColumnVisibility };
-                            tempPinnedColumnIds = [...pinnedColumnIds];
-                            renderDropdown();
-                            columnsDrawer.classList.add('active');
-                            if (overlay) overlay.classList.add('active');
+                            if (columnsDrawer.classList.contains('active')) {
+                                columnsDrawer.classList.remove('active');
+                            } else {
+                                tempNestedColumnVisibility = { ...nestedColumnVisibility };
+                                if (typeof tempNestedPinnedColumnIds !== 'undefined') {
+                                    tempNestedPinnedColumnIds = [...nestedPinnedColumnIds];
+                                }
+                                renderDropdown();
+                                columnsDrawer.classList.add('active');
+                            }
                         }
                     }
                 });
@@ -1925,6 +2042,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Restore expanded rows
+            window.applyDrawerOrderToTable();
             if (previouslyExpanded.length > 0) {
                 previouslyExpanded.forEach(uid => {
                     const btn = userTableBody.querySelector(`.expand-btn[data-uid="${uid}"]`);
@@ -1996,7 +2114,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </label>
                 </div>
             `;
-            html += `<ul class="column-list" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">`;
+            html += `<ul class="column-list" style="display: grid; grid-template-columns: 1fr; gap: 8px;">`;
             nestedColumnsConfig.forEach(col => {
                 const isVisible = tempNestedColumnVisibility[col.id];
                 if (isVisible) visibleCount++;
@@ -2050,7 +2168,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </label>
                     </div>
                 `;
-                html += `<ul class="column-list" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">`;
+                html += `<ul class="column-list" style="display: grid; grid-template-columns: 1fr; gap: 8px;">`;
                 cols.forEach(col => {
                     const isVisible = tempCompactColumnVisibility[col.id];
                     if (isVisible) visibleCount++;
@@ -2744,9 +2862,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // IP Event Delegation
     document.querySelector('#userTableBody')?.addEventListener('click', function (e) {
-        if (e.target.closest('.ip-link')) {
+        if (e.target.closest('.ip-link') || e.target.closest('.ip-link-icon')) {
             e.preventDefault();
-            const ip = e.target.closest('.ip-link').dataset.ip;
+            const el = e.target.closest('.ip-link') || e.target.closest('.ip-link-icon');
+            const ip = el.dataset.ip;
             showToast('前往 IP 统计页面: ' + ip);
         }
 
@@ -2781,16 +2900,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 const colId = e.target.getAttribute('data-id');
                 if (currentTableMode === 'nested') {
                     tempNestedColumnVisibility[colId] = e.target.checked;
+                    nestedColumnVisibility = { ...tempNestedColumnVisibility };
                 } else {
                     tempCompactColumnVisibility[colId] = e.target.checked;
                 }
                 renderDropdown(); // Update drawer UI only
+                if (currentTableMode === 'nested') renderTable();
             } else if (e.target.classList.contains('group-cb-nested')) {
                 const isChecked = e.target.checked;
                 nestedColumnsConfig.forEach(col => {
                     tempNestedColumnVisibility[col.id] = isChecked;
                 });
+                nestedColumnVisibility = { ...tempNestedColumnVisibility };
                 renderDropdown();
+                if (currentTableMode === 'nested') renderTable();
             } else if (e.target.classList.contains('group-cb')) {
                 const groupName = e.target.getAttribute('data-group');
                 const isChecked = e.target.checked;
@@ -2815,6 +2938,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else {
                         tempNestedPinnedColumnIds.push(colId);
                     }
+                    nestedPinnedColumnIds = [...tempNestedPinnedColumnIds];
                 } else {
                     const idx = tempPinnedColumnIds.indexOf(colId);
                     if (idx > -1) {
@@ -2824,6 +2948,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
                 renderDropdown(); // Update drawer UI only
+                if (currentTableMode === 'nested') renderTable();
             }
         });
     }
@@ -3089,13 +3214,13 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 'ds_balInt', label: '利息', category: '余额宝' },
         { id: 'ds_debt', label: '欠款', category: '信贷' },
         { id: 'ds_creditVal', label: '信用值', category: '信贷' },
-        { id: 'ds_tags', label: '用户标签', category: '其他' },
+        { id: 'ds_tags', label: '用户标签', category: '用户标签' },
         { id: 'ds_remark', label: '备注', category: '其他' },
         { id: 'ds_followup', label: '回访备注', category: '其他' }
     ];
 
     // Track which data source fields are visible in expanded cards (true=visible, false=hidden)
-    let dataSourceFieldVisibility = {};
+    let dataSourceFieldVisibility = { 'ds_debt': false, 'ds_creditVal': false };
 
     window.toggleDataSourceFieldVisibility = function(id) {
         dataSourceFieldVisibility[id] = dataSourceFieldVisibility[id] === false ? true : false;
@@ -3104,7 +3229,8 @@ document.addEventListener('DOMContentLoaded', () => {
             el.style.display = dataSourceFieldVisibility[id] === false ? 'none' : '';
         });
         renderDrawerStates();
-    };
+            window.applyDrawerOrderToTable();
+        };
 
     window.resetCustomColumns = function() {
         if (!confirm('确定要重置所有自订栏位设定吗？')) return;
@@ -3130,13 +3256,48 @@ document.addEventListener('DOMContentLoaded', () => {
                 customColumnDrawer.style.setProperty('--max-drawer-height', `${availableSpace}px`);
             }
             customColumnDrawer.classList.add('show');
+            const customColumnOverlay = document.getElementById('customColumnOverlay');
+            if (customColumnOverlay) {
+                customColumnOverlay.style.display = 'block';
+                setTimeout(() => customColumnOverlay.style.opacity = '1', 10);
+            }
             renderDrawerStates();
+            window.applyDrawerOrderToTable();
         });
 
         btnCloseCustomColumnDrawer.addEventListener('click', () => {
             customColumnDrawer.classList.remove('show');
             customColumnDrawer.classList.remove('expanded');
+            const customColumnOverlay = document.getElementById('customColumnOverlay');
+            if (customColumnOverlay) {
+                customColumnOverlay.style.opacity = '0';
+                setTimeout(() => customColumnOverlay.style.display = 'none', 300);
+            }
         });
+
+        
+        const customColumnOverlay = document.getElementById('customColumnOverlay');
+        if (customColumnOverlay) {
+            customColumnOverlay.addEventListener('click', () => {
+                customColumnDrawer.classList.remove('show');
+                customColumnDrawer.classList.remove('expanded');
+                customColumnOverlay.style.opacity = '0';
+                setTimeout(() => customColumnOverlay.style.display = 'none', 300);
+            });
+        }
+
+        
+        const backupFieldSearch = document.getElementById('backupFieldSearch');
+        if (backupFieldSearch) {
+            backupFieldSearch.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                const items = document.getElementById('col3-backup-fields').children;
+                for (let i = 0; i < items.length; i++) {
+                    const text = items[i].innerText.toLowerCase();
+                    items[i].style.display = text.includes(term) ? 'inline-flex' : 'none';
+                }
+            });
+        }
 
         btnToggleDrawerHeight.addEventListener('click', () => {
             if (!customColumnDrawer.classList.contains('expanded')) {
@@ -3155,167 +3316,360 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    
     function renderDrawerStates() {
-        if (!frozenColumnsList || !scrollColumnsList || !dataSourceGrid) return;
+        const col1 = document.getElementById('col1-table-fields');
+        const col2 = document.getElementById('col2-card-fields');
+        const col3 = document.getElementById('col3-backup-fields');
+        
+        if (!col1 || !col2 || !col3) return;
 
-        frozenColumnsList.innerHTML = '';
-        scrollColumnsList.innerHTML = '';
-        dataSourceGrid.innerHTML = '';
+        col1.innerHTML = '';
+        col2.innerHTML = '';
+        col3.innerHTML = '';
 
         const activeLists = getActiveLists();
 
+        // 1. Render Table Fields (Column 1)
         activeLists.frozen.forEach((col, idx) => {
-            frozenColumnsList.appendChild(createColumnItem(col, idx, 'frozen'));
+            col1.appendChild(createCol1Item(col, idx, 'frozen'));
         });
-
         activeLists.scroll.forEach((col, idx) => {
-            scrollColumnsList.appendChild(createColumnItem(col, idx, 'scroll'));
+            col1.appendChild(createCol1Item(col, idx, 'scroll'));
         });
 
-        const groupedSource = {};
-        availableDataSource.forEach((col) => {
+        // Split availableDataSource into card fields and backup fields
+        const cardFields = [];
+        const backupFields = [];
+        availableDataSource.forEach(col => {
+            if (dataSourceFieldVisibility[col.id] !== false) {
+                cardFields.push(col);
+            } else {
+                backupFields.push(col);
+            }
+        });
+
+        // 2. Render Card Fields (Column 2) - Grouped by accordion
+        const groupedCardFields = {};
+        cardFields.forEach(col => {
             const cat = col.category || '其他';
-            if (!groupedSource[cat]) groupedSource[cat] = [];
-            groupedSource[cat].push(col);
+            if (!groupedCardFields[cat]) groupedCardFields[cat] = [];
+            groupedCardFields[cat].push(col);
         });
 
-        for (const cat in groupedSource) {
+        
+        const badge1 = document.getElementById('badge-col1');
+        const badge2 = document.getElementById('badge-col2');
+        const badge3 = document.getElementById('badge-col3');
+        if (badge1) badge1.textContent = activeLists.frozen.length + activeLists.scroll.length;
+        if (badge2) badge2.textContent = cardFields.length;
+        if (badge3) badge3.textContent = backupFields.length;
+
+        // Sort groupedCardFields keys
+                
+        
+        const catKeys = Object.keys(groupedCardFields).sort((a, b) => {
+            const visA = drawerCategoryVisibility[a] !== false;
+            const visB = drawerCategoryVisibility[b] !== false;
+            if (visA !== visB) return visA ? -1 : 1;
+            
+            // If visibility is the same, sort by predefined order
+            const idxA = drawerCategoryOrder.indexOf(a);
+            const idxB = drawerCategoryOrder.indexOf(b);
+            const finalIdxA = idxA === -1 ? 999 : idxA;
+            const finalIdxB = idxB === -1 ? 999 : idxB;
+            return finalIdxA - finalIdxB;
+        });
+        
+        const getCategoryIcon = (cat) => {
+            switch(cat) {
+                case '基本资料': return 'ph-fill ph-user';
+                case '资金与存取款': return 'ph-fill ph-coins';
+                case '成长与积分': return 'ph-fill ph-trend-up';
+                case '推荐关系': return 'ph-fill ph-share-network';
+                case '余额宝': return 'ph-fill ph-wallet';
+                case '用户标签': return 'ph-fill ph-tag';
+                case '信贷': return 'ph-fill ph-credit-card';
+                default: return 'ph-fill ph-folder';
+            }
+        };
+
+        catKeys.forEach(cat => {
             const block = document.createElement('div');
             block.className = 'category-block';
-            block.style.marginBottom = '24px';
-            
+            block.style.marginBottom = '12px';
             const isVisible = drawerCategoryVisibility[cat] !== false;
             
+            // Accordion Block Container styling
+            block.style.border = '1px solid #e2e8f0';
+            block.style.borderRadius = '8px';
+            block.style.overflow = 'hidden';
+            block.style.opacity = isVisible ? '1' : '0.4';
+            block.style.transition = 'all 0.2s';
+            block.style.background = '#fff';
+            block.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
+            block.style.flexShrink = '0';
+            
+            block.draggable = true;
+            block.dataset.cat = cat;
+            
+            // Accordion Header styling
             block.innerHTML = `
-                <div class="category-title" style="font-size:13px; font-weight:600; color:var(--text-muted); margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; cursor:pointer;" onclick="window.toggleCategoryVisibility('${cat}')">
-                    <div style="display:flex; align-items:center; gap:6px;">
-                        <i class="ph-fill ph-folder-notch" style="color:var(--primary-color);"></i>${cat}
+                <div class="category-title" style="padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; cursor: move; border-bottom: ${isVisible ? '1px solid #e2e8f0' : 'none'}; background: #f8fafc;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <i class="ph ph-dots-six-vertical" style="color:#cbd5e1; font-size:16px;"></i>
+                        <input type="checkbox" ${isVisible ? 'checked' : ''} onchange="window.toggleCategoryVisibility('${cat}')" style="cursor:pointer; margin:0; width:14px; height:14px; accent-color:#3b82f6;">
+                        <i class="${getCategoryIcon(cat)}" style="color: #475569; font-size:16px;"></i>
+                        <span style="font-size:12px; font-weight:600; color: #1e293b; ${isVisible ? '' : 'opacity:0.4; text-decoration:line-through;'}">${cat}</span>
                     </div>
-                    <button type="button" class="btn-action-icon" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer;">
-                        <i class="ph ${isVisible ? 'ph-eye' : 'ph-eye-slash'}"></i>
-                    </button>
+                    <div style="display:flex; align-items:center; gap:16px;">
+                        <div style="display:flex; flex-direction:column; gap:2px;">
+                            <i class="ph-bold ph-caret-up" style="font-size:10px; color:#cbd5e1; cursor:pointer;" onclick="window.moveCategoryUp('${cat}')"></i>
+                            <i class="ph-bold ph-caret-down" style="font-size:10px; color:#cbd5e1; cursor:pointer;" onclick="window.moveCategoryDown('${cat}')"></i>
+                        </div>
+                    </div>
                 </div>
             `;
+            
+            // Grid containing fields
             const grid = document.createElement('div');
-            grid.className = 'auto-fit-grid';
-            groupedSource[cat].forEach(col => {
-                grid.appendChild(createDataCard(col));
-            });
+            grid.style.padding = '12px';
+            grid.style.display = isVisible ? 'grid' : 'none';
+            grid.style.gridTemplateColumns = '1fr 1fr';
+            grid.style.gap = '10px';
+            grid.style.background = '#f8fafc';
+            grid.style.maxHeight = '250px';
+            grid.style.overflowY = 'auto';
+            
+            if (isVisible) {
+                groupedCardFields[cat].forEach(col => {
+                    grid.appendChild(createCol2Item(col));
+                });
+            }
+            
             block.appendChild(grid);
-            dataSourceGrid.appendChild(block);
-        }
+            col2.appendChild(block);
+        });
+
+        // 3. Render Backup Fields (Column 3)
+        backupFields.forEach(col => {
+            col3.appendChild(createCol3Item(col));
+        });
 
         initDragAndDrop();
         updateTableFromDrawer();
     }
 
-    function createColumnItem(col, index, type) {
+    
+    function createCol1Item(col, index, type) {
         const div = document.createElement('div');
         div.className = 'column-item';
+        div.style.display = 'flex';
+        div.style.justifyContent = 'space-between';
+        div.style.alignItems = 'center';
+        div.style.padding = '8px 12px';
+        div.style.background = '#fff';
+        div.style.border = '1px solid #e2e8f0';
+        div.style.borderRadius = '8px';
+        div.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
+        
         div.draggable = true;
         div.dataset.id = col.id;
         div.dataset.type = type;
 
-        const isNative = col.isNative === true;
+        const isMandatory = ['uid', 'account', 'memberInfo'].includes(col.id);
+
         let actionButtons = '';
         
-        actionButtons += `<button type="button" class="btn-action-icon" onclick="window.moveColumnUp('${col.id}', '${type}')" ${index === 0 ? 'disabled style="opacity: 0.5;"' : ''}><i class="ph ph-arrow-up"></i></button>`;
-        actionButtons += `<button type="button" class="btn-action-icon" onclick="window.moveColumnDown('${col.id}', '${type}')"><i class="ph ph-arrow-down"></i></button>`;
-        actionButtons += `<button type="button" class="btn-action-icon lock-btn ${type === 'frozen' ? 'locked' : ''}" onclick="window.toggleLock('${col.id}', '${type}')"><i class="ph ${type === 'frozen' ? 'ph-lock-key' : 'ph-lock-key-open'}"></i></button>`;
+        // Sorting buttons
+        actionButtons += `<div style="display: flex; flex-direction: column; gap: 2px; border-right: 1px solid #e2e8f0; padding-right: 4px; margin-right: 4px;">
+            <button type="button" style="background:none; border:none; color:var(--text-muted); cursor:pointer; height: 12px; line-height: 12px; font-size: 10px; ${index === 0 ? 'opacity: 0.3; cursor: not-allowed;' : ''}" onclick="window.moveColumnUp('${col.id}', '${type}')"><i class="ph-bold ph-caret-up"></i></button>
+            <button type="button" style="background:none; border:none; color:var(--text-muted); cursor:pointer; height: 12px; line-height: 12px; font-size: 10px;" onclick="window.moveColumnDown('${col.id}', '${type}')"><i class="ph-bold ph-caret-down"></i></button>
+        </div>`;
         
-        if (!isNative) {
-            actionButtons += `<button type="button" class="btn-action-icon delete-btn" onclick="window.demoteColumn('${col.id}', '${type}')"><i class="ph ph-trash"></i></button>`;
-        }
-
-        const isVisible = currentTableMode === 'nested' ? nestedColumnVisibility[col.id] !== false : compactColumnVisibility[col.id] !== false;
-        const isMandatory = ['uid', 'account', 'memberInfo'].includes(col.id);
-        
-        let checkboxHtml = '';
-        if (isMandatory) {
-            checkboxHtml = `<input type="checkbox" checked disabled class="column-vis-cb" style="cursor: not-allowed;" title="此为必填栏位，无法隐藏">`;
+        if (!isMandatory) {
+            // Move to Card
+            actionButtons += `<button type="button" class="btn-action-icon" style="color:#8b5cf6;" title="移至卡片" onclick="window.demoteColumnToCard('${col.id}', '${type}')"><i class="ph ph-arrow-right"></i></button>`;
+            // Hide (Move to Backup)
+            actionButtons += `<button type="button" class="btn-action-icon" style="color:#94a3b8;" title="隐藏" onclick="window.demoteColumnToBackup('${col.id}', '${type}')"><i class="ph ph-x"></i></button>`;
         } else {
-            checkboxHtml = `<input type="checkbox" ${isVisible ? 'checked' : ''} class="column-vis-cb" style="cursor: pointer;" onclick="event.stopPropagation(); window.toggleDrawerColumnVisibility('${col.id}')">`;
+            actionButtons += `<button type="button" class="btn-action-icon" style="color:#cbd5e1; cursor:not-allowed;" title="无法移除"><i class="ph ph-x"></i></button>`;
         }
 
         div.innerHTML = `
-            <div class="column-item-left">
-                ${checkboxHtml}
-                <span class="column-name">${col.label}</span>
+            <div class="column-item-left" style="display:flex; align-items:center; gap:8px; flex:1; min-width:0;">
+                <i class="ph ph-dots-six-vertical" style="color:#cbd5e1; cursor:grab;"></i>
+                <input type="checkbox" ${isMandatory ? 'checked disabled' : (tableFieldVisibility[col.id] !== false ? 'checked' : '')} onchange="window.toggleTableFieldVisibility('${col.id}', this.checked)" style="cursor:pointer; margin:0; width:14px; height:14px; accent-color:#3b82f6;">
+                <span class="column-name" style="font-size:12px; font-weight:600; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; ${tableFieldVisibility[col.id] === false ? 'opacity:0.4; text-decoration:line-through;' : ''}">${col.label} ${isMandatory ? '<i class="ph-fill ph-lock-key" style="color:#3b82f6; font-size:12px;"></i>' : ''}</span>
             </div>
-            <div class="column-item-actions">
+            <div class="column-item-actions" style="display:flex; align-items:center; gap:4px;">
                 ${actionButtons}
             </div>
         `;
         return div;
     }
 
-    window.toggleDrawerColumnVisibility = function(id) {
-        if (currentTableMode === 'nested') {
-            nestedColumnVisibility[id] = !nestedColumnVisibility[id];
-        } else {
-            compactColumnVisibility[id] = !compactColumnVisibility[id];
-        }
-        renderDrawerStates();
-        updateTableFromDrawer();
-    };
-
-    function createDataCard(col) {
+    function createCol2Item(col) {
         const div = document.createElement('div');
-        div.className = 'data-card';
-        const isVisible = dataSourceFieldVisibility[col.id] !== false;
+        div.style.display = 'flex';
+        div.style.justifyContent = 'space-between';
+        div.style.alignItems = 'center';
+        div.style.padding = '6px 12px';
+        div.style.background = '#fff';
+        div.style.border = '1px solid #e2e8f0';
+        div.style.borderRadius = '8px';
+        div.draggable = true;
+        div.dataset.id = col.id;
+        
         div.innerHTML = `
-            <span class="column-name">${col.label}</span>
-            <div style="display:flex; gap:2px; align-items:center;">
-                <button type="button" class="btn-action-icon eye-btn" onclick="window.toggleDataSourceFieldVisibility('${col.id}')" title="${isVisible ? '隐藏' : '显示'}展开卡片中此栏位"><i class="ph ${isVisible ? 'ph-eye' : 'ph-eye-slash'}"></i></button>
-                <button type="button" class="btn-action-icon add-btn" onclick="window.promoteColumn('${col.id}')" title="加入表格"><i class="ph ph-plus"></i></button>
+            <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0;">
+                <i class="ph ph-dots-six-vertical" style="color:#cbd5e1; cursor:grab; font-size: 16px;"></i>
+                <span style="font-size:12px; font-weight:600; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${col.label}</span>
+            </div>
+            <div style="display:flex; align-items:center; border: 1px solid #f1f5f9; background: #f8fafc; border-radius: 6px; overflow: hidden;">
+                <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 4px 8px; border-right: 1px solid #f1f5f9; background: #f8fafc;">
+                    <button type="button" style="background:none; border:none; color:#cbd5e1; cursor:pointer; height: 10px; line-height: 10px; font-size: 10px; padding: 0;" onclick="window.moveCardUp('${col.id}', '${col.ds_category || '其他'}')"><i class="ph-bold ph-caret-up"></i></button>
+                    <button type="button" style="background:none; border:none; color:#cbd5e1; cursor:pointer; height: 10px; line-height: 10px; font-size: 10px; padding: 0;" onclick="window.moveCardDown('${col.id}', '${col.ds_category || '其他'}')"><i class="ph-bold ph-caret-down"></i></button>
+                </div>
+                <div style="padding: 4px 8px; border-right: 1px solid #f1f5f9; background: #f8fafc; display: flex; align-items: center; justify-content: center;">
+                    <button type="button" class="btn-action-icon" style="color:#3b82f6; border: none; background: transparent; padding: 0; cursor: pointer; display: flex;" title="提至表格" onclick="window.promoteColumnFromCard('${col.id}')"><i class="ph ph-arrow-left" style="font-size: 13px; font-weight: bold;"></i></button>
+                </div>
+                <div style="padding: 4px 8px; background: #f8fafc; display: flex; align-items: center; justify-content: center;">
+                    <button type="button" class="btn-action-icon" style="color:#94a3b8; border: none; background: transparent; padding: 0; cursor: pointer; display: flex;" title="隐藏" onclick="window.hideCardColumn('${col.id}')"><i class="ph ph-x" style="font-size: 13px; font-weight: bold;"></i></button>
+                </div>
             </div>
         `;
         return div;
     }
 
-    window.promoteColumn = function(id) {
-        const idx = availableDataSource.findIndex(c => c.id === id);
-        if (idx > -1) {
-            const col = availableDataSource.splice(idx, 1)[0];
-            col.isNative = false;
-            
-            if (currentTableMode === 'nested') {
-                nestedScrollColumns.push(col);
-                nestedColumnVisibility[col.id] = true;
-            } else {
-                if (!col.render) {
-                    col.render = (user) => `<td class="cell-val" data-col="${col.id}">${user[col.id] !== undefined ? user[col.id] : '-'}</td>`;
-                }
-                col.sortable = false;
-                compactScrollColumns.push(col);
-                compactColumnVisibility[col.id] = true;
-            }
-            
-            renderDrawerStates();
-            updateTableFromDrawer();
-        }
-    };
+        function createCol3Item(col) {
+        const div = document.createElement('div');
+        div.style.display = 'flex';
+        div.style.justifyContent = 'space-between';
+        div.style.alignItems = 'center';
+        div.style.padding = '8px 12px';
+        div.style.background = '#fff';
+        div.style.border = '1px solid #e2e8f0';
+        div.style.borderRadius = '8px';
+        div.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
+        div.draggable = true;
+        div.dataset.id = col.id;
+        
+        div.innerHTML = `
+            <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0;">
+                <i class="ph ph-dots-six-vertical" style="color:#cbd5e1; cursor:grab;"></i>
+                <span style="font-size:13px; font-weight:500; color:#334155; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${col.label}</span>
+            </div>
+            <div style="display:flex; gap:8px;">
+                <button type="button" style="color:#3b82f6; font-size:12px; font-weight:600; background:transparent; border:none; cursor:pointer; display:flex; align-items:center; gap:2px;" title="加至表格" onclick="window.promoteColumnFromBackup('${col.id}')">+表</button>
+                <button type="button" style="color:#8b5cf6; font-size:12px; font-weight:600; background:transparent; border:none; cursor:pointer; display:flex; align-items:center; gap:2px;" title="加至卡片" onclick="window.addBackupToCard('${col.id}')">+卡</button>
+            </div>
+        `;
+        return div;
+    }
 
-    window.demoteColumn = function(id, type) {
+    // --- Action Methods ---
+    
+    window.demoteColumnToCard = function(id, type) {
         const list = type === 'frozen' ? getActiveLists().frozen : getActiveLists().scroll;
         const idx = list.findIndex(c => c.id === id);
         if (idx > -1) {
             const col = list.splice(idx, 1)[0];
             availableDataSource.push(col);
+            dataSourceFieldVisibility[col.id] = true;
             renderDrawerStates();
             updateTableFromDrawer();
         }
     };
 
-    window.toggleLock = function(id, type) {
-        let sourceList = type === 'frozen' ? getActiveLists().frozen : getActiveLists().scroll;
-        let targetList = type === 'frozen' ? getActiveLists().scroll : getActiveLists().frozen;
-        const idx = sourceList.findIndex(c => c.id === id);
+    window.demoteColumnToBackup = function(id, type) {
+        const list = type === 'frozen' ? getActiveLists().frozen : getActiveLists().scroll;
+        const idx = list.findIndex(c => c.id === id);
         if (idx > -1) {
-            const col = sourceList.splice(idx, 1)[0];
-            targetList.push(col);
+            const col = list.splice(idx, 1)[0];
+            availableDataSource.push(col);
+            dataSourceFieldVisibility[col.id] = false;
             renderDrawerStates();
             updateTableFromDrawer();
+        }
+    };
+
+    window.promoteColumnFromCard = function(id) {
+        const idx = availableDataSource.findIndex(c => c.id === id);
+        if (idx > -1) {
+            const col = availableDataSource.splice(idx, 1)[0];
+            col.isNative = false;
+            if (currentTableMode === 'nested') {
+                nestedScrollColumns.push(col);
+                nestedColumnVisibility[col.id] = true;
+            } else {
+                compactScrollColumns.push(col);
+                compactColumnVisibility[col.id] = true;
+            }
+            // Cleanup card visibility flag
+            delete dataSourceFieldVisibility[col.id];
+            renderDrawerStates();
+            updateTableFromDrawer();
+        }
+    };
+
+    window.hideCardColumn = function(id) {
+        dataSourceFieldVisibility[id] = false;
+        renderDrawerStates();
+            window.applyDrawerOrderToTable();
+        };
+
+    window.promoteColumnFromBackup = function(id) {
+        // Backup to table is same logic as card to table
+        window.promoteColumnFromCard(id);
+    };
+
+    window.addBackupToCard = function(id) {
+        dataSourceFieldVisibility[id] = true;
+        renderDrawerStates();
+            window.applyDrawerOrderToTable();
+        };
+
+    
+    window.moveCardUp = function(id, cat) {
+        const activeLists = getActiveLists();
+        const inCardItems = availableDataSource.filter(c => {
+            const isCol1 = activeLists.frozen.some(tc => tc.id === c.id) || activeLists.scroll.some(tc => tc.id === c.id);
+            const resolvedCat = c.ds_category || '其他';
+            return !isCol1 && dataSourceFieldVisibility[c.id] !== false && resolvedCat === cat;
+        });
+        const idx = inCardItems.findIndex(c => c.id === id);
+        if (idx > 0) {
+            const itemToMove = inCardItems[idx];
+            const itemBefore = inCardItems[idx - 1];
+            const actualIdx1 = availableDataSource.findIndex(c => c.id === itemToMove.id);
+            const actualIdx2 = availableDataSource.findIndex(c => c.id === itemBefore.id);
+            const temp = availableDataSource[actualIdx1];
+            availableDataSource[actualIdx1] = availableDataSource[actualIdx2];
+            availableDataSource[actualIdx2] = temp;
+            renderDrawerStates();
+            window.applyDrawerOrderToTable();
+        }
+    };
+
+    window.moveCardDown = function(id, cat) {
+        const activeLists = getActiveLists();
+        const inCardItems = availableDataSource.filter(c => {
+            const isCol1 = activeLists.frozen.some(tc => tc.id === c.id) || activeLists.scroll.some(tc => tc.id === c.id);
+            const resolvedCat = c.ds_category || '其他';
+            return !isCol1 && dataSourceFieldVisibility[c.id] !== false && resolvedCat === cat;
+        });
+        const idx = inCardItems.findIndex(c => c.id === id);
+        if (idx > -1 && idx < inCardItems.length - 1) {
+            const itemToMove = inCardItems[idx];
+            const itemAfter = inCardItems[idx + 1];
+            const actualIdx1 = availableDataSource.findIndex(c => c.id === itemToMove.id);
+            const actualIdx2 = availableDataSource.findIndex(c => c.id === itemAfter.id);
+            const temp = availableDataSource[actualIdx1];
+            availableDataSource[actualIdx1] = availableDataSource[actualIdx2];
+            availableDataSource[actualIdx2] = temp;
+            renderDrawerStates();
+            window.applyDrawerOrderToTable();
         }
     };
 
@@ -3409,7 +3763,8 @@ document.addEventListener('DOMContentLoaded', () => {
         customFrozenColumns = newFrozen;
         customScrollColumns = newScroll;
         renderDrawerStates();
-    }
+            window.applyDrawerOrderToTable();
+        }
 
     function updateTableFromDrawer() {
         if (currentTableMode === 'nested') {
@@ -3417,11 +3772,13 @@ document.addEventListener('DOMContentLoaded', () => {
             nestedPinnedColumnIds.length = 0;
             
             nestedFrozenColumns.forEach(c => {
+                if (tableFieldVisibility[c.id] === false) return;
                 nestedColumnsConfig.push(c);
                 nestedPinnedColumnIds.push(c.id);
             });
             
             nestedScrollColumns.forEach(c => {
+                if (tableFieldVisibility[c.id] === false) return;
                 nestedColumnsConfig.push(c);
             });
 
@@ -3433,11 +3790,13 @@ document.addEventListener('DOMContentLoaded', () => {
             pinnedColumnIds.length = 0;
             
             compactFrozenColumns.forEach(c => {
+                if (tableFieldVisibility[c.id] === false) return;
                 compactColumnsConfig.push(c);
                 pinnedColumnIds.push(c.id);
             });
             
             compactScrollColumns.forEach(c => {
+                if (tableFieldVisibility[c.id] === false) return;
                 compactColumnsConfig.push(c);
             });
 

@@ -276,7 +276,7 @@
                         <div class="filter-tags" id="filterTagsContainer">
                             <!-- Dynamic filter tags will be rendered here -->
                         </div>
-                        <button class="btn btn-outline btn-sm" id="btnCustomColumns" style="display: flex; align-items: center; gap: 4px; margin-left: 12px;">
+                        <button class="btn btn-outline btn-sm" id="btnCustomColumns" style="display: none !important;">
                             <i class="ph ph-columns"></i> 自订栏位
                         </button>
                         <!-- 分页区块 (极简版) -->
@@ -1088,6 +1088,7 @@
                             <div style="display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: #334155; margin-bottom: 4px;">
                                 54.150.111.152
                                 <button class="ued-copy-btn" title="复制" style="color: #94a3b8; padding: 2px;"><i class="ph ph-copy"></i></button>
+                                <button class="ued-copy-btn" title="IP统计" style="color: #3b82f6; padding: 2px;" onclick="if(typeof showToast !== 'undefined') showToast('到IP统计页面'); else alert('到IP统计页面');"><i class="ph ph-link"></i></button>
                             </div>
                             <div style="font-size: 12px; color: #94a3b8;">(Japan, Tokyo)</div>
                         </div>
@@ -1143,6 +1144,7 @@
                             <div style="display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: #334155; margin-bottom: 4px;">
                                 54.150.111.152
                                 <button class="ued-copy-btn" title="复制" style="color: #94a3b8; padding: 2px;"><i class="ph ph-copy"></i></button>
+                                <button class="ued-copy-btn" title="IP统计" style="color: #3b82f6; padding: 2px;" onclick="if(typeof showToast !== 'undefined') showToast('到IP统计页面'); else alert('到IP统计页面');"><i class="ph ph-link"></i></button>
                             </div>
                             <div style="font-size: 12px; color: #94a3b8;">(Japan, Tokyo)</div>
                         </div>
@@ -1217,6 +1219,7 @@
         </main>
 
         <!-- 自订栏位底部抽屉 (Custom Column Drawer) -->
+    <div class="custom-column-overlay" id="customColumnOverlay" style="position:fixed; top:0; left:0; right:0; bottom:0; background: rgba(15, 23, 42, 0.1); z-index: 999; display: none; opacity: 0; transition: opacity 0.3s;"></div>
     <div class="custom-column-drawer" id="customColumnDrawer">
         <div class="drawer-header">
             <div class="drawer-title">
@@ -1236,36 +1239,46 @@
             </div>
         </div>
         
-        <div class="drawer-body custom-column-layout">
-            <!-- 左侧：主表格设定 (第一层级) -->
-            <div class="column-panel left-panel">
-                <div class="panel-header">
-                    <h4>主表格栏位</h4>
-                    <span class="badge">显示中</span>
+        <div class="drawer-body custom-column-layout" style="display: flex; flex-direction: row; gap: 16px; padding: 16px; height: calc(100% - 60px); overflow-y: hidden; background: #fff;">
+            <!-- 第一栏: 主表格栏位 (flex-[3]) -->
+            <div class="column-panel" style="flex: 3; display: flex; flex-direction: column; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.02);">
+                <div class="panel-header" style="padding: 12px 16px; background: #eff6ff; border-bottom: 1px solid #bfdbfe; display: flex; justify-content: space-between; align-items: center;">
+                    <h4 style="margin: 0; font-size: 12px; font-weight: 600; color: #1e3a8a; display: flex; align-items: center; gap: 6px;"><i class="ph-bold ph-tree-structure"></i> 主表格栏位</h4>
+                    <span class="badge" id="badge-col1" style="background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">0</span>
                 </div>
-                
-                <div class="column-zones-container">
-                    <!-- 统一列表：固定栏位在上，可卷动在下 -->
-                    <div class="sortable-list" id="frozenColumnsList">
-                        <!-- JS 动态生成 (固定栏位) -->
-                    </div>
-                    <div class="sortable-list" id="scrollColumnsList">
-                        <!-- JS 动态生成 (可卷动栏位) -->
-                    </div>
+                <div class="column-zones-container" id="col1-table-fields" style="flex: 1; overflow-y: auto; padding: 12px; display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: max-content; gap: 8px; align-items: start;">
+                    <!-- JS 生成 -->
                 </div>
             </div>
-            
-            <!-- 右侧：资料源 (第二层级) -->
-            <div class="column-panel right-panel">
-                <div class="panel-header">
-                    <h4>展开卡片资料源</h4>
-                    <span class="badge badge-outline">可加入表格</span>
+
+            <!-- 第二栏: 展开卡片栏位 (flex-[3]) -->
+            <div class="column-panel" style="flex: 3; display: flex; flex-direction: column; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.02);">
+                <div class="panel-header" style="padding: 12px 16px; background: #faf5ff; border-bottom: 1px solid #e9d5ff; display: flex; justify-content: space-between; align-items: center;">
+                    <h4 style="margin: 0; font-size: 12px; font-weight: 600; color: #6b21a8; display: flex; align-items: center; gap: 6px;"><i class="ph-bold ph-arrows-out-line-horizontal"></i> 展开卡片</h4>
+                    <span class="badge" id="badge-col2" style="background: #f3e8ff; color: #7e22ce; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">0</span>
                 </div>
-                <div class="data-source-container">
-                    <div class="auto-fit-grid" id="dataSourceGrid">
-                        <!-- JS 动态生成 -->
+                <div class="column-zones-container" id="col2-card-fields" style="flex: 1; overflow-y: auto; padding: 12px;">
+                    <!-- JS 生成 -->
+                </div>
+            </div>
+
+            <!-- 第三栏: 备用栏位库 (flex-[1]) -->
+            <div class="column-panel" style="flex: 1; display: flex; flex-direction: column; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.02);">
+                <div class="panel-header" style="padding: 12px 16px; background: #f1f5f9; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                    <h4 style="margin: 0; font-size: 12px; font-weight: 600; color: #475569; display: flex; align-items: center; gap: 6px;"><i class="ph-bold ph-archive"></i> 备用栏位</h4>
+                    <span class="badge" id="badge-col3" style="background: #e2e8f0; color: #334155; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">0</span>
+                </div>
+                <div style="padding: 12px; border-bottom: 1px solid #e2e8f0;">
+                    <div class="search-box" style="display: flex; align-items: center; background: #f1f5f9; border-radius: 6px; padding: 6px 12px;">
+                        <i class="ph ph-magnifying-glass" style="color: #94a3b8; margin-right: 8px;"></i>
+                        <input type="text" id="backupFieldSearch" placeholder="搜寻栏位..." style="border: none; background: transparent; outline: none; width: 100%; font-size: 13px;">
                     </div>
                 </div>
+                <div class="column-zones-container" id="col3-backup-fields" style="flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+                    <!-- JS 生成 -->
+                </div>
+            </div>
+        </div>
             </div>
         </div>
     </div>
@@ -1281,12 +1294,11 @@
 
         <!-- Custom Columns Drawer (Compact Mode) -->
         <div class="advanced-filter-drawer" id="columnsDrawer">
-            <div class="drawer-header">
-                <h3>自订栏位</h3>
-                <div style="display: flex; gap: 8px; align-items: center;">
-                    <button class="btn btn-outline btn-sm" id="btnColumnsDrawerClose">关闭</button>
-                    <button class="btn btn-primary btn-sm" id="btnColumnsDrawerSave">保存</button>
-                </div>
+            <div class="drawer-header" style="justify-content: space-between; align-items: center; padding-bottom: 0; border-bottom: none; display: flex;">
+                <h3 style="margin-bottom: 0;">自订栏位</h3>
+                <button class="btn-icon btn-close-modal" id="btnColumnsDrawerCloseX">
+                    <i class="ph ph-x"></i>
+                </button>
             </div>
             <div class="drawer-content" id="columnsDrawerContent">
                 <!-- Rendered via JS -->
