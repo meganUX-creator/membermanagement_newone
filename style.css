@@ -118,7 +118,9 @@ body {
 
 .filter-row .form-group[data-filter-id="userTags"],
 .filter-row .form-group[data-filter-id="bankCard"],
-.filter-row .form-group[data-filter-id="depositAmount"] {
+.filter-row .form-group[data-filter-id="depositAmount"],
+.filter-row .form-group[data-filter-id="notLoginDays"],
+.filter-row .form-group[data-filter-id="vipLevel"] {
     flex: 1 1 0%;
     min-width: 320px;
     max-width: 420px;
@@ -1891,7 +1893,7 @@ body.hide-contact-info #viewContactCard {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 24px;
+    padding: 6px 24px;
     font-size: 13px;
 }
 
@@ -1930,7 +1932,7 @@ body.hide-contact-info #viewContactCard {
     position: relative;
     display: flex;
     gap: 6px;
-    padding: 0 24px 12px 32px;
+    padding: 0 24px 8px 32px;
     overflow-x: auto;
 }
 
@@ -1939,7 +1941,7 @@ body.hide-contact-info #viewContactCard {
     position: absolute;
     left: 24px;
     top: 0;
-    bottom: 12px;
+    bottom: 8px;
     width: 4px;
     background-color: #3b82f6;
     border-radius: 2px;
@@ -2182,26 +2184,29 @@ body.hide-contact-info #viewContactCard {
 .mode-segmented-control {
     display: inline-flex;
     background-color: #f3f4f6;
-    padding: 3px;
-    border-radius: 8px;
+    padding: 2px;
+    border-radius: 6px;
     border: 1px solid #e5e7eb;
+    height: 28px;
+    box-sizing: border-box;
 }
 
 .mode-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 6px 10px;
+    padding: 0 10px;
+    height: 100%;
     border: none;
     background: transparent;
-    border-radius: 6px;
+    border-radius: 4px;
     color: #4b5563;
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
 .mode-btn i {
-    font-size: 18px;
+    font-size: 16px;
 }
 
 .mode-btn:hover {
@@ -2439,7 +2444,7 @@ body.hide-contact-info #viewContactCard {
 table tr.header-sub-row th.sticky-col,
 table tr.header-group-row th.sticky-col {
     background-color: #f8fafc !important;
-    z-index: 30 !important;
+    z-index: 40 !important;
     box-shadow: 3px 0 6px -2px rgba(0, 0, 0, 0.12);
 }
 
@@ -2465,42 +2470,26 @@ th:hover .icon-pin,
     opacity: 1;
 }
 
-.header-actions-dropdown {
-    position: relative;
+.header-inline-actions {
     display: inline-flex;
     align-items: center;
+    gap: 4px;
     margin-left: 8px;
 }
 
-.header-actions-dropdown>.btn-text {
-    padding: 2px 4px;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    border-radius: 4px;
+.header-inline-actions .icon-pin,
+.header-inline-actions .sort-btn {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    margin-left: 0;
 }
 
-.header-actions-dropdown>.btn-text:hover {
-    background: #f1f5f9;
-}
-
-.header-actions-menu {
-    display: none;
-    position: absolute;
-    top: 100%;
-    right: 0;
-    background: white;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    padding: 6px 8px;
-    z-index: 50;
-    gap: 12px;
-    align-items: center;
-}
-
-.header-actions-dropdown:hover .header-actions-menu {
-    display: flex;
+th:hover .header-inline-actions .icon-pin,
+th:hover .header-inline-actions .sort-btn,
+.header-inline-actions .icon-pin.active,
+.header-inline-actions .sort-btn.active-asc,
+.header-inline-actions .sort-btn.active-desc {
+    opacity: 1;
 }
 
 .icon-pin:hover {
@@ -2893,7 +2882,7 @@ table thead th.sticky-col-right {
 .app-container {
     padding: 0;
     max-width: 100%;
-    margin: 24px 24px 72px 24px;
+    margin: 5px;
     display: flex;
     flex-direction: column;
     gap: 0;
@@ -2908,7 +2897,7 @@ table thead th.sticky-col-right {
 }
 
 body.stats-collapsed .app-container {
-    margin-bottom: 24px;
+    margin-bottom: 5px;
 }
 
 /* Filter Card Improvements */
@@ -3081,6 +3070,7 @@ body.stats-collapsed .app-container {
     flex: 1;
     overflow-y: auto;
     overflow-x: auto;
+    padding-bottom: 56px; /* Add space so last row isn't hidden by the floating bottom stats bar */
 }
 
 table {
@@ -3101,6 +3091,15 @@ table thead th {
     z-index: 20;
 }
 
+table tr.header-group-row th {
+    height: 33px;
+    box-sizing: border-box;
+}
+
+table tr.header-sub-row th {
+    top: 33px; /* Height of the first row to prevent overlapping */
+}
+
 th.header-group {
     background-color: #f8fafc;
     color: #475569;
@@ -3116,6 +3115,7 @@ th.header-sub {
     font-weight: 600;
     font-size: 12px;
     border-bottom: 1px solid #eaecf0;
+    padding: 12px 14px;
 }
 
 td {
@@ -3274,6 +3274,13 @@ td {
 .stat-label {
     color: #64748b;
     font-weight: 500;
+}
+
+.stat-label i {
+    cursor: help;
+    pointer-events: auto;
+    font-size: 14px;
+    margin-left: 4px;
 }
 
 .stat-value {
@@ -3554,6 +3561,7 @@ td {
 
 /* 灰色头像圆圈 */
 .user-avatar-circle-grey {
+    position: relative;
     width: 32px;
     height: 32px;
     border-radius: 50%;
@@ -3566,6 +3574,17 @@ td {
     margin: 0 auto;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     cursor: pointer;
+}
+
+.user-avatar-circle-grey .status-dot-icon {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 10px;
+    height: 10px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    box-sizing: content-box;
 }
 
 .user-avatar-circle-grey:hover {
@@ -3588,19 +3607,22 @@ td {
     white-space: nowrap;
 }
 
+.nested-cell-info.wrap-text div {
+    white-space: normal;
+    word-break: break-word;
+}
+
 .nested-cell-info .info-label {
     color: #475569;
     font-weight: 500;
 }
 
-/* 3x3 操作连结网格 (图一右侧) */
 .operations-grid-3x3 {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    display: flex;
+    flex-wrap: wrap;
     gap: 8px 12px;
     text-align: left;
     margin-bottom: 10px;
-    min-width: 170px;
 }
 
 .operations-grid-3x3 .op-link {
@@ -3782,7 +3804,8 @@ td {
 .more-op-dropdown-menu {
     display: none;
     position: absolute;
-    bottom: 30px;
+    top: 100%;
+    margin-top: 4px;
     left: 50%;
     transform: translateX(-50%);
     background-color: #ffffff;
@@ -3792,7 +3815,7 @@ td {
     padding: 6px 0;
     list-style: none;
     min-width: 170px;
-    z-index: 1000;
+    z-index: 9999;
     max-height: 380px;
     overflow-y: auto;
 }
@@ -5177,4 +5200,26 @@ input.ued-input-sm {
     overflow-wrap: break-word;
     white-space: normal;
     text-align: right;
+}
+
+/* Wallet Detail Modal */
+.wallet-detail-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    cursor: pointer;
+}
+.wallet-detail-link:hover {
+    text-decoration: underline;
+}
+.wallet-detail-table-row td {
+    border-bottom: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+    padding: 12px;
+    text-align: center;
+}
+.wallet-detail-table-row td:last-child {
+    border-right: none;
+}
+.wallet-detail-table-row:last-child td {
+    border-bottom: none;
 }

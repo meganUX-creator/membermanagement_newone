@@ -1,14 +1,14 @@
 document.addEventListener('DOMContentLoaded', () => {
     let tableFieldVisibility = {};
-window.toggleTableFieldVisibility = function(id, isVisible) {
-    tableFieldVisibility[id] = isVisible;
-    renderDrawerStates();
-            window.applyDrawerOrderToTable();
-        };
-let drawerCategoryOrder = ['基本资料', '资金与存取款', '成长与积分', '推荐关系', '余额宝', '用户标签', '信贷', '其他'];
-let drawerCategoryVisibility = { '信贷': false };
-    
-    window.moveCategoryUp = function(cat) {
+    window.toggleTableFieldVisibility = function (id, isVisible) {
+        tableFieldVisibility[id] = isVisible;
+        renderDrawerStates();
+        window.applyDrawerOrderToTable();
+    };
+    let drawerCategoryOrder = ['基本资料', '存取款 (主钱包)', '存取款 (汇总 USDT)', '成长与积分', '推荐关系', '余额宝', '用户标签', '信贷', '其他'];
+    let drawerCategoryVisibility = { '信贷': false };
+
+    window.moveCategoryUp = function (cat) {
         const idx = drawerCategoryOrder.indexOf(cat);
         if (idx > 0) {
             const temp = drawerCategoryOrder[idx - 1];
@@ -19,7 +19,7 @@ let drawerCategoryVisibility = { '信贷': false };
         }
     };
 
-    window.moveCategoryDown = function(cat) {
+    window.moveCategoryDown = function (cat) {
         const idx = drawerCategoryOrder.indexOf(cat);
         if (idx > -1 && idx < drawerCategoryOrder.length - 1) {
             const temp = drawerCategoryOrder[idx + 1];
@@ -30,7 +30,7 @@ let drawerCategoryVisibility = { '信贷': false };
         }
     };
 
-    window.applyDrawerOrderToTable = function() {
+    window.applyDrawerOrderToTable = function () {
         document.querySelectorAll('.expanded-detail-row').forEach(row => {
             const wrapper = row.querySelector('.detail-cards-wrapper');
             if (wrapper) {
@@ -54,10 +54,10 @@ let drawerCategoryVisibility = { '信贷': false };
                         const dsId = card.getAttribute('data-ds-id');
                         const isCol1 = activeLists.frozen.some(c => c.id === dsId) || activeLists.scroll.some(c => c.id === dsId);
                         const isVisible = dataSourceFieldVisibility[dsId] !== false && !isCol1 && drawerCategoryVisibility[cat] !== false;
-                        card.style.display = isVisible ? '' : 'none'; 
+                        card.style.display = isVisible ? '' : 'none';
                     } else {
                         const body = card.querySelector('.detail-card-body');
-                        if (body) {
+                        if (body && !body.hasAttribute('data-no-sort')) {
                             const fields = Array.from(body.querySelectorAll('.ds-field[data-ds-id]'));
                             fields.sort((a, b) => {
                                 const idA = a.getAttribute('data-ds-id');
@@ -68,14 +68,14 @@ let drawerCategoryVisibility = { '信贷': false };
                                 if (idxB === -1) idxB = 999;
                                 return idxA - idxB;
                             });
-                            
+
                             let hasVisibleField = false;
                             fields.forEach(f => {
                                 body.appendChild(f);
                                 const dsId = f.getAttribute('data-ds-id');
                                 const isCol1 = activeLists.frozen.some(c => c.id === dsId) || activeLists.scroll.some(c => c.id === dsId);
                                 const isVisible = dataSourceFieldVisibility[dsId] !== false && !isCol1;
-                                
+
                                 if (isVisible) {
                                     f.style.display = f.style.gap ? 'flex' : '';
                                     hasVisibleField = true;
@@ -96,13 +96,13 @@ let drawerCategoryVisibility = { '信贷': false };
         });
     };
 
-    window.toggleCategoryVisibility = function(cat) {
+    window.toggleCategoryVisibility = function (cat) {
         if (drawerCategoryVisibility[cat] === undefined) {
             drawerCategoryVisibility[cat] = false;
         } else {
             drawerCategoryVisibility[cat] = !drawerCategoryVisibility[cat];
         }
-        
+
         // Update expanded rows without fully re-rendering
         if (currentTableMode === 'compact') {
             const isVisible = drawerCategoryVisibility[cat] !== false;
@@ -110,14 +110,14 @@ let drawerCategoryVisibility = { '信贷': false };
                 card.style.display = isVisible ? 'block' : 'none';
             });
         }
-        
+
         // Re-render drawer to update eye icon
         if (typeof renderDrawerStates === 'function') {
             renderDrawerStates();
             window.applyDrawerOrderToTable();
         }
     };
-    
+
     // Sidebar Toggle Logic
     const btnSidebarToggle = document.getElementById('btnSidebarToggle');
     const mainLayout = document.querySelector('.main-layout');
@@ -142,6 +142,7 @@ let drawerCategoryVisibility = { '信贷': false };
     const dropdownStatus = document.getElementById('dropdownStatus');
     const dropdownLevel = document.getElementById('dropdownLevel');
     const dropdownVip = document.getElementById('dropdownVip');
+    const dropdownCurrency = document.getElementById('dropdownCurrency');
     const dropdownOther = document.getElementById('dropdownOther');
     const inputAccount = document.getElementById('inputAccount');
 
@@ -413,6 +414,7 @@ let drawerCategoryVisibility = { '信贷': false };
     let selectedStatusVal = '';
     let selectedLevelVal = '';
     let selectedVipVal = '';
+    let selectedCurrencyVal = '';
     let selectedBirthdayOuterVal = '';
 
     const dropdownBirthdayOuter = document.getElementById('dropdownBirthdayOuter');
@@ -437,6 +439,12 @@ let drawerCategoryVisibility = { '信贷': false };
     if (typeof dropdownVip !== 'undefined' && dropdownVip) {
         initSingleSelect(dropdownVip, (val) => {
             selectedVipVal = val;
+        });
+    }
+
+    if (typeof dropdownCurrency !== 'undefined' && dropdownCurrency) {
+        initSingleSelect(dropdownCurrency, (val) => {
+            selectedCurrencyVal = val;
         });
     }
 
@@ -485,11 +493,11 @@ let drawerCategoryVisibility = { '信贷': false };
     const urlParams = new URLSearchParams(window.location.search);
     const dataMode = urlParams.get('mock') || 'normal';
     window.dataMode = dataMode; // export globally if needed
-    
+
     // Filter Row Extreme Mock
     if (dataMode === 'extreme') {
         const filterDropdowns = [
-            'dropdownStatus', 'dropdownLevel', 'dropdownVip', 'dropdownUserTags', 
+            'dropdownStatus', 'dropdownLevel', 'dropdownVip', 'dropdownCurrency', 'dropdownUserTags',
             'dropdownOther', 'dropdownBirthdayOuter', 'accountTypeDropdown'
         ];
         filterDropdowns.forEach(id => {
@@ -547,10 +555,10 @@ let drawerCategoryVisibility = { '信贷': false };
         const statThirdParty = document.getElementById('statThirdParty');
         const statReg = document.getElementById('statReg');
         const statFirstDep = document.getElementById('statFirstDep');
-        
-        if (statYuEBao) statYuEBao.innerText = '$ 9,999,999,999,999';
-        if (statTotalAmount) statTotalAmount.innerText = '$ 9,999,999,999,999';
-        if (statThirdParty) statThirdParty.innerText = '$ 9,999,999,999,999';
+
+        if (statYuEBao) statYuEBao.innerText = '9,999,999,999,999.99';
+        if (statTotalAmount) statTotalAmount.innerText = '9,999,999,999,999.99';
+        if (statThirdParty) statThirdParty.innerText = '9,999,999,999,999.99';
         if (statReg) statReg.innerText = '9,999,999,999';
         if (statFirstDep) statFirstDep.innerText = '9,999,999,999';
     }
@@ -561,7 +569,7 @@ let drawerCategoryVisibility = { '信贷': false };
         const statThirdParty = document.getElementById('statThirdParty');
         const statReg = document.getElementById('statReg');
         const statFirstDep = document.getElementById('statFirstDep');
-        
+
         if (statYuEBao) statYuEBao.innerText = '-';
         if (statTotalAmount) statTotalAmount.innerText = '-';
         if (statThirdParty) statThirdParty.innerText = '-';
@@ -572,7 +580,7 @@ let drawerCategoryVisibility = { '信贷': false };
         if (editFormBirthday) editFormBirthday.value = '';
 
         const filterDropdownsNoData = [
-            'dropdownStatus', 'dropdownLevel', 'dropdownVip', 'dropdownUserTags', 
+            'dropdownStatus', 'dropdownLevel', 'dropdownVip', 'dropdownCurrency', 'dropdownUserTags',
             'dropdownOther', 'dropdownBirthdayOuter', 'dropdownAgentId'
         ];
         filterDropdownsNoData.forEach(id => {
@@ -640,12 +648,12 @@ let drawerCategoryVisibility = { '信贷': false };
 
     // Nested Visibility State
     let nestedColumnsConfig = [
-        { id: 'online', label: '在线' },
         { id: 'avatar', label: '头像' },
         { id: 'memberInfo', label: '会员信息' },
         { id: 'levelTeam', label: '等级&团队' },
-        { id: 'creditLimit', label: '信用&额度' },
-        { id: 'depositWithdraw', label: '存取款' },
+        { id: 'creditLimit', label: '信用&额度 (主钱包)' },
+        { id: 'depositWithdraw', label: '存取款 (主钱包)' },
+        { id: 'dwSummary', label: '存取款 (汇总 USDT)' },
         { id: 'tags', label: '标签' },
         { id: 'status', label: '状态' },
         { id: 'dateInfo', label: '日期信息' },
@@ -663,12 +671,17 @@ let drawerCategoryVisibility = { '信贷': false };
     let nestedDropdownHtml = '';
 
     // --- Amount Formatting Helper ---
-    function formatAmount(val) {
+    function formatAmount(val, currency) {
         if (window.dataMode === 'nodata') return '-';
-        if (val === undefined || val === null || val === '-' || val === '' || val === '无数据') return val;
+        if (val === undefined || val === null || val === '-' || val === '' || val === '无数据' || val === '获取失败') return '-';
         let num = parseFloat(val);
-        if (isNaN(num)) return val;
-        return Math.floor(num).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        if (isNaN(num)) return '-';
+
+        if (currency === 'USDT') {
+            return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        } else {
+            return Math.floor(num).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        }
     }
 
     // --- Data State Rendering Helper ---
@@ -721,20 +734,23 @@ let drawerCategoryVisibility = { '信贷': false };
 
 
     let compactColumnsConfig = [
-        { id: 'online', group: '状态', label: '在线', checkboxIndex: 1, render: (user) => `<td data-col="online" style="text-align: center;">${dataMode === 'nodata' ? '-' : `<span class="status-dot-icon ${user.offlineDays === 0 ? 'online' : 'offline'}" title="${user.offlineDays === 0 ? '在线' : '离线'}"></span>`}</td>` },
+        { id: 'online', group: '基本', label: '在线', checkboxIndex: 1, render: (user) => `<td data-col="online" style="text-align: center;">${dataMode === 'nodata' ? '-' : `<span class="status-dot-icon ${user.offlineDays === 0 ? 'online' : 'offline'}" title="${user.offlineDays === 0 ? '在线' : '离线'}"></span>`}</td>` },
         { id: 'uid', group: '基本', label: '用户ID', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="uid">${dataMode === 'nodata' ? '-' : renderDataState(user.uid, 'copyable')}</td>` },
         { id: 'account', group: '基本', label: '会员名', checkboxIndex: 3, render: (user) => `<td data-col="account"><a href="#" class="cell-username user-detail-link" data-uid="${user.uid}">${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : renderDataState(user.account, 'copyable')}</a></td>` },
         { id: 'agentId', group: '基本', label: '代理', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="agentId">${renderDataState(user.agentId)}</td>` },
-        { id: 'status', group: '状态', label: '状态', checkboxIndex: 1, render: (user) => `<td data-col="status"><span class="user-custom-tag ${user.status === '正常' ? 'tag-green' : user.status === '冻结' ? 'tag-blue' : 'tag-red'}">${user.status}</span></td>` },
+        { id: 'status', group: '基本', label: '状态', checkboxIndex: 1, render: (user) => `<td data-col="status"><span class="user-custom-tag ${user.status === '正常' ? 'tag-green' : user.status === '冻结' ? 'tag-blue' : 'tag-red'}">${user.status}</span></td>` },
         { id: 'vipLevel', group: '等级', label: 'VIP等级', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="vipLevel">${user.vipLevel || 'VIP ' + (user.vipLevel || 1)}</td>` },
         { id: 'payLevel', group: '等级', label: '支付层级', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="payLevel">${user.payLevel}</td>` },
-        { id: 'availableCredit', group: '额度', label: '可用额度', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-money" data-col="availableCredit">${formatAmount(user.availableCredit)}</td>` },
-        { id: 'thirdBal', group: '额度', label: '三方余额', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-money" data-col="thirdBal"><div style="display:flex;align-items:center;justify-content:flex-end;">${formatAmount(user.thirdBal)} <i class="ph ph-arrows-clockwise refresh-icon-compact" data-uid="${user.uid}" style="margin-left:4px;cursor:pointer;color:#2563eb;" title="刷新余额"></i></div></td>` },
-        { id: 'deposit', group: '存取款', label: '存款总额', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money ${user.deposit > 0 ? 'highlight' : ''}" data-col="deposit">${formatAmount(user.deposit)}</td>` },
-        { id: 'withdraw', group: '存取款', label: '取款总额', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money" data-col="withdraw">${formatAmount(user.withdraw)}</td>` },
+        { id: 'currency', group: '额度', label: '主钱包币种', checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="currency">${user.currency || 'RMB'}</td>` },
+        { id: 'availableCredit', group: '额度', label: '可用额度', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-money" data-col="availableCredit">${formatAmount(user.availableCredit, user.currency)}</td>` },
+        { id: 'thirdBal', group: '额度', label: '三方余额', sortable: true, checkboxIndex: 5, render: (user) => `<td data-col="thirdBal"><div style="display:flex;align-items:center;justify-content:flex-start;">${formatAmount(user.thirdBal, user.currency)} <i class="ph ph-arrows-clockwise refresh-icon-compact" data-uid="${user.uid}" style="margin-left:4px;cursor:pointer;color:#2563eb;" title="刷新余额"></i></div></td>` },
+        { id: 'ds_depTotal_main', group: '主钱包', label: '存款总额', tag: '主钱包', tagColor: 'blue', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money ${user.deposit > 0 ? 'highlight' : ''}" data-col="ds_depTotal_main">${formatAmount(user.deposit, user.currency)}</td>` },
+        { id: 'ds_wdrTotal_main', group: '主钱包', label: '取款总额', tag: '主钱包', tagColor: 'blue', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money" data-col="ds_wdrTotal_main">${formatAmount(user.withdraw, user.currency)}</td>` },
+        { id: 'ds_depTotal_summary', group: '汇总 USDT', label: '存款总额', tag: '汇总', tagColor: 'purple', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money ${user.deposit > 0 ? 'highlight' : ''}" data-col="ds_depTotal_summary">${formatAmount(user.deposit, 'USDT')}</td>` },
+        { id: 'ds_wdrTotal_summary', group: '汇总 USDT', label: '取款总额', tag: '汇总', tagColor: 'purple', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money" data-col="ds_wdrTotal_summary">${formatAmount(user.withdraw, 'USDT')}</td>` },
+        { id: 'ip', group: '日期信息', label: '登入IP', checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="ip"><div class="ip-row" style="display: flex; align-items: center; gap: 4px;">${renderDataState(user.ip, 'ip')}</div></td>` },
         { id: 'date', group: '日期信息', label: '新增时间', sortable: true, checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="date">${user.date}</td>` },
         { id: 'lastLogin', group: '日期信息', label: '登入时间', sortable: true, checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="lastLogin">${user.lastLogin}</td>` },
-        { id: 'ip', group: '日期信息', label: '登入IP', checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="ip"><div class="ip-row" style="display: flex; align-items: center; gap: 4px;">${renderDataState(user.ip, 'ip')}</div></td>` },
         {
             id: 'action', group: '', label: '操作', checkboxIndex: 10, render: (user) => `<td class="cell-action sticky-col-right" data-col="action" style="text-align: center; width: 100px;">
             <div class="op-dropdown-container">
@@ -899,6 +915,7 @@ let drawerCategoryVisibility = { '信贷': false };
             });
         });
     }
+    window.mockUsers = mockUsers;
 
     // Helper: Get active selections from multi-select
     function getMultiSelectValues(element) {
@@ -959,6 +976,9 @@ let drawerCategoryVisibility = { '信贷': false };
         // 3. VIP (Multiple Select)
         if (selectedVipVal) {
             tags.push({ key: 'vip', label: `等级: ${selectedVipVal}`, type: 'single-custom', element: dropdownVip, defaultValue: '', defaultText: '请选择', valueVarSetter: (v) => selectedVipVal = v });
+        }
+        if (selectedCurrencyVal) {
+            tags.push({ key: 'currency', label: `主钱包币种: ${selectedCurrencyVal}`, type: 'single-custom', element: dropdownCurrency, defaultValue: '', defaultText: '全部币种', valueVarSetter: (v) => selectedCurrencyVal = v });
         }
         // 4. Other
         const selectedOthers = getMultiSelectValues(dropdownOther);
@@ -1147,7 +1167,7 @@ let drawerCategoryVisibility = { '信贷': false };
             clearAllBtn.style.background = 'transparent';
             clearAllBtn.style.cursor = 'pointer';
             clearAllBtn.style.padding = '4px';
-            
+
             clearAllBtn.addEventListener('click', () => {
                 // Expand search section if collapsed
                 const searchSection = document.querySelector('.search-section');
@@ -1160,7 +1180,7 @@ let drawerCategoryVisibility = { '信贷': false };
                         btnToggleSearch.classList.add('btn-outline');
                     }
                 }
-                
+
                 // Let the browser apply the CSS transition and class changes before blocking the main thread
                 setTimeout(() => {
                     clearAllFilters();
@@ -1182,6 +1202,9 @@ let drawerCategoryVisibility = { '信贷': false };
 
         setSingleSelectValue(dropdownVip, '', '请选择');
         selectedVipVal = '';
+
+        setSingleSelectValue(dropdownCurrency, '', '全部币种');
+        selectedCurrencyVal = '';
         clearMultiSelectValue(dropdownOther);
 
         const inputAccount = document.getElementById('inputAccount');
@@ -1256,7 +1279,7 @@ let drawerCategoryVisibility = { '信贷': false };
                 if (uid) previouslyExpanded.push(uid);
             });
         }
-        
+
         const selectedOthers = getMultiSelectValues(dropdownOther);
         const inputAccount = document.getElementById('inputAccount');
         const accountVal = inputAccount ? inputAccount.value.trim().toLowerCase() : '';
@@ -1323,6 +1346,8 @@ let drawerCategoryVisibility = { '信贷': false };
                 }
 
                 // Advanced Filters
+                if (selectedCurrencyVal && user.currency !== selectedCurrencyVal) return false;
+
                 const formattedDateStart = dateStartVal ? dateStartVal.replace('T', ' ') : '';
                 const formattedDateEnd = dateEndVal ? dateEndVal.replace('T', ' ') : '';
                 if (birthdayVal && user.birthday !== birthdayVal) return false;
@@ -1347,11 +1372,42 @@ let drawerCategoryVisibility = { '信贷': false };
         // Sorting Logic
         if (currentSortColumn) {
             filtered.sort((a, b) => {
-                let valA = a[currentSortColumn];
-                let valB = b[currentSortColumn];
+                let sortKey = currentSortColumn;
+                const dsMapping = {
+                    'ds_debt': 'arrears',
+                    'ds_creditVal': 'creditValue',
+                    'ds_balTreas': 'balanceBuy',
+                    'ds_balInt': 'interest',
+                    'ds_depTotal': 'deposit',
+                    'ds_depCount': 'depositCount',
+                    'ds_wdrTotal': 'withdraw',
+                    'ds_wdrCount': 'withdrawCount',
+                    'ds_wdrFee': 'withdrawPre',
+                    'ds_sysAdd': 'adminAdd',
+                    'ds_sysSub': 'adminDeduct',
+                    'ds_commBal': 'commissionBal',
+                    'ds_depTotal_main': 'deposit',
+                    'ds_wdrTotal_main': 'withdraw',
+                    'ds_wdrFee_main': 'withdrawPre',
+                    'ds_sysAdd_main': 'adminAdd',
+                    'ds_sysSub_main': 'adminDeduct',
+                    'ds_depTotal_summary': 'deposit',
+                    'ds_depCount_summary': 'depositCount',
+                    'ds_wdrTotal_summary': 'withdraw',
+                    'ds_wdrCount_summary': 'withdrawCount',
+                    'ds_wdrFee_summary': 'withdrawPre',
+                    'ds_sysAdd_summary': 'adminAdd',
+                    'ds_sysSub_summary': 'adminDeduct',
+                };
+                if (dsMapping[sortKey]) {
+                    sortKey = dsMapping[sortKey];
+                }
+
+                let valA = a[sortKey];
+                let valB = b[sortKey];
 
                 // Handle numeric conversion for arrears (e.g. "-" or numbers)
-                if (currentSortColumn === 'arrears') {
+                if (sortKey === 'arrears') {
                     valA = valA === '-' ? 0 : parseFloat(valA) || 0;
                     valB = valB === '-' ? 0 : parseFloat(valB) || 0;
                 } else if (typeof valA === 'string' && typeof valB === 'string') {
@@ -1452,20 +1508,19 @@ let drawerCategoryVisibility = { '信贷': false };
                 pinned.forEach(col => {
                     const isMoney = ['availableCredit', 'thirdBal', 'deposit', 'withdraw'].includes(col.id);
                     const justifyAttr = 'space-between';
-                    headerHtml += `<th class="header-sub sticky-col" style="left:${currentLeft}px; min-width:110px; z-index:12;" data-col="${col.id}">
+                    const isSummary = col.group === '汇总 USDT';
+                    const bgStyle = isSummary ? 'background-color: #f1f5f9 !important;' : '';
+                    headerHtml += `<th class="header-sub sticky-col" style="left:${currentLeft}px; min-width:110px; z-index:12; ${bgStyle}" data-col="${col.id}">
                         <div style="display:flex;align-items:center;white-space:nowrap;justify-content:${justifyAttr};">
                             <div style="display:flex;align-items:center;">
                                 <span>${col.label}</span>
                             </div>
                             ${col.sortable
-                            ? `<div class="header-actions-dropdown">
-                                    <button class="btn-icon-only btn-text" style="color: var(--text-muted);"><i class="ph ph-dots-three" style="font-size:16px;"></i></button>
-                                    <div class="header-actions-menu">
-                                        ${getSortBtn(col.id)}
-                                        <i class="ph ph-push-pin icon-pin active" style="opacity:1; margin-left:0;" data-id="${col.id}" title="取消钉选"></i>
-                                    </div>
-                                   </div>`
-                            : `<i class="ph ph-push-pin icon-pin active" data-id="${col.id}" title="取消钉选"></i>`
+                            ? `<div class="header-inline-actions">
+                                    ${getSortBtn(col.id)}
+                                    <i class="ph ph-push-pin icon-pin active" data-id="${col.id}" title="取消钉选"></i>
+                               </div>`
+                            : `<div class="header-inline-actions"><i class="ph ph-push-pin icon-pin active" data-id="${col.id}" title="取消钉选"></i></div>`
                         }
                         </div>
                         <div class="resizer"></div>
@@ -1494,20 +1549,19 @@ let drawerCategoryVisibility = { '信贷': false };
                 unpinnedWithoutAction.forEach(col => {
                     const isMoney = ['availableCredit', 'thirdBal', 'deposit', 'withdraw'].includes(col.id);
                     const justifyAttr = 'space-between';
-                    headerHtml += `<th class="header-sub" data-col="${col.id}">
+                    const isSummary = col.group === '汇总 USDT';
+                    const bgStyle = isSummary ? 'background-color: #f1f5f9 !important;' : '';
+                    headerHtml += `<th class="header-sub" style="${bgStyle}" data-col="${col.id}">
                         <div style="display:flex;align-items:center;white-space:nowrap;justify-content:${justifyAttr};">
                             <div style="display:flex;align-items:center;">
                                 <span>${col.label}</span>
                             </div>
                             ${col.sortable
-                            ? `<div class="header-actions-dropdown">
-                                    <button class="btn-icon-only btn-text" style="color: var(--text-muted);"><i class="ph ph-dots-three" style="font-size:16px;"></i></button>
-                                    <div class="header-actions-menu">
-                                        ${getSortBtn(col.id)}
-                                        <i class="ph ph-push-pin icon-pin" style="opacity:1; margin-left:0;" data-id="${col.id}" title="钉选栏位"></i>
-                                    </div>
-                                   </div>`
-                            : `<i class="ph ph-push-pin icon-pin" data-id="${col.id}" title="钉选栏位"></i>`
+                            ? `<div class="header-inline-actions">
+                                    ${getSortBtn(col.id)}
+                                    <i class="ph ph-push-pin icon-pin" data-id="${col.id}" title="钉选栏位"></i>
+                               </div>`
+                            : `<div class="header-inline-actions"><i class="ph ph-push-pin icon-pin" data-id="${col.id}" title="钉选栏位"></i></div>`
                         }
                         </div>
                         <div class="resizer"></div>
@@ -1517,8 +1571,57 @@ let drawerCategoryVisibility = { '信贷': false };
                 if (actionHeaderHtml) {
                     headerHtml += actionHeaderHtml;
                 }
+                
+                let groupHeaderHtml = `<th class="header-group sticky-col" style="left:0; width: 40px; z-index: 40; border-bottom: 1px solid #f1f5f9; background: #f8fafc;"></th>
+                <th class="header-group sticky-col sticky-col-1" width="40" style="left:40px; z-index: 40; border-bottom: 1px solid #f1f5f9; background: #f8fafc;"></th>`;
+
+                let currentLeftGroup = 80;
+                
+                const buildGroups = (cols, isPinned) => {
+                    let html = '';
+                    let currentGroup = null;
+                    let count = 0;
+                    const renderGroupLabel = (groupName) => {
+                        if (groupName === '主钱包') {
+                            return `
+                            <div style="color: #4338ca; font-weight: 600; font-size: 13px; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 4px; white-space: nowrap;">
+                                <span>主钱包</span>
+                            </div>`;
+                        } else if (groupName === '汇总 USDT') {
+                            return `
+                            <div style="color: #4338ca; font-weight: 600; font-size: 13px; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 4px; white-space: nowrap;">
+                                <span>汇总</span>
+                                <span style="font-size: 12px;">(USDT)</span>
+                            </div>`;
+                        }
+                        return groupName || '';
+                    };
+
+                    cols.forEach((col) => {
+                        if (col.group !== currentGroup) {
+                            if (currentGroup !== null) {
+                                html += `<th class="header-group ${isPinned ? 'sticky-col' : ''}" colspan="${count}" style="${isPinned ? `left:${currentLeftGroup}px; z-index: 40;` : 'z-index: 20;'} text-align: center; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; background: ${currentGroup === '汇总 USDT' ? '#f1f5f9 !important' : '#f8fafc'}; padding: 6px; font-weight: 600; color: #475569; overflow: visible;">${renderGroupLabel(currentGroup)}</th>`;
+                                if (isPinned) currentLeftGroup += 110 * count;
+                            }
+                            currentGroup = col.group;
+                            count = 1;
+                        } else {
+                            count++;
+                        }
+                    });
+                    if (currentGroup !== null) {
+                        html += `<th class="header-group ${isPinned ? 'sticky-col' : ''}" colspan="${count}" style="${isPinned ? `left:${currentLeftGroup}px; z-index: 40;` : 'z-index: 20;'} text-align: center; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; background: ${currentGroup === '汇总 USDT' ? '#f1f5f9 !important' : '#f8fafc'}; padding: 6px; font-weight: 600; color: #475569; overflow: visible;">${renderGroupLabel(currentGroup)}</th>`;
+                        if (isPinned) currentLeftGroup += 110 * count;
+                    }
+                    return html;
+                };
+
+                groupHeaderHtml += buildGroups(pinned, true);
+                groupHeaderHtml += buildGroups(unpinnedWithoutAction, false);
+                if (actionCol) groupHeaderHtml += `<th class="header-group sticky-col-right" style="min-width: 60px; z-index: 30; border-bottom: 1px solid #f1f5f9; background: #f8fafc;"></th>`;
 
                 userTableHeader.innerHTML = `
+                    <tr class="header-group-row">${groupHeaderHtml}</tr>
                     <tr class="header-sub-row">${headerHtml}</tr>
                 `;
             }
@@ -1533,7 +1636,6 @@ let drawerCategoryVisibility = { '信贷': false };
             if (currentTableMode === 'nested') {
                 skeletonHtml += `<tr>`;
                 skeletonHtml += `<td style="text-align: center; padding: 16px 8px;"><div class="skeleton-box skeleton-text-short" style="height: 14px; margin: 0 auto; display: block; max-width: 20px;"></div></td>`;
-                if (nestedColumnVisibility['online']) skeletonHtml += `<td style="padding: 16px 8px;"><div class="skeleton-box skeleton-text-short" style="margin:0 auto; display: block;"></div></td>`;
                 if (nestedColumnVisibility['avatar']) skeletonHtml += `<td style="padding: 16px 8px;"><div class="skeleton-avatar"></div></td>`;
                 if (nestedColumnVisibility['memberInfo']) skeletonHtml += `<td style="padding: 16px 8px;"><div class="skeleton-box skeleton-text-medium" style="margin-bottom:8px; display: block;"></div><div class="skeleton-box skeleton-text-long" style="display: block;"></div></td>`;
                 if (nestedColumnVisibility['levelTeam']) skeletonHtml += `<td style="padding: 16px 8px;"><div class="skeleton-box skeleton-text-medium" style="margin-bottom:8px; display: block;"></div><div class="skeleton-box skeleton-text-long" style="display: block;"></div></td>`;
@@ -1573,7 +1675,7 @@ let drawerCategoryVisibility = { '信贷': false };
             if (!userTableBody) return;
             userTableBody.innerHTML = '';
             if (pagedUsers.length === 0) {
-                let colspanForLoading = currentTableMode === 'nested' 
+                let colspanForLoading = currentTableMode === 'nested'
                     ? (nestedColumnsConfig.filter(c => nestedColumnVisibility[c.id]).length + 2)
                     : (compactColumnsConfig.filter(c => compactColumnVisibility[c.id]).length + 2);
                 userTableBody.innerHTML = `<tr><td colspan="${colspanForLoading}" style="text-align: center; color: var(--text-muted); padding: 32px 0;">无符合筛选条件的会员资料</td></tr>`;
@@ -1595,19 +1697,18 @@ let drawerCategoryVisibility = { '信贷': false };
 
                     nestedColumnsConfig.forEach(col => {
                         if (!nestedColumnVisibility[col.id]) return;
-                        
+
                         // Handle sticky frozen columns
                         const isPinned = nestedPinnedColumnIds && nestedPinnedColumnIds.includes(col.id);
                         const stickyClass = isPinned ? 'sticky-col' : '';
 
-                        if (col.id === 'online') {
-                            nestedRowHtml += `<td class="${stickyClass}" style="text-align: center;">
-                            ${window.dataMode === 'nodata' ? '-' : `<span class="status-dot-icon ${user.offlineDays === 0 ? 'online' : 'offline'}" title="${user.offlineDays === 0 ? '在线' : '离线'}"></span>`}
-                        </td>`;
-                        } else if (col.id === 'avatar') {
+                        if (col.id === 'avatar') {
+                            const isOnline = user.offlineDays === 0;
+                            const statusDotHtml = window.dataMode === 'nodata' ? '' : `<span class="status-dot-icon ${isOnline ? 'online' : 'offline'}" title="${isOnline ? '在线' : '离线'}"></span>`;
                             nestedRowHtml += `<td class="${stickyClass}" style="text-align: center;">
                             <div class="user-avatar-circle-grey">
                                 <i class="ph-fill ph-user"></i>
+                                ${statusDotHtml}
                             </div>
                         </td>`;
                         } else if (col.id === 'memberInfo') {
@@ -1635,23 +1736,37 @@ let drawerCategoryVisibility = { '信贷': false };
                         </td>`;
                         } else if (col.id === 'creditLimit') {
                             nestedRowHtml += `<td class="nested-cell-info ${stickyClass}">
-                            <div><span class="info-label">信用值 :</span> ${formatAmount(user.creditValue)}</div>
-                            <div><span class="info-label">可用额度 :</span> ${formatAmount(user.availableCredit)}</div>
-                            <div><span class="info-label">佣金余额 :</span> ${formatAmount(user.commissionBal)}</div>
-                            <div><span class="info-label">诊额宝 :</span> ${formatAmount(user.balanceBuy)}</div>
-                            <div><span class="info-label">欠款 :</span> ${formatAmount(user.arrears)}</div>
-                            <div><span class="info-label">余额宝利息 :</span> ${formatAmount(user.interest)}</div>
-                            <div><span class="info-label">三方余额 :</span> ${formatAmount(user.thirdBal)} <a href="#" class="refresh-link" style="color:#2563eb;font-size:12px;margin-left:4px;text-decoration:none;">刷新</a></div>
-                            <div><span class="info-label">会员积分 :</span> ${user.points || 0}</div>
+                            <div><span class="info-label">信用值 :</span> <a class="wallet-detail-link" data-title="信用值" data-wallet="${user.currency || 'RMB'}" data-amount="${user.creditValue}">${formatAmount(user.creditValue, 'RMB')}</a></div>
+                            <div><span class="info-label">可用额度 :</span> <a class="wallet-detail-link" data-title="可用额度" data-wallet="${user.currency || 'RMB'}" data-amount="${user.availableCredit}">${formatAmount(user.availableCredit, user.currency)}</a> ${user.currency || 'RMB'}</div>
+                            <div><span class="info-label">佣金余额 :</span> <a class="wallet-detail-link" data-title="佣金余额" data-wallet="${user.currency || 'RMB'}" data-amount="${user.commissionBal}">${formatAmount(user.commissionBal, user.currency)}</a> ${user.currency || 'RMB'}</div>
+                            <div><span class="info-label">余额宝 :</span> <a class="wallet-detail-link" data-title="余额宝" data-wallet="${user.currency || 'RMB'}" data-amount="${user.balanceBuy || 0}">${formatAmount(user.balanceBuy || 0, user.currency)}</a> ${user.currency || 'RMB'}</div>
+                            <div><span class="info-label">欠款 :</span> <a class="wallet-detail-link" data-title="欠款" data-wallet="${user.currency || 'RMB'}" data-amount="${user.arrears || 0}">${formatAmount(user.arrears || 0, user.currency)}</a> ${user.currency || 'RMB'}</div>
+                            <div><span class="info-label">余额宝利息 :</span> <a class="wallet-detail-link" data-title="余额宝利息" data-wallet="${user.currency || 'RMB'}" data-amount="${user.interest || 0}">${formatAmount(user.interest || 0, user.currency)}</a> ${user.currency || 'RMB'}</div>
+                            <div><span class="info-label">三方余额 :</span> <a class="wallet-detail-link" data-title="三方余额" data-wallet="${user.currency || 'RMB'}" data-amount="${user.thirdBal || 0}">${formatAmount(user.thirdBal || 0, user.currency)}</a> ${user.currency || 'RMB'} <a href="#" class="refresh-link" style="color:#2563eb;font-size:12px;margin-left:4px;text-decoration:none;">刷新</a></div>
+                            <div><span class="info-label">会员积分 :</span> <a class="wallet-detail-link" data-title="会员积分" data-wallet="积分" data-amount="${user.points || 0}">${user.points || 0}</a></div>
                         </td>`;
                         } else if (col.id === 'depositWithdraw') {
                             nestedRowHtml += `<td class="nested-cell-info ${stickyClass}">
-                            <div><span class="info-label">存款总额 :</span> ${formatAmount(user.deposit)}</div>
-                            <div><span class="info-label">取款总额 :</span> ${formatAmount(user.withdraw)}</div>
-                            <div><span class="info-label">提款预扣金额 :</span> ${formatAmount(user.withdrawPre)}</div>
-                            <div><span class="info-label">后台扣款总额 :</span> ${formatAmount(user.adminDeduct)}</div>
-                            <div><span class="info-label">存款次数 :</span> ${user.depositCount || 0}</div>
-                            <div><span class="info-label">取款次数 :</span> ${user.withdrawCount || 0}</div>
+                            <div><span class="info-label">存款总额 :</span> <a class="wallet-detail-link" data-title="存款总额" data-wallet="${user.currency || 'RMB'}" data-amount="${user.deposit}">${formatAmount(user.deposit, user.currency)}</a> ${user.currency || 'RMB'}</div>
+                            <div><span class="info-label">取款总额 :</span> <a class="wallet-detail-link" data-title="取款总额" data-wallet="${user.currency || 'RMB'}" data-amount="${user.withdraw}">${formatAmount(user.withdraw, user.currency)}</a> ${user.currency || 'RMB'}</div>
+                            <div><span class="info-label">提款预扣金额 :</span> <a class="wallet-detail-link" data-title="提款预扣金额" data-wallet="${user.currency || 'RMB'}" data-amount="${user.withdrawPre}">${formatAmount(user.withdrawPre, user.currency)}</a> ${user.currency || 'RMB'}</div>
+                            <div><span class="info-label">后台加款总额 :</span> <a class="wallet-detail-link" data-title="后台加款总额" data-wallet="${user.currency || 'RMB'}" data-amount="${user.adminAdd || 0}">${formatAmount(user.adminAdd || 0, user.currency)}</a> ${user.currency || 'RMB'}</div>
+                            <div><span class="info-label">后台扣款总额 :</span> <a class="wallet-detail-link" data-title="后台扣款总额" data-wallet="${user.currency || 'RMB'}" data-amount="${user.adminDeduct}">${formatAmount(user.adminDeduct, user.currency)}</a> ${user.currency || 'RMB'}</div>
+                            <div><span class="info-label">存款次数 :</span> <a class="wallet-detail-link" data-title="存款次数" data-wallet="${user.currency || 'RMB'}" data-amount="${user.depositCount || 0}">${user.depositCount || 0}</a></div>
+                            <div><span class="info-label">取款次数 :</span> <a class="wallet-detail-link" data-title="取款次数" data-wallet="${user.currency || 'RMB'}" data-amount="${user.withdrawCount || 0}">${user.withdrawCount || 0}</a></div>
+                        </td>`;
+                        } else if (col.id === 'dwSummary') {
+                            let depUSDT = user.depositUSDT || (user.deposit && user.deposit !== '-' ? (user.deposit / 7.2) : 0);
+                            let witUSDT = user.withdrawUSDT || (user.withdraw && user.withdraw !== '-' ? (user.withdraw / 7.2) : 0);
+                            let preUSDT = user.withdrawPreUSDT || (user.withdrawPre && user.withdrawPre !== '-' ? (user.withdrawPre / 7.2) : 0);
+                            nestedRowHtml += `<td class="nested-cell-info ${stickyClass}">
+                            <div><span class="info-label">存款总额 :</span> <a class="wallet-detail-link" data-title="存款总额 (USDT)" data-wallet="USDT" data-amount="${depUSDT}">${formatAmount(depUSDT, 'USDT')}</a> USDT</div>
+                            <div><span class="info-label">取款总额 :</span> <a class="wallet-detail-link" data-title="取款总额 (USDT)" data-wallet="USDT" data-amount="${witUSDT}">${formatAmount(witUSDT, 'USDT')}</a> USDT</div>
+                            <div><span class="info-label">提款预扣金额 :</span> <a class="wallet-detail-link" data-title="提款预扣金额 (USDT)" data-wallet="USDT" data-amount="${preUSDT}">${formatAmount(preUSDT, 'USDT')}</a> USDT</div>
+                            <div><span class="info-label">后台加款总额 :</span> <a class="wallet-detail-link" data-title="后台加款总额 (USDT)" data-wallet="USDT" data-amount="0">${formatAmount(0, 'USDT')}</a> USDT</div>
+                            <div><span class="info-label">后台扣款总额 :</span> <a class="wallet-detail-link" data-title="后台扣款总额 (USDT)" data-wallet="USDT" data-amount="0">${formatAmount(0, 'USDT')}</a> USDT</div>
+                            <div><span class="info-label">存款次数 :</span> <a class="wallet-detail-link" data-title="存款次数 (USDT)" data-wallet="USDT" data-amount="${user.depositCountUSDT || user.depositCount || 0}">${user.depositCountUSDT || user.depositCount || 0}</a></div>
+                            <div><span class="info-label">取款次数 :</span> <a class="wallet-detail-link" data-title="取款次数 (USDT)" data-wallet="USDT" data-amount="${user.withdrawCountUSDT || user.withdrawCount || 0}">${user.withdrawCountUSDT || user.withdrawCount || 0}</a></div>
                         </td>`;
                         } else if (col.id === 'tags') {
                             const tagStyles = { '正常': 'tag-blue', 'VIP 客户': 'tag-blue', 'VIP': 'tag-blue', '活跃': 'tag-green', '高频交易': 'tag-green', '大户': 'tag-purple', '高消费': 'tag-purple', '异常风险': 'tag-red' };
@@ -1663,7 +1778,7 @@ let drawerCategoryVisibility = { '信贷': false };
                                 return `<span class="user-custom-tag ${styleClass}">${tag}</span>`;
                             }).join('');
 
-                            nestedRowHtml += `<td class="${stickyClass}">
+                            nestedRowHtml += `<td class="${stickyClass}" style="width: 140px; max-width: 140px;">
                             <div class="user-tags-container" style="flex-wrap: wrap;">
                                 ${nestedTagsOutput}
                             </div>
@@ -1683,7 +1798,7 @@ let drawerCategoryVisibility = { '信贷': false };
                             </div>
                         </td>`;
                         } else if (col.id === 'remark') {
-                            nestedRowHtml += `<td class="nested-cell-info ${stickyClass}">
+                            nestedRowHtml += `<td class="nested-cell-info wrap-text ${stickyClass}">
                             <div><span class="info-label">备注 :</span> ${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : renderDataState(user.remark, 'longText')}</div>
                             <div><span class="info-label">回访备注 :</span> ${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : renderDataState(user.followRemark, 'longText')}</div>
                             <div><span class="info-label">注 :</span> ${renderDataState(user.note, 'longText')}</div>
@@ -1743,11 +1858,12 @@ let drawerCategoryVisibility = { '信贷': false };
                     let currentLeft = 80;
                     pinned.forEach(col => {
                         let cellStr = col.render(user);
+                        let bgStyle = col.group === '汇总 USDT' ? 'background-color: #f1f5f9 !important; ' : '';
                         const match = cellStr.match(/^<td([^>]*?)class="([^"]*)"/);
                         if (match) {
-                            cellStr = cellStr.replace(/^<td([^>]*?)class="/, `<td$1style="left:${currentLeft}px; min-width:110px;" class="sticky-col `);
+                            cellStr = cellStr.replace(/^<td([^>]*?)class="/, `<td$1style="left:${currentLeft}px; min-width:110px; ${bgStyle}" class="sticky-col `);
                         } else {
-                            cellStr = cellStr.replace(/^<td/, `<td style="left:${currentLeft}px; min-width:110px;" class="sticky-col"`);
+                            cellStr = cellStr.replace(/^<td/, `<td style="left:${currentLeft}px; min-width:110px; ${bgStyle}" class="sticky-col"`);
                         }
                         cellsHtml += cellStr;
                         currentLeft += 110;
@@ -1755,7 +1871,15 @@ let drawerCategoryVisibility = { '信贷': false };
 
                     const unpinnedWithoutAction = unpinned.filter(col => col.id !== 'action');
                     unpinnedWithoutAction.forEach(col => {
-                        cellsHtml += col.render(user);
+                        let cellStr = col.render(user);
+                        if (col.group === '汇总 USDT') {
+                            if (cellStr.includes('style="')) {
+                                cellStr = cellStr.replace('style="', 'style="background-color: #f1f5f9 !important; ');
+                            } else {
+                                cellStr = cellStr.replace(/^<td/, '<td style="background-color: #f1f5f9 !important;"');
+                            }
+                        }
+                        cellsHtml += cellStr;
                     });
 
                     const actionCol = visibleColumnsConfig.find(col => col.id === 'action');
@@ -1774,6 +1898,30 @@ let drawerCategoryVisibility = { '信贷': false };
                     expandTr.className = 'expanded-detail-row';
                     expandTr.style.display = 'none';
 
+                    const renderDropdownUI = (mainCurrency) => {
+                        const allCurrencies = ['USDT', 'RMB', 'VND', 'PHP', 'MYR'];
+                        const otherCurrencies = allCurrencies.filter(c => c !== mainCurrency);
+                        return `
+                        <div class="custom-unit-dropdown" style="margin-left: auto; position: relative;">
+                            <button type="button" style="background: #eef2ff; color: #4f46e5; border-radius: 6px; padding: 4px 8px; border: none; display: flex; align-items: center; gap: 4px; font-size: 12px; cursor: pointer; font-weight: 500;">
+                                单位: <span>${mainCurrency}</span> <i class="ph ph-caret-down"></i>
+                            </button>
+                            <div class="dropdown-menu" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 4px; background: white; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); z-index: 10; width: 120px; padding: 4px 0; text-align: left;">
+                                <div style="padding: 4px 12px; font-size: 12px; color: #94a3b8; font-weight: 500;">主钱包</div>
+                                <div class="dropdown-item" data-value="${mainCurrency}" style="padding: 6px 12px; font-size: 13px; color: #4f46e5; background: #f8fafc; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                                    ${mainCurrency} <i class="ph ph-check" style="color: #10b981; display: inline-block;"></i>
+                                </div>
+                                <div style="height: 1px; background: #e2e8f0; margin: 4px 0;"></div>
+                                <div style="padding: 4px 12px; font-size: 12px; color: #94a3b8; font-weight: 500;">其他币种</div>
+                                ${otherCurrencies.map(u => `
+                                <div class="dropdown-item" data-value="${u}" style="padding: 6px 12px; font-size: 13px; color: #334155; background: transparent; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                                    ${u} <i class="ph ph-check" style="color: #10b981; display: none;"></i>
+                                </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        `;
+                    };
                     const colCount = compactColumnsConfig.length + 2; // +1 for checkbox, +1 for expand
                     expandTr.innerHTML = `
                     <td colspan="${colCount}" style="padding: 16px; background: #f8fafc; border-bottom: 1px solid var(--border-color);">
@@ -1788,25 +1936,120 @@ let drawerCategoryVisibility = { '信贷': false };
                                 <div class="detail-card-body grid-2-col">
                                     <div class="ds-field" data-ds-id="ds_realname" style="display:${dataSourceFieldVisibility['ds_realname'] !== false ? '' : 'none'}"><span class="lbl">真实姓名</span> <span class="val" title="${dataMode === 'nodata' ? '' : user.realName}">${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : (user.realName && user.realName.length > 15 ? user.realName.substring(0, 15) + '...' : user.realName)}</span></div>
                                     <div class="ds-field" data-ds-id="ds_birthday" style="display:${dataSourceFieldVisibility['ds_birthday'] !== false ? '' : 'none'}"><span class="lbl">生日</span> <span class="val">${dataMode === 'nodata' ? '-' : '1991-02-11'}</span></div>
-                                    <div class="ds-field" data-ds-id="ds_accountType" style="display:${dataSourceFieldVisibility['ds_accountType'] !== false ? '' : 'none'}"><span class="lbl">账号类型</span> <span class="val">${user.userType || '代理会员'}</span></div>
-                                    <div class="ds-field" data-ds-id="ds_memberType" style="display:${dataSourceFieldVisibility['ds_memberType'] !== false ? '' : 'none'}"><span class="lbl">会员类型</span> <span class="val">${user.payLevel || '默认层'}</span></div>
+                                    <div class="ds-field" data-ds-id="ds_accountType" style="display:${dataSourceFieldVisibility['ds_accountType'] !== false ? '' : 'none'}"><span class="lbl">账号类型</span> <span class="val">${user.accountType || '普通账号'}</span></div>
+                                    <div class="ds-field" data-ds-id="ds_memberType" style="display:${dataSourceFieldVisibility['ds_memberType'] !== false ? '' : 'none'}"><span class="lbl">会员类型</span> <span class="val">${user.userType || '代理会员'}</span></div>
                                     <div class="ds-field" data-ds-id="ds_level" style="display:${dataSourceFieldVisibility['ds_level'] !== false ? '' : 'none'}"><span class="lbl">等级</span> <span class="val">${dataMode === 'nodata' ? '-' : (user.vipLevel ? 'VIP ' + user.vipLevel : 'VIP 1')}</span></div>
                                     <div class="ds-field" data-ds-id="ds_regMode" style="display:${dataSourceFieldVisibility['ds_regMode'] !== false ? '' : 'none'}"><span class="lbl">注册模式</span> <span class="val">${user.registerMode || '一般注册'}</span></div>
                                     <div class="ds-field" data-ds-id="ds_nickname" style="display:${dataSourceFieldVisibility['ds_nickname'] !== false ? '' : 'none'}"><span class="lbl">昵称</span> <span class="val" style="line-height: 1.8; padding: 2px 0;">${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : (user.nickname || '-')}</span></div>
                                     <div class="ds-field" data-ds-id="ds_phone" style="display:${dataSourceFieldVisibility['ds_phone'] !== false ? '' : 'none'}"><span class="lbl">手机号</span> <span class="val">${dataMode === 'nodata' ? '-' : renderDataState(user.phone, 'phone')}</span></div>
                                 </div>
                             </div>
-                            <!-- 资金与存取款 -->
-                            <div class="detail-card" data-category="资金与存取款" style="flex: 0 0 auto; width: 510px; display: ${drawerCategoryVisibility['资金与存取款'] !== false ? 'block' : 'none'};">
-                                <div class="detail-card-header"><i class="ph ph-coins"></i> 资金与存取款</div>
-                                <div class="detail-card-body grid-2-col">
-                                    <div class="ds-field" data-ds-id="ds_depTotal" style="display:${dataSourceFieldVisibility['ds_depTotal'] !== false ? '' : 'none'}"><span class="lbl">存款总额</span> <span class="val text-blue">${formatAmount(user.deposit)}</span></div>
-                                    <div class="ds-field" data-ds-id="ds_depCount" style="display:${dataSourceFieldVisibility['ds_depCount'] !== false ? '' : 'none'}"><span class="lbl">存款次数</span> <span class="val">${user.depositCount || '0'}</span></div>
-                                    <div class="ds-field" data-ds-id="ds_wdrTotal" style="display:${dataSourceFieldVisibility['ds_wdrTotal'] !== false ? '' : 'none'}"><span class="lbl">取款总额</span> <span class="val text-blue">${formatAmount(user.withdraw)}</span></div>
-                                    <div class="ds-field" data-ds-id="ds_wdrCount" style="display:${dataSourceFieldVisibility['ds_wdrCount'] !== false ? '' : 'none'}"><span class="lbl">取款次数</span> <span class="val">${user.withdrawCount || '0'}</span></div>
-                                    <div class="ds-field" data-ds-id="ds_wdrFee" style="display:${dataSourceFieldVisibility['ds_wdrFee'] !== false ? '' : 'none'}"><span class="lbl">提款预扣金额</span> <span class="val">${formatAmount(user.withdrawPre)}</span></div>
-                                    <div class="ds-field" data-ds-id="ds_sysAdd" style="display:${dataSourceFieldVisibility['ds_sysAdd'] !== false ? '' : 'none'}"><span class="lbl">后台加款总额</span> <span class="val text-green">${dataMode === 'nodata' ? '-' : '200'}</span></div>
-                                    <div class="ds-field" data-ds-id="ds_sysSub" style="display:${dataSourceFieldVisibility['ds_sysSub'] !== false ? '' : 'none'}"><span class="lbl">后台扣款总额</span> <span class="val text-red">${dataMode === 'nodata' ? '-' : '0'}</span></div>
+                            <!-- 存取款数据 (主钱包 / 汇总) Combined Card -->
+                            <div class="detail-card" data-category="存取款 (主钱包)" style="flex: 1 1 100%; display: ${drawerCategoryVisibility['存取款 (主钱包)'] !== false ? 'flex' : 'none'}; min-width: max-content; width: auto; flex-direction: column;">
+                                <div class="detail-card-header" style="display: none;"></div>
+                                <div class="detail-card-body" data-no-sort="true" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px 0; padding: 16px;">
+                                    <!-- Column 1 -->
+                                    <div style="display: flex; flex-direction: column; gap: 12px; padding-right: 24px;">
+                                        <!-- Micro Header -->
+                                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; align-items: center; min-height: 29px;">
+                                            <span style="font-size: 15px; font-weight: 600; color: #1e293b; white-space: nowrap; width: 100px;">存取款资料</span>
+                                            <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; justify-items: end;">
+                                                <div class="custom-unit-dropdown" data-main-currency="${user.currency || 'RMB'}" style="display: inline-block; position: relative; min-width: 90px; width: auto; text-align: right; white-space: nowrap;">
+                                                    <button type="button" style="background: none; border: none; padding: 0; color: #4338ca; font-weight: 600; font-size: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: flex-end; width: 100%; white-space: nowrap;">
+                                                        <span class="dropdown-title">主钱包</span>
+                                                        <span style="display: flex; align-items: center; gap: 4px; font-size: 11px; margin-top: 2px;">(<span class="selected-val main-currency-label">${user.currency || 'RMB'}</span>) <i class="ph ph-caret-down"></i></span>
+                                                    </button>
+                                                    <div class="dropdown-menu" style="display: none; position: absolute; right: 0; top: 100%; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); z-index: 10; min-width: 80px; text-align: left;">
+                                                        ${['USDT', 'RMB', 'VND', 'PHP', 'MYR'].map(c => `<div class="dropdown-item" data-value="${c}" style="padding: 8px 12px; font-size: 13px; color: #1e293b; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">${c}${c === (user.currency || 'RMB') ? ' <span style="font-size: 10px; background: #eff6ff; color: #3b82f6; padding: 2px 4px; border-radius: 4px; border: 1px solid #bfdbfe;">主钱包</span>' : ''}</div>`).join('')}
+                                                    </div>
+                                                </div>
+                                                <span style="min-width: 90px; width: auto; text-align: right; white-space: nowrap; color: #6366f1; font-weight: 600; display: flex; flex-direction: column; align-items: flex-end;">
+                                                    <span style="font-size: 12px;">汇总</span>
+                                                    <span style="font-size: 11px; margin-top: 2px;">(USDT)</span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Rows -->
+                                        <div data-ds-row="ds_depTotal" style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+                                            <span style="width: 100px; color: #64748b; font-weight: 500;">存款总额</span>
+                                            <div class="ds-val-grid" style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; justify-items: end;">
+                                                <div class="ds-field" data-ds-id="ds_depTotal_main" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;"><span class="val" style="font-family: monospace; font-weight: 600; color: #334155;">${formatAmount(user.deposit, user.currency)}</span></div>
+                                                <div class="ds-field" data-ds-id="ds_depTotal_summary" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;"><span class="val" style="font-family: monospace; font-weight: 600; color: #4338ca; background: #f8fafc; padding: 2px 6px; border-radius: 4px;">${formatAmount(user.deposit, 'USDT')}</span></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div data-ds-row="ds_depCount" style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+                                            <span style="width: 100px; color: #64748b; font-weight: 500;">存款次数</span>
+                                            <div class="ds-val-grid" style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; justify-items: end;">
+                                                <div class="ds-field" data-ds-id="ds_depCount_main" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;"><span class="val" style="font-family: monospace; font-weight: 600; color: #334155;">${user.depositCount || '0'}</span></div>
+                                                <div class="ds-field" data-ds-id="ds_depCount_summary" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;"><span class="val" style="font-family: monospace; font-weight: 600; color: #4338ca; background: #f8fafc; padding: 2px 6px; border-radius: 4px;">${user.depositCount || '0'}</span></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div data-ds-row="ds_wdrTotal" style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+                                            <span style="width: 100px; color: #64748b; font-weight: 500;">取款总额</span>
+                                            <div class="ds-val-grid" style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; justify-items: end;">
+                                                <div class="ds-field" data-ds-id="ds_wdrTotal_main" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;"><span class="val" style="font-family: monospace; font-weight: 600; color: #334155;">${formatAmount(user.withdraw, user.currency)}</span></div>
+                                                <div class="ds-field" data-ds-id="ds_wdrTotal_summary" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;"><span class="val" style="font-family: monospace; font-weight: 600; color: #4338ca; background: #f8fafc; padding: 2px 6px; border-radius: 4px;">${formatAmount(user.withdraw, 'USDT')}</span></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div data-ds-row="ds_wdrCount" style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+                                            <span style="width: 100px; color: #64748b; font-weight: 500;">取款次数</span>
+                                            <div class="ds-val-grid" style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; justify-items: end;">
+                                                <div class="ds-field" data-ds-id="ds_wdrCount_main" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;"><span class="val" style="font-family: monospace; font-weight: 600; color: #334155;">${user.withdrawCount || '0'}</span></div>
+                                                <div class="ds-field" data-ds-id="ds_wdrCount_summary" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;"><span class="val" style="font-family: monospace; font-weight: 600; color: #4338ca; background: #f8fafc; padding: 2px 6px; border-radius: 4px;">${user.withdrawCount || '0'}</span></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Column 2 -->
+                                    <div style="display: flex; flex-direction: column; gap: 12px; padding-left: 24px; border-left: 1px solid #f1f5f9;">
+                                        <!-- Micro Header -->
+                                        <div style="display: flex; justify-content: flex-end; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; align-items: center; min-height: 29px;">
+                                            <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; justify-items: end; margin-left: 100px;">
+                                                <div class="custom-unit-dropdown" data-main-currency="${user.currency || 'RMB'}" style="display: inline-block; position: relative; min-width: 90px; width: auto; text-align: right; white-space: nowrap;">
+                                                    <button type="button" style="background: none; border: none; padding: 0; color: #4338ca; font-weight: 600; font-size: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: flex-end; width: 100%; white-space: nowrap;">
+                                                        <span class="dropdown-title">主钱包</span>
+                                                        <span style="display: flex; align-items: center; gap: 4px; font-size: 11px; margin-top: 2px;">(<span class="selected-val main-currency-label">${user.currency || 'RMB'}</span>) <i class="ph ph-caret-down"></i></span>
+                                                    </button>
+                                                    <div class="dropdown-menu" style="display: none; position: absolute; right: 0; top: 100%; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); z-index: 10; min-width: 80px; text-align: left;">
+                                                        ${['USDT', 'RMB', 'VND', 'PHP', 'MYR'].map(c => `<div class="dropdown-item" data-value="${c}" style="padding: 8px 12px; font-size: 13px; color: #1e293b; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">${c}${c === (user.currency || 'RMB') ? ' <span style="font-size: 10px; background: #eff6ff; color: #3b82f6; padding: 2px 4px; border-radius: 4px; border: 1px solid #bfdbfe;">主钱包</span>' : ''}</div>`).join('')}
+                                                    </div>
+                                                </div>
+                                                <span style="min-width: 90px; width: auto; text-align: right; white-space: nowrap; color: #6366f1; font-weight: 600; display: flex; flex-direction: column; align-items: flex-end;">
+                                                    <span style="font-size: 12px;">汇总</span>
+                                                    <span style="font-size: 11px; margin-top: 2px;">(USDT)</span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Rows -->
+                                        <div data-ds-row="ds_wdrFee" style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+                                            <span style="width: 100px; color: #64748b; font-weight: 500;">提款预扣金额</span>
+                                            <div class="ds-val-grid" style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; justify-items: end;">
+                                                <div class="ds-field" data-ds-id="ds_wdrFee_main" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;"><span class="val" style="font-family: monospace; font-weight: 600; color: #334155;">${formatAmount(user.withdrawPre, user.currency)}</span></div>
+                                                <div class="ds-field" data-ds-id="ds_wdrFee_summary" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;"><span class="val" style="font-family: monospace; font-weight: 600; color: #4338ca; background: #f8fafc; padding: 2px 6px; border-radius: 4px;">${formatAmount(user.withdrawPre, 'USDT')}</span></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div data-ds-row="ds_sysAdd" style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+                                            <span style="width: 100px; color: #64748b; font-weight: 500;">后台加款总额</span>
+                                            <div class="ds-val-grid" style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; justify-items: end;">
+                                                <div class="ds-field" data-ds-id="ds_sysAdd_main" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;"><span class="val text-green" style="font-family: monospace; font-weight: 600;">${dataMode === 'nodata' ? '-' : formatAmount(1000000, user.currency)}</span></div>
+                                                <div class="ds-field" data-ds-id="ds_sysAdd_summary" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;"><span class="val text-green" style="font-family: monospace; font-weight: 600; background: #f8fafc; padding: 2px 6px; border-radius: 4px;">${dataMode === 'nodata' ? '-' : formatAmount(1800, 'USDT')}</span></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div data-ds-row="ds_sysSub" style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+                                            <span style="width: 100px; color: #64748b; font-weight: 500;">后台扣款总额</span>
+                                            <div class="ds-val-grid" style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; justify-items: end;">
+                                                <div class="ds-field" data-ds-id="ds_sysSub_main" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;"><span class="val" style="font-family: monospace; font-weight: 600; color: #a1a1aa;">${dataMode === 'nodata' ? '-' : '0'}</span></div>
+                                                <div class="ds-field" data-ds-id="ds_sysSub_summary" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;"><span class="val text-red" style="font-family: monospace; font-weight: 600; background: #f8fafc; padding: 2px 6px; border-radius: 4px;">${dataMode === 'nodata' ? '-' : formatAmount(50, 'USDT')}</span></div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <!-- 成长与积分 -->
@@ -1820,20 +2063,26 @@ let drawerCategoryVisibility = { '信贷': false };
                             </div>
                             <!-- 推荐关系 -->
                             <div class="detail-card" data-category="推荐关系" style="flex: 0 0 auto; width: 240px; display: ${drawerCategoryVisibility['推荐关系'] !== false ? 'block' : 'none'};">
-                                <div class="detail-card-header"><i class="ph ph-share-network"></i> 推荐关系</div>
+                                <div class="detail-card-header">
+                                    <div style="display: flex; align-items: center; gap: 8px;"><i class="ph ph-share-network"></i> 推荐关系</div>
+                                    ${renderDropdownUI(user.currency || 'RMB')}
+                                </div>
                                 <div class="detail-card-body flex-list-col">
                                     <div class="ds-field" data-ds-id="ds_inviter" style="display:${dataSourceFieldVisibility['ds_inviter'] !== false ? '' : 'none'}"><span class="lbl">邀请人</span> <span class="val" style="line-height: 1.8; padding: 2px 0;">${user.inviter || '-'}</span></div>
                                     <div class="ds-field" data-ds-id="ds_inviteCode" style="display:${dataSourceFieldVisibility['ds_inviteCode'] !== false ? '' : 'none'}"><span class="lbl">邀请码</span> <span class="val">${user.inviteCode || '-'}</span></div>
                                     <div class="ds-field" data-ds-id="ds_team" style="display:${dataSourceFieldVisibility['ds_team'] !== false ? '' : 'none'}"><span class="lbl">下级/团队</span> <a href="#" class="val subordinate-link text-blue" style="text-decoration: underline;" data-uid="${user.uid}">${user.directTeam || '0/0'}</a></div>
-                                    <div class="ds-field" data-ds-id="ds_commBal" style="display:${dataSourceFieldVisibility['ds_commBal'] !== false ? '' : 'none'}"><span class="lbl">佣金余额</span> <span class="val text-red">${formatAmount(user.commissionBal)}</span></div>
+                                    <div class="ds-field" data-ds-id="ds_commBal" style="display:${dataSourceFieldVisibility['ds_commBal'] !== false ? '' : 'none'}"><span class="lbl">佣金余额</span> <span class="val text-red">${formatAmount(user.commissionBal, user.currency)}</span></div>
                                 </div>
                             </div>
                             <!-- 余额宝 -->
                             <div class="detail-card" data-category="余额宝" style="flex: 0 0 auto; width: 240px; display: ${drawerCategoryVisibility['余额宝'] !== false ? 'block' : 'none'};">
-                                <div class="detail-card-header"><i class="ph ph-wallet"></i> 余额宝</div>
+                                <div class="detail-card-header">
+                                    <div style="display: flex; align-items: center; gap: 8px;"><i class="ph ph-wallet"></i> 余额宝</div>
+                                    ${renderDropdownUI(user.currency || 'RMB')}
+                                </div>
                                 <div class="detail-card-body flex-list-col">
-                                    <div class="ds-field" data-ds-id="ds_balTreas" style="display:${dataSourceFieldVisibility['ds_balTreas'] !== false ? '' : 'none'}"><span class="lbl">余额</span> <span class="val">${dataMode === 'nodata' ? '-' : '15000'}</span></div>
-                                    <div class="ds-field" data-ds-id="ds_balInt" style="display:${dataSourceFieldVisibility['ds_balInt'] !== false ? '' : 'none'}"><span class="lbl">利息</span> <span class="val text-green">${dataMode === 'nodata' ? '-' : '35'}</span></div>
+                                    <div class="ds-field" data-ds-id="ds_balTreas" style="display:${dataSourceFieldVisibility['ds_balTreas'] !== false ? '' : 'none'}"><span class="lbl">余额</span> <span class="val">${dataMode === 'nodata' ? '-' : formatAmount(15000, user.currency)}</span></div>
+                                    <div class="ds-field" data-ds-id="ds_balInt" style="display:${dataSourceFieldVisibility['ds_balInt'] !== false ? '' : 'none'}"><span class="lbl">利息</span> <span class="val text-green">${dataMode === 'nodata' ? '-' : formatAmount(35, user.currency)}</span></div>
                                 </div>
                             </div>
                             <!-- 用户标签 -->
@@ -1845,10 +2094,13 @@ let drawerCategoryVisibility = { '信贷': false };
                             </div>
                             <!-- 信贷 -->
                             <div class="detail-card" data-category="信贷" style="flex: 0 0 auto; width: 240px; display: ${drawerCategoryVisibility['信贷'] !== false ? 'block' : 'none'};">
-                                <div class="detail-card-header"><i class="ph ph-credit-card"></i> 信贷</div>
+                                <div class="detail-card-header">
+                                    <div style="display: flex; align-items: center; gap: 8px;"><i class="ph ph-credit-card"></i> 信贷</div>
+                                    ${renderDropdownUI(user.currency || 'RMB')}
+                                </div>
                                 <div class="detail-card-body flex-list-col">
-                                    <div class="ds-field" data-ds-id="ds_debt" style="display:${dataSourceFieldVisibility['ds_debt'] !== false ? '' : 'none'}"><span class="lbl">欠款</span> <span class="val text-red">${formatAmount(user.arrears)}</span></div>
-                                    <div class="ds-field" data-ds-id="ds_creditVal" style="display:${dataSourceFieldVisibility['ds_creditVal'] !== false ? '' : 'none'}"><span class="lbl">信用值</span> <span class="val">${formatAmount(user.creditValue)}</span></div>
+                                    <div class="ds-field" data-ds-id="ds_debt" style="display:${dataSourceFieldVisibility['ds_debt'] !== false ? '' : 'none'}"><span class="lbl">欠款</span> <span class="val text-red">${formatAmount(user.arrears, user.currency)}</span></div>
+                                    <div class="ds-field" data-ds-id="ds_creditVal" style="display:${dataSourceFieldVisibility['ds_creditVal'] !== false ? '' : 'none'}"><span class="lbl">信用值</span> <span class="val">${formatAmount(user.creditValue, 'RMB')}</span></div>
                                 </div>
                             </div>
                         </div>
@@ -1874,7 +2126,7 @@ let drawerCategoryVisibility = { '信贷': false };
                     closeAllDropdowns();
                     const columnsDrawer = document.getElementById('columnsDrawer');
                     const customColumnDrawer = document.getElementById('customColumnDrawer');
-                    
+
                     if (currentTableMode === 'compact') {
                         if (customColumnDrawer) {
                             const tableHeader = document.querySelector('#userTable thead th');
@@ -2552,7 +2804,7 @@ let drawerCategoryVisibility = { '信贷': false };
 
         const remarkIn = document.getElementById('editFormRemark');
         if (remarkIn) remarkIn.value = (window.dataMode === 'nodata' || user.remark === '-') ? '-' : user.remark;
-        
+
         // Handle extra hardcoded inputs for nodata mode
         if (window.dataMode === 'nodata') {
             const extraInputs = ['editFormEmail', 'editFormQQ', 'editFormWechat', 'editFormZalo', 'editFormWhatsapp', 'editFormTelegram', 'editFormFacebook'];
@@ -2560,7 +2812,7 @@ let drawerCategoryVisibility = { '信贷': false };
                 const el = document.getElementById(id);
                 if (el) el.value = '-';
             });
-            
+
             // Clear withdraw info content in edit modal
             const withdrawTableBody = document.getElementById('withdrawTableBody');
             if (withdrawTableBody) {
@@ -2581,7 +2833,7 @@ let drawerCategoryVisibility = { '信贷': false };
        ========================================================= */
     const userDetailDrawer = document.getElementById('userDetailDrawer');
     const btnUserDetailClose = document.getElementById('btnUserDetailClose');
-    
+
     function openUserDetailModal(uid) {
         if (!userDetailDrawer) return;
         const user = (mockUsers || []).find(u => u.uid === uid) || (mockUsers && mockUsers[0]);
@@ -2590,7 +2842,7 @@ let drawerCategoryVisibility = { '信贷': false };
         // Update Title
         const titleEl = document.getElementById('userDetailDrawerTitle');
         if (titleEl) titleEl.textContent = `查看详情 · ${user.account}`;
-        
+
         // Update Status Badge
         const badge = document.getElementById('ued-detail-status-badge');
         if (badge) {
@@ -2629,7 +2881,7 @@ let drawerCategoryVisibility = { '信贷': false };
                     td.innerText = '-';
                 }
             });
-            
+
             // Override mockup grids in Device / IP tab
             const nestedTriggers = userDetailDrawer.querySelectorAll('.nested-trigger');
             nestedTriggers.forEach(el => el.innerText = '-');
@@ -2639,7 +2891,7 @@ let drawerCategoryVisibility = { '信贷': false };
                     div.innerHTML = '-';
                 }
             });
-            
+
             // Clear withdraw info content in view details modal
             const viewWithdrawTab = document.getElementById('tabContentDtlWithdraw');
             if (viewWithdrawTab) {
@@ -2675,7 +2927,7 @@ let drawerCategoryVisibility = { '信贷': false };
         tab.addEventListener('click', () => {
             userDetailTabs.forEach(t => t.classList.remove('active'));
             dtlTabContents.forEach(c => c.style.display = 'none');
-            
+
             tab.classList.add('active');
             const targetId = 'tabContent' + tab.getAttribute('data-tab').split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('');
             const targetContent = document.getElementById(targetId);
@@ -2692,10 +2944,10 @@ let drawerCategoryVisibility = { '信贷': false };
     const nestedTableBody = document.getElementById('nestedTableBody');
 
     let nestedCurrentSort = 'desc';
-    
+
     function openNestedDrawer(type, val) {
         if (!nestedDrawer) return;
-        
+
         let data = [];
         if (type === 'ip') {
             data = [
@@ -2739,7 +2991,7 @@ let drawerCategoryVisibility = { '信贷': false };
 
         function renderTable() {
             if (!nestedTableBody) return;
-            
+
             // Sort data array
             data.sort((a, b) => {
                 const timeA = new Date(a.timeStr).getTime();
@@ -2760,7 +3012,7 @@ let drawerCategoryVisibility = { '信贷': false };
 
         // Initial render
         renderTable();
-        
+
         nestedDrawer.classList.add('active');
         if (userDetailDrawer) {
             userDetailDrawer.classList.add('shifted');
@@ -2805,7 +3057,7 @@ let drawerCategoryVisibility = { '信贷': false };
             e.preventDefault();
             const uid = link.getAttribute('data-uid');
             const text = link.textContent.trim();
-            
+
             if (text === '查看详情' || text === '查看详情') {
                 openUserDetailModal(uid);
             } else if (text === '编辑用户' || text === '编辑用户') {
@@ -2824,6 +3076,17 @@ let drawerCategoryVisibility = { '信贷': false };
         if (subLink) {
             e.preventDefault();
             showToast('即将跳转至团队页面...');
+        }
+
+        const walletLink = e.target.closest('.wallet-detail-link');
+        if (walletLink) {
+            e.preventDefault();
+            const title = walletLink.getAttribute('data-title');
+            const wallet = walletLink.getAttribute('data-wallet');
+            const amount = walletLink.getAttribute('data-amount');
+            if (typeof openWalletDetailModal === 'function') {
+                openWalletDetailModal(title, wallet, amount);
+            }
         }
     });
 
@@ -3170,7 +3433,7 @@ let drawerCategoryVisibility = { '信贷': false };
     ];
     let compactFrozenColumns = [];
     let compactScrollColumns = [];
-    
+
     // Initialize compact drawer columns from the original config
     compactColumnsConfig.forEach(col => {
         col.isNative = true;
@@ -3196,43 +3459,120 @@ let drawerCategoryVisibility = { '信贷': false };
         { id: 'ds_regMode', label: '注册模式', category: '基本资料' },
         { id: 'ds_nickname', label: '暱称', category: '基本资料' },
         { id: 'ds_phone', label: '手机号', category: '基本资料' },
-        { id: 'ds_depTotal', label: '存款总额', category: '资金与存取款' },
-        { id: 'ds_depCount', label: '存款次数', category: '资金与存取款' },
-        { id: 'ds_wdrTotal', label: '取款总额', category: '资金与存取款' },
-        { id: 'ds_wdrCount', label: '取款次数', category: '资金与存取款' },
-        { id: 'ds_wdrFee', label: '提款预扣金额', category: '资金与存取款' },
-        { id: 'ds_sysAdd', label: '后台加款总额', category: '资金与存取款' },
-        { id: 'ds_sysSub', label: '后台扣款总额', category: '资金与存取款' },
+        { id: 'ds_depTotal_main', label: '存款总额', category: '存取款资料', group: '主钱包', tag: '主钱包', tagColor: 'blue', sortable: true },
+        { id: 'ds_depCount_main', label: '存款次数', category: '存取款资料', group: '主钱包', tag: '主钱包', tagColor: 'blue' },
+        { id: 'ds_wdrTotal_main', label: '取款总额', category: '存取款资料', group: '主钱包', tag: '主钱包', tagColor: 'blue', sortable: true },
+        { id: 'ds_wdrCount_main', label: '取款次数', category: '存取款资料', group: '主钱包', tag: '主钱包', tagColor: 'blue' },
+        { id: 'ds_wdrFee_main', label: '提款预扣金额', category: '存取款资料', group: '主钱包', tag: '主钱包', tagColor: 'blue', sortable: true },
+        { id: 'ds_sysAdd_main', label: '后台加款总额', category: '存取款资料', group: '主钱包', tag: '主钱包', tagColor: 'blue', sortable: true },
+        { id: 'ds_sysSub_main', label: '后台扣款总额', category: '存取款资料', group: '主钱包', tag: '主钱包', tagColor: 'blue', sortable: true },
+        { id: 'ds_depTotal_summary', label: '存款总额', category: '存取款资料', group: '汇总 USDT', tag: '汇总', tagColor: 'purple', sortable: true },
+        { id: 'ds_depCount_summary', label: '存款次数', category: '存取款资料', group: '汇总 USDT', tag: '汇总', tagColor: 'purple' },
+        { id: 'ds_wdrTotal_summary', label: '取款总额', category: '存取款资料', group: '汇总 USDT', tag: '汇总', tagColor: 'purple', sortable: true },
+        { id: 'ds_wdrCount_summary', label: '取款次数', category: '存取款资料', group: '汇总 USDT', tag: '汇总', tagColor: 'purple' },
+        { id: 'ds_wdrFee_summary', label: '提款预扣金额', category: '存取款资料', group: '汇总 USDT', tag: '汇总', tagColor: 'purple', sortable: true },
+        { id: 'ds_sysAdd_summary', label: '后台加款总额', category: '存取款资料', group: '汇总 USDT', tag: '汇总', tagColor: 'purple', sortable: true },
+        { id: 'ds_sysSub_summary', label: '后台扣款总额', category: '存取款资料', group: '汇总 USDT', tag: '汇总', tagColor: 'purple', sortable: true },
         { id: 'ds_growth', label: '成长值', category: '成长与积分' },
         { id: 'ds_vipGrowth', label: 'VIP成长值', category: '成长与积分' },
         { id: 'ds_points', label: '会员积分', category: '成长与积分' },
         { id: 'ds_inviter', label: '邀请人', category: '推荐关系' },
         { id: 'ds_inviteCode', label: '邀请码', category: '推荐关系' },
         { id: 'ds_team', label: '下级/团队', category: '推荐关系' },
-        { id: 'ds_commBal', label: '佣金余额', category: '推荐关系' },
-        { id: 'ds_balTreas', label: '余额', category: '余额宝' },
-        { id: 'ds_balInt', label: '利息', category: '余额宝' },
-        { id: 'ds_debt', label: '欠款', category: '信贷' },
-        { id: 'ds_creditVal', label: '信用值', category: '信贷' },
+        { id: 'ds_commBal', label: '佣金余额', category: '推荐关系', sortable: true },
+        { id: 'ds_balTreas', label: '余额', category: '余额宝', sortable: true },
+        { id: 'ds_balInt', label: '利息', category: '余额宝', sortable: true },
+        { id: 'ds_debt', label: '欠款', category: '信贷', sortable: true },
+        { id: 'ds_creditVal', label: '信用值', category: '信贷', sortable: true },
         { id: 'ds_tags', label: '用户标签', category: '用户标签' },
         { id: 'ds_remark', label: '备注', category: '其他' },
         { id: 'ds_followup', label: '回访备注', category: '其他' }
-    ];
+    ].map(col => {
+        col.render = (user) => {
+            let val = '-';
+            let extraClass = 'cell-val';
+            switch (col.id) {
+                case 'ds_realname': val = renderDataState(user.realName, 'na'); break;
+                case 'ds_birthday': val = user.birthday || '-'; break;
+                case 'ds_accountType': val = user.accountType || '普通账号'; break;
+                case 'ds_memberType': val = user.userType || '代理会员'; break;
+                case 'ds_level': val = `<strong class="${user.level === '黄金会员' ? 'level-gold' : ''}">${user.level}</strong>`; break;
+                case 'ds_regMode': val = user.registerMode || '一般注册'; break;
+                case 'ds_nickname': val = renderDataState(user.nickname, 'na'); break;
+                case 'ds_phone': val = renderDataState(user.phone, 'phone'); break;
+                case 'ds_depTotal_main': val = formatAmount(user.deposit, user.currency); extraClass = 'cell-money text-blue'; break;
+                case 'ds_depCount_main': val = user.depositCount || '0'; break;
+                case 'ds_wdrTotal_main': val = formatAmount(user.withdraw, user.currency); extraClass = 'cell-money text-blue'; break;
+                case 'ds_wdrCount_main': val = user.withdrawCount || '0'; break;
+                case 'ds_wdrFee_main': val = formatAmount(user.withdrawPre, user.currency); extraClass = 'cell-money'; break;
+                case 'ds_sysAdd_main': val = window.dataMode === 'nodata' ? '-' : formatAmount(user.adminAdd || 200, user.currency); extraClass = 'cell-money text-green'; break;
+                case 'ds_sysSub_main': val = window.dataMode === 'nodata' ? '-' : formatAmount(user.adminDeduct || 0, user.currency); extraClass = 'cell-money text-red'; break;
+                case 'ds_depTotal_summary': val = formatAmount(user.deposit, 'USDT'); extraClass = 'cell-money text-blue'; break;
+                case 'ds_depCount_summary': val = user.depositCount || '0'; break;
+                case 'ds_wdrTotal_summary': val = formatAmount(user.withdraw, 'USDT'); extraClass = 'cell-money text-blue'; break;
+                case 'ds_wdrCount_summary': val = user.withdrawCount || '0'; break;
+                case 'ds_wdrFee_summary': val = formatAmount(user.withdrawPre, 'USDT'); extraClass = 'cell-money'; break;
+                case 'ds_sysAdd_summary': val = window.dataMode === 'nodata' ? '-' : formatAmount(user.adminAdd || 200, 'USDT'); extraClass = 'cell-money text-green'; break;
+                case 'ds_sysSub_summary': val = window.dataMode === 'nodata' ? '-' : formatAmount(user.adminDeduct || 0, 'USDT'); extraClass = 'cell-money text-red'; break;
+                case 'ds_growth': val = user.growth || '0'; break;
+                case 'ds_vipGrowth': val = user.vipGrowth || '0'; break;
+                case 'ds_points': val = user.points || '0'; break;
+                case 'ds_inviter': val = user.inviter || '-'; break;
+                case 'ds_inviteCode': val = user.inviteCode || '-'; break;
+                case 'ds_team': val = `<a href="#" class="subordinate-link text-blue" style="text-decoration: underline;" data-uid="${user.uid}">${user.directTeam || '0/0'}</a>`; break;
+                case 'ds_commBal': val = formatAmount(user.commissionBal, user.currency); extraClass = 'cell-money text-red'; break;
+                case 'ds_balTreas': val = window.dataMode === 'nodata' ? '-' : formatAmount(user.balanceBuy || 15000, user.currency); extraClass = 'cell-money'; break;
+                case 'ds_balInt': val = window.dataMode === 'nodata' ? '-' : formatAmount(user.interest || 35, user.currency); extraClass = 'cell-money text-green'; break;
+                case 'ds_debt': val = formatAmount(user.arrears, user.currency); extraClass = 'cell-money text-red'; break;
+                case 'ds_creditVal': val = formatAmount(user.creditValue, 'RMB'); extraClass = 'cell-val'; break;
+                case 'ds_tags': val = (user.tags && user.tags.length > 0) ? user.tags.map(t => `<span class="user-custom-tag tag-blue" style="max-width: 100%; overflow: hidden; text-overflow: ellipsis;" title="${t}">${t}</span>`).join(' ') : '-'; break;
+                case 'ds_remark': val = window.dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : `<span title="${user.remark || ''}">${user.remark ? (user.remark.length > 20 ? user.remark.substring(0, 20) + '...' : user.remark) : '-'}</span>`; break;
+                case 'ds_followup': val = window.dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : `<span title="${user.followRemark || ''}">${user.followRemark ? (user.followRemark.length > 20 ? user.followRemark.substring(0, 20) + '...' : user.followRemark) : '-'}</span>`; break;
+            }
+            return `<td class="${extraClass}" data-col="${col.id}">${val}</td>`;
+        };
+        
+        return col;
+    });
 
     // Track which data source fields are visible in expanded cards (true=visible, false=hidden)
     let dataSourceFieldVisibility = { 'ds_debt': false, 'ds_creditVal': false };
 
-    window.toggleDataSourceFieldVisibility = function(id) {
+    window.toggleDataSourceFieldVisibility = function (id) {
         dataSourceFieldVisibility[id] = dataSourceFieldVisibility[id] === false ? true : false;
-        // Update all expanded row cards in the DOM directly
+        const nowVisible = dataSourceFieldVisibility[id] !== false;
+        
         document.querySelectorAll(`.ds-field[data-ds-id="${id}"]`).forEach(el => {
-            el.style.display = dataSourceFieldVisibility[id] === false ? 'none' : '';
+            // For deposit/withdrawal card fields, use visibility+width instead of display
+            // to avoid collapsing grid cells abruptly
+            el.style.display = nowVisible ? '' : 'none';
         });
+        
+        // Custom logic for deposit/withdrawal card rows
+        if (id.endsWith('_main') || id.endsWith('_summary')) {
+            const baseId = id.replace('_main', '').replace('_summary', '');
+            const mainVisible = dataSourceFieldVisibility[baseId + '_main'] !== false;
+            const summaryVisible = dataSourceFieldVisibility[baseId + '_summary'] !== false;
+            
+            // Update using reliable data-ds-row + .ds-val-grid selectors
+            document.querySelectorAll(`[data-ds-row="${baseId}"]`).forEach(row => {
+                const valGrid = row.querySelector('.ds-val-grid');
+                if (!mainVisible && !summaryVisible) {
+                    row.style.display = 'none';
+                } else {
+                    row.style.display = 'flex';
+                    if (valGrid) {
+                        valGrid.style.gridTemplateColumns = (mainVisible && summaryVisible) ? '1fr 1fr' : '1fr';
+                    }
+                }
+            });
+        }
+        
         renderDrawerStates();
-            window.applyDrawerOrderToTable();
-        };
+        window.applyDrawerOrderToTable();
+    };
 
-    window.resetCustomColumns = function() {
+    window.resetCustomColumns = function () {
         if (!confirm('确定要重置所有自订栏位设定吗？')) return;
         // Reset data source visibility
         dataSourceFieldVisibility = {};
@@ -3275,7 +3615,7 @@ let drawerCategoryVisibility = { '信贷': false };
             }
         });
 
-        
+
         const customColumnOverlay = document.getElementById('customColumnOverlay');
         if (customColumnOverlay) {
             customColumnOverlay.addEventListener('click', () => {
@@ -3286,7 +3626,7 @@ let drawerCategoryVisibility = { '信贷': false };
             });
         }
 
-        
+
         const backupFieldSearch = document.getElementById('backupFieldSearch');
         if (backupFieldSearch) {
             backupFieldSearch.addEventListener('input', (e) => {
@@ -3316,12 +3656,12 @@ let drawerCategoryVisibility = { '信贷': false };
         });
     }
 
-    
+
     function renderDrawerStates() {
         const col1 = document.getElementById('col1-table-fields');
         const col2 = document.getElementById('col2-card-fields');
         const col3 = document.getElementById('col3-backup-fields');
-        
+
         if (!col1 || !col2 || !col3) return;
 
         col1.innerHTML = '';
@@ -3342,10 +3682,13 @@ let drawerCategoryVisibility = { '信贷': false };
         const cardFields = [];
         const backupFields = [];
         availableDataSource.forEach(col => {
-            if (dataSourceFieldVisibility[col.id] !== false) {
-                cardFields.push(col);
-            } else {
-                backupFields.push(col);
+            const isCol1 = col.category !== '存取款资料' && (activeLists.frozen.some(tc => tc.id === col.id) || activeLists.scroll.some(tc => tc.id === col.id));
+            if (!isCol1) {
+                if (dataSourceFieldVisibility[col.id] !== false) {
+                    cardFields.push(col);
+                } else {
+                    backupFields.push(col);
+                }
             }
         });
 
@@ -3357,7 +3700,7 @@ let drawerCategoryVisibility = { '信贷': false };
             groupedCardFields[cat].push(col);
         });
 
-        
+
         const badge1 = document.getElementById('badge-col1');
         const badge2 = document.getElementById('badge-col2');
         const badge3 = document.getElementById('badge-col3');
@@ -3366,13 +3709,13 @@ let drawerCategoryVisibility = { '信贷': false };
         if (badge3) badge3.textContent = backupFields.length;
 
         // Sort groupedCardFields keys
-                
-        
+
+
         const catKeys = Object.keys(groupedCardFields).sort((a, b) => {
             const visA = drawerCategoryVisibility[a] !== false;
             const visB = drawerCategoryVisibility[b] !== false;
             if (visA !== visB) return visA ? -1 : 1;
-            
+
             // If visibility is the same, sort by predefined order
             const idxA = drawerCategoryOrder.indexOf(a);
             const idxB = drawerCategoryOrder.indexOf(b);
@@ -3380,11 +3723,12 @@ let drawerCategoryVisibility = { '信贷': false };
             const finalIdxB = idxB === -1 ? 999 : idxB;
             return finalIdxA - finalIdxB;
         });
-        
+
         const getCategoryIcon = (cat) => {
-            switch(cat) {
+            switch (cat) {
                 case '基本资料': return 'ph-fill ph-user';
-                case '资金与存取款': return 'ph-fill ph-coins';
+                case '存取款 (主钱包)': return 'ph-fill ph-wallet';
+                case '存取款 (汇总 USDT)': return 'ph-fill ph-coins';
                 case '成长与积分': return 'ph-fill ph-trend-up';
                 case '推荐关系': return 'ph-fill ph-share-network';
                 case '余额宝': return 'ph-fill ph-wallet';
@@ -3399,7 +3743,7 @@ let drawerCategoryVisibility = { '信贷': false };
             block.className = 'category-block';
             block.style.marginBottom = '12px';
             const isVisible = drawerCategoryVisibility[cat] !== false;
-            
+
             // Accordion Block Container styling
             block.style.border = '1px solid #e2e8f0';
             block.style.borderRadius = '8px';
@@ -3409,28 +3753,27 @@ let drawerCategoryVisibility = { '信贷': false };
             block.style.background = '#fff';
             block.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
             block.style.flexShrink = '0';
-            
+
             block.draggable = true;
             block.dataset.cat = cat;
-            
+
+            // Calculate selected count
+            const selectedCount = groupedCardFields[cat] ? groupedCardFields[cat].length : 0;
+            const totalCount = availableDataSource.filter(c => c.category === cat || (cat === '其他' && !c.category)).length;
+
             // Accordion Header styling
             block.innerHTML = `
-                <div class="category-title" style="padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; cursor: move; border-bottom: ${isVisible ? '1px solid #e2e8f0' : 'none'}; background: #f8fafc;">
+                <div class="category-title" style="padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; cursor: move; border-bottom: ${isVisible ? '1px solid #e2e8f0' : 'none'}; background: #ffffff;">
                     <div style="display:flex; align-items:center; gap:8px;">
-                        <i class="ph ph-dots-six-vertical" style="color:#cbd5e1; font-size:16px;"></i>
-                        <input type="checkbox" ${isVisible ? 'checked' : ''} onchange="window.toggleCategoryVisibility('${cat}')" style="cursor:pointer; margin:0; width:14px; height:14px; accent-color:#3b82f6;">
-                        <i class="${getCategoryIcon(cat)}" style="color: #475569; font-size:16px;"></i>
-                        <span style="font-size:12px; font-weight:600; color: #1e293b; ${isVisible ? '' : 'opacity:0.4; text-decoration:line-through;'}">${cat}</span>
+                        <i class="ph-fill ph-folder" style="color:#94a3b8; font-size:18px;"></i>
+                        <span style="font-size:15px; font-weight:700; color: #4338ca; ${isVisible ? '' : 'opacity:0.4; text-decoration:line-through;'}">${cat}</span>
                     </div>
-                    <div style="display:flex; align-items:center; gap:16px;">
-                        <div style="display:flex; flex-direction:column; gap:2px;">
-                            <i class="ph-bold ph-caret-up" style="font-size:10px; color:#cbd5e1; cursor:pointer;" onclick="window.moveCategoryUp('${cat}')"></i>
-                            <i class="ph-bold ph-caret-down" style="font-size:10px; color:#cbd5e1; cursor:pointer;" onclick="window.moveCategoryDown('${cat}')"></i>
-                        </div>
+                    <div style="display:flex; align-items:center;">
+                        <span style="font-size: 11px; font-weight: 600; color: #4f46e5; background: #eef2ff; padding: 4px 10px; border-radius: 99px;">已选 ${selectedCount} / ${totalCount}</span>
                     </div>
                 </div>
             `;
-            
+
             // Grid containing fields
             const grid = document.createElement('div');
             grid.style.padding = '12px';
@@ -3440,13 +3783,68 @@ let drawerCategoryVisibility = { '信贷': false };
             grid.style.background = '#f8fafc';
             grid.style.maxHeight = '250px';
             grid.style.overflowY = 'auto';
-            
+
             if (isVisible) {
-                groupedCardFields[cat].forEach(col => {
-                    grid.appendChild(createCol2Item(col));
-                });
+                if (cat === '存取款资料') {
+                    grid.style.display = 'flex';
+                    grid.style.flexDirection = 'column';
+                    grid.style.gap = '16px';
+                    grid.style.padding = '16px';
+                    grid.style.background = '#fff';
+
+                    const mainWalletFields = groupedCardFields[cat].filter(col => col.tag === '主钱包');
+                    const summaryFields = groupedCardFields[cat].filter(col => col.tag === '汇总');
+
+                    if (mainWalletFields.length > 0) {
+                        const mainBox = document.createElement('div');
+                        mainBox.style.flexShrink = '0';
+                        mainBox.style.border = '1px solid #eff6ff';
+                        mainBox.style.borderRadius = '8px';
+                        mainBox.style.background = '#f8fafc';
+                        mainBox.style.overflow = 'hidden';
+                        mainBox.innerHTML = `
+                            <div style="padding: 12px 16px; border-bottom: 1px dashed #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div style="width: 8px; height: 8px; border-radius: 50%; background: #3b82f6;"></div>
+                                    <span style="font-weight: 600; color: #1e40af; font-size: 14px;">主钱包</span>
+                                </div>
+                                <span style="font-size: 12px; color: #3b82f6; border: 1px solid #bfdbfe; padding: 2px 8px; border-radius: 4px; background: #fff;">可切换币种</span>
+                            </div>
+                            <div class="fields-grid" style="padding: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;"></div>
+                        `;
+                        const mainGrid = mainBox.querySelector('.fields-grid');
+                        mainWalletFields.forEach(col => mainGrid.appendChild(createCol2Item(col)));
+                        grid.appendChild(mainBox);
+                    }
+
+                    if (summaryFields.length > 0) {
+                        const summaryBox = document.createElement('div');
+                        summaryBox.style.flexShrink = '0';
+                        summaryBox.style.border = '1px solid #faf5ff';
+                        summaryBox.style.borderRadius = '8px';
+                        summaryBox.style.background = '#f8fafc';
+                        summaryBox.style.overflow = 'hidden';
+                        summaryBox.innerHTML = `
+                            <div style="padding: 12px 16px; border-bottom: 1px dashed #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div style="width: 8px; height: 8px; border-radius: 50%; background: #a855f7;"></div>
+                                    <span style="font-weight: 600; color: #6b21a8; font-size: 14px;">汇总</span>
+                                </div>
+                                <span style="font-size: 12px; color: #a855f7; border: 1px solid #e9d5ff; padding: 2px 8px; border-radius: 4px; background: #fff;">USDT</span>
+                            </div>
+                            <div class="fields-grid" style="padding: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;"></div>
+                        `;
+                        const summaryGrid = summaryBox.querySelector('.fields-grid');
+                        summaryFields.forEach(col => summaryGrid.appendChild(createCol2Item(col)));
+                        grid.appendChild(summaryBox);
+                    }
+                } else {
+                    groupedCardFields[cat].forEach(col => {
+                        grid.appendChild(createCol2Item(col));
+                    });
+                }
             }
-            
+
             block.appendChild(grid);
             col2.appendChild(block);
         });
@@ -3460,7 +3858,7 @@ let drawerCategoryVisibility = { '信贷': false };
         updateTableFromDrawer();
     }
 
-    
+
     function createCol1Item(col, index, type) {
         const div = document.createElement('div');
         div.className = 'column-item';
@@ -3472,7 +3870,7 @@ let drawerCategoryVisibility = { '信贷': false };
         div.style.border = '1px solid #e2e8f0';
         div.style.borderRadius = '8px';
         div.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
-        
+
         div.draggable = true;
         div.dataset.id = col.id;
         div.dataset.type = type;
@@ -3480,20 +3878,23 @@ let drawerCategoryVisibility = { '信贷': false };
         const isMandatory = ['uid', 'account', 'memberInfo'].includes(col.id);
 
         let actionButtons = '';
-        
+
         // Sorting buttons
         actionButtons += `<div style="display: flex; flex-direction: column; gap: 2px; border-right: 1px solid #e2e8f0; padding-right: 4px; margin-right: 4px;">
             <button type="button" style="background:none; border:none; color:var(--text-muted); cursor:pointer; height: 12px; line-height: 12px; font-size: 10px; ${index === 0 ? 'opacity: 0.3; cursor: not-allowed;' : ''}" onclick="window.moveColumnUp('${col.id}', '${type}')"><i class="ph-bold ph-caret-up"></i></button>
             <button type="button" style="background:none; border:none; color:var(--text-muted); cursor:pointer; height: 12px; line-height: 12px; font-size: 10px;" onclick="window.moveColumnDown('${col.id}', '${type}')"><i class="ph-bold ph-caret-down"></i></button>
         </div>`;
-        
-        if (!isMandatory) {
+
+        if (!col.isNative) {
+            let hasCardEquivalent = dataSourceFieldVisibility[col.id] === 'card';
             // Move to Card
-            actionButtons += `<button type="button" class="btn-action-icon" style="color:#8b5cf6;" title="移至卡片" onclick="window.demoteColumnToCard('${col.id}', '${type}')"><i class="ph ph-arrow-right"></i></button>`;
+            if (!hasCardEquivalent) {
+                actionButtons += `<button type="button" class="btn-action-icon" style="color:#8b5cf6;" title="移至卡片" onclick="window.demoteColumnToCard('${col.id}', '${type}')"><i class="ph ph-arrow-right"></i></button>`;
+            }
             // Hide (Move to Backup)
             actionButtons += `<button type="button" class="btn-action-icon" style="color:#94a3b8;" title="隐藏" onclick="window.demoteColumnToBackup('${col.id}', '${type}')"><i class="ph ph-x"></i></button>`;
         } else {
-            actionButtons += `<button type="button" class="btn-action-icon" style="color:#cbd5e1; cursor:not-allowed;" title="无法移除"><i class="ph ph-x"></i></button>`;
+            actionButtons += `<button type="button" class="btn-action-icon" style="color:#cbd5e1; cursor:not-allowed;" title="${isMandatory ? '无法移除' : '固定在主表格'}"><i class="ph ph-x"></i></button>`;
         }
 
         div.innerHTML = `
@@ -3501,6 +3902,7 @@ let drawerCategoryVisibility = { '信贷': false };
                 <i class="ph ph-dots-six-vertical" style="color:#cbd5e1; cursor:grab;"></i>
                 <input type="checkbox" ${isMandatory ? 'checked disabled' : (tableFieldVisibility[col.id] !== false ? 'checked' : '')} onchange="window.toggleTableFieldVisibility('${col.id}', this.checked)" style="cursor:pointer; margin:0; width:14px; height:14px; accent-color:#3b82f6;">
                 <span class="column-name" style="font-size:12px; font-weight:600; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; ${tableFieldVisibility[col.id] === false ? 'opacity:0.4; text-decoration:line-through;' : ''}">${col.label} ${isMandatory ? '<i class="ph-fill ph-lock-key" style="color:#3b82f6; font-size:12px;"></i>' : ''}</span>
+                ${col.tag ? `<span style="font-size: 10px; background: ${col.tagColor === 'blue' ? '#eff6ff' : '#faf5ff'}; color: ${col.tagColor === 'blue' ? '#3b82f6' : '#a855f7'}; padding: 2px 6px; border-radius: 4px; border: 1px solid ${col.tagColor === 'blue' ? '#bfdbfe' : '#e9d5ff'}; flex-shrink: 0;">${col.tag}</span>` : ''}
             </div>
             <div class="column-item-actions" style="display:flex; align-items:center; gap:4px;">
                 ${actionButtons}
@@ -3520,20 +3922,26 @@ let drawerCategoryVisibility = { '信贷': false };
         div.style.borderRadius = '8px';
         div.draggable = true;
         div.dataset.id = col.id;
-        
+
+        let hasTableEquivalent = compactColumnsConfig.some(c => c.id === col.id);
+
         div.innerHTML = `
             <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0;">
                 <i class="ph ph-dots-six-vertical" style="color:#cbd5e1; cursor:grab; font-size: 16px;"></i>
-                <span style="font-size:12px; font-weight:600; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${col.label}</span>
+                <input type="checkbox" checked onchange="if(!this.checked) window.hideCardColumn('${col.id}')" style="cursor:pointer; margin:0; width:14px; height:14px; accent-color:#3b82f6; flex-shrink: 0;">
+                <span style="font-size:13px; font-weight:500; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${col.label}</span>
+                ${col.tag ? `<span style="font-size: 10px; background: ${col.tagColor === 'blue' ? '#eff6ff' : '#faf5ff'}; color: ${col.tagColor === 'blue' ? '#3b82f6' : '#a855f7'}; padding: 2px 6px; border-radius: 4px; border: 1px solid ${col.tagColor === 'blue' ? '#bfdbfe' : '#e9d5ff'}; flex-shrink: 0;">${col.tag}</span>` : ''}
             </div>
             <div style="display:flex; align-items:center; border: 1px solid #f1f5f9; background: #f8fafc; border-radius: 6px; overflow: hidden;">
                 <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 4px 8px; border-right: 1px solid #f1f5f9; background: #f8fafc;">
                     <button type="button" style="background:none; border:none; color:#cbd5e1; cursor:pointer; height: 10px; line-height: 10px; font-size: 10px; padding: 0;" onclick="window.moveCardUp('${col.id}', '${col.ds_category || '其他'}')"><i class="ph-bold ph-caret-up"></i></button>
                     <button type="button" style="background:none; border:none; color:#cbd5e1; cursor:pointer; height: 10px; line-height: 10px; font-size: 10px; padding: 0;" onclick="window.moveCardDown('${col.id}', '${col.ds_category || '其他'}')"><i class="ph-bold ph-caret-down"></i></button>
                 </div>
+                ${!hasTableEquivalent ? `
                 <div style="padding: 4px 8px; border-right: 1px solid #f1f5f9; background: #f8fafc; display: flex; align-items: center; justify-content: center;">
                     <button type="button" class="btn-action-icon" style="color:#3b82f6; border: none; background: transparent; padding: 0; cursor: pointer; display: flex;" title="提至表格" onclick="window.promoteColumnFromCard('${col.id}')"><i class="ph ph-arrow-left" style="font-size: 13px; font-weight: bold;"></i></button>
                 </div>
+                ` : ''}
                 <div style="padding: 4px 8px; background: #f8fafc; display: flex; align-items: center; justify-content: center;">
                     <button type="button" class="btn-action-icon" style="color:#94a3b8; border: none; background: transparent; padding: 0; cursor: pointer; display: flex;" title="隐藏" onclick="window.hideCardColumn('${col.id}')"><i class="ph ph-x" style="font-size: 13px; font-weight: bold;"></i></button>
                 </div>
@@ -3542,7 +3950,7 @@ let drawerCategoryVisibility = { '信贷': false };
         return div;
     }
 
-        function createCol3Item(col) {
+    function createCol3Item(col) {
         const div = document.createElement('div');
         div.style.display = 'flex';
         div.style.justifyContent = 'space-between';
@@ -3554,11 +3962,12 @@ let drawerCategoryVisibility = { '信贷': false };
         div.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
         div.draggable = true;
         div.dataset.id = col.id;
-        
+
         div.innerHTML = `
             <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0;">
                 <i class="ph ph-dots-six-vertical" style="color:#cbd5e1; cursor:grab;"></i>
                 <span style="font-size:13px; font-weight:500; color:#334155; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${col.label}</span>
+                ${col.tag ? `<span style="font-size: 10px; background: ${col.tagColor === 'blue' ? '#eff6ff' : '#faf5ff'}; color: ${col.tagColor === 'blue' ? '#3b82f6' : '#a855f7'}; padding: 2px 6px; border-radius: 4px; border: 1px solid ${col.tagColor === 'blue' ? '#bfdbfe' : '#e9d5ff'}; flex-shrink: 0;">${col.tag}</span>` : ''}
             </div>
             <div style="display:flex; gap:8px;">
                 <button type="button" style="color:#3b82f6; font-size:12px; font-weight:600; background:transparent; border:none; cursor:pointer; display:flex; align-items:center; gap:2px;" title="加至表格" onclick="window.promoteColumnFromBackup('${col.id}')">+表</button>
@@ -3569,11 +3978,15 @@ let drawerCategoryVisibility = { '信贷': false };
     }
 
     // --- Action Methods ---
-    
-    window.demoteColumnToCard = function(id, type) {
+
+    window.demoteColumnToCard = function (id, type) {
         const list = type === 'frozen' ? getActiveLists().frozen : getActiveLists().scroll;
         const idx = list.findIndex(c => c.id === id);
         if (idx > -1) {
+            if (list[idx].isNative) {
+                renderDrawerStates();
+                return;
+            }
             const col = list.splice(idx, 1)[0];
             availableDataSource.push(col);
             dataSourceFieldVisibility[col.id] = true;
@@ -3582,10 +3995,14 @@ let drawerCategoryVisibility = { '信贷': false };
         }
     };
 
-    window.demoteColumnToBackup = function(id, type) {
+    window.demoteColumnToBackup = function (id, type) {
         const list = type === 'frozen' ? getActiveLists().frozen : getActiveLists().scroll;
         const idx = list.findIndex(c => c.id === id);
         if (idx > -1) {
+            if (list[idx].isNative) {
+                renderDrawerStates();
+                return;
+            }
             const col = list.splice(idx, 1)[0];
             availableDataSource.push(col);
             dataSourceFieldVisibility[col.id] = false;
@@ -3594,48 +4011,88 @@ let drawerCategoryVisibility = { '信贷': false };
         }
     };
 
-    window.promoteColumnFromCard = function(id) {
+    window.promoteColumnFromCard = function (id) {
+        const targetList = currentTableMode === 'nested' ? nestedScrollColumns : compactScrollColumns;
+        if (targetList.some(c => c.id === id) || (currentTableMode === 'nested' ? nestedFrozenColumns : compactFrozenColumns).some(c => c.id === id)) {
+            // Already in table, just remove it from availableDataSource if it's not deposit/withdraw
+            const idx = availableDataSource.findIndex(c => c.id === id);
+            if (idx > -1) {
+                if (availableDataSource[idx].category !== '存取款资料') {
+                    availableDataSource.splice(idx, 1);
+                    delete dataSourceFieldVisibility[id];
+                }
+            }
+            renderDrawerStates();
+            return;
+        }
+
         const idx = availableDataSource.findIndex(c => c.id === id);
         if (idx > -1) {
-            const col = availableDataSource.splice(idx, 1)[0];
+            const isDepositWithdraw = availableDataSource[idx].category === '存取款资料';
+            const col = isDepositWithdraw ? { ...availableDataSource[idx] } : availableDataSource.splice(idx, 1)[0];
             col.isNative = false;
+            const insertIntoGroup = (targetList, colToInsert) => {
+                let actionIdx = targetList.findIndex(c => c.id === 'action');
+                let appendIdx = actionIdx !== -1 ? actionIdx : targetList.length;
+
+                if (!colToInsert.group) {
+                    targetList.splice(appendIdx, 0, colToInsert);
+                    return;
+                }
+
+                let lastIdx = -1;
+                for (let i = 0; i < targetList.length; i++) {
+                    if (targetList[i].group === colToInsert.group) {
+                        lastIdx = i;
+                    }
+                }
+
+                if (lastIdx !== -1) {
+                    targetList.splice(lastIdx + 1, 0, colToInsert);
+                } else {
+                    targetList.splice(appendIdx, 0, colToInsert);
+                }
+            };
+
             if (currentTableMode === 'nested') {
-                nestedScrollColumns.push(col);
+                insertIntoGroup(nestedScrollColumns, col);
                 nestedColumnVisibility[col.id] = true;
             } else {
-                compactScrollColumns.push(col);
+                insertIntoGroup(compactScrollColumns, col);
                 compactColumnVisibility[col.id] = true;
             }
-            // Cleanup card visibility flag
-            delete dataSourceFieldVisibility[col.id];
+            // Cleanup card visibility flag only if we actually moved it
+            if (!isDepositWithdraw) {
+                delete dataSourceFieldVisibility[col.id];
+            }
             renderDrawerStates();
             updateTableFromDrawer();
         }
     };
 
-    window.hideCardColumn = function(id) {
+    window.hideCardColumn = function (id) {
         dataSourceFieldVisibility[id] = false;
         renderDrawerStates();
-            window.applyDrawerOrderToTable();
-        };
+        window.applyDrawerOrderToTable();
+    };
 
-    window.promoteColumnFromBackup = function(id) {
+    window.promoteColumnFromBackup = function (id) {
         // Backup to table is same logic as card to table
         window.promoteColumnFromCard(id);
     };
 
-    window.addBackupToCard = function(id) {
+    window.addBackupToCard = function (id) {
         dataSourceFieldVisibility[id] = true;
         renderDrawerStates();
-            window.applyDrawerOrderToTable();
-        };
+        window.applyDrawerOrderToTable();
+    };
 
-    
-    window.moveCardUp = function(id, cat) {
+
+    window.moveCardUp = function (id, cat) {
         const activeLists = getActiveLists();
         const inCardItems = availableDataSource.filter(c => {
-            const isCol1 = activeLists.frozen.some(tc => tc.id === c.id) || activeLists.scroll.some(tc => tc.id === c.id);
-            const resolvedCat = c.ds_category || '其他';
+            const isCol1 = c.category !== '存取款资料' && (activeLists.frozen.some(tc => tc.id === c.id) || activeLists.scroll.some(tc => tc.id === c.id));
+            const resolvedCat = c.ds_category || c.category || '其他';
             return !isCol1 && dataSourceFieldVisibility[c.id] !== false && resolvedCat === cat;
         });
         const idx = inCardItems.findIndex(c => c.id === id);
@@ -3652,11 +4109,11 @@ let drawerCategoryVisibility = { '信贷': false };
         }
     };
 
-    window.moveCardDown = function(id, cat) {
+    window.moveCardDown = function (id, cat) {
         const activeLists = getActiveLists();
         const inCardItems = availableDataSource.filter(c => {
-            const isCol1 = activeLists.frozen.some(tc => tc.id === c.id) || activeLists.scroll.some(tc => tc.id === c.id);
-            const resolvedCat = c.ds_category || '其他';
+            const isCol1 = c.category !== '存取款资料' && (activeLists.frozen.some(tc => tc.id === c.id) || activeLists.scroll.some(tc => tc.id === c.id));
+            const resolvedCat = c.ds_category || c.category || '其他';
             return !isCol1 && dataSourceFieldVisibility[c.id] !== false && resolvedCat === cat;
         });
         const idx = inCardItems.findIndex(c => c.id === id);
@@ -3673,7 +4130,7 @@ let drawerCategoryVisibility = { '信贷': false };
         }
     };
 
-    window.moveColumnUp = function(id, type) {
+    window.moveColumnUp = function (id, type) {
         let list = type === 'frozen' ? getActiveLists().frozen : getActiveLists().scroll;
         const idx = list.findIndex(c => c.id === id);
         if (idx > 0) {
@@ -3685,7 +4142,7 @@ let drawerCategoryVisibility = { '信贷': false };
         }
     };
 
-    window.moveColumnDown = function(id, type) {
+    window.moveColumnDown = function (id, type) {
         let list = type === 'frozen' ? getActiveLists().frozen : getActiveLists().scroll;
         const idx = list.findIndex(c => c.id === id);
         if (idx > -1 && idx < list.length - 1) {
@@ -3747,7 +4204,7 @@ let drawerCategoryVisibility = { '信贷': false };
     function updateListsFromDOM() {
         const newFrozen = [];
         const newScroll = [];
-        
+
         document.querySelectorAll('#frozenColumnsList .column-item').forEach(el => {
             const id = el.dataset.id;
             let col = customFrozenColumns.find(c => c.id === id) || customScrollColumns.find(c => c.id === id);
@@ -3763,20 +4220,20 @@ let drawerCategoryVisibility = { '信贷': false };
         customFrozenColumns = newFrozen;
         customScrollColumns = newScroll;
         renderDrawerStates();
-            window.applyDrawerOrderToTable();
-        }
+        window.applyDrawerOrderToTable();
+    }
 
     function updateTableFromDrawer() {
         if (currentTableMode === 'nested') {
             nestedColumnsConfig.length = 0;
             nestedPinnedColumnIds.length = 0;
-            
+
             nestedFrozenColumns.forEach(c => {
                 if (tableFieldVisibility[c.id] === false) return;
                 nestedColumnsConfig.push(c);
                 nestedPinnedColumnIds.push(c.id);
             });
-            
+
             nestedScrollColumns.forEach(c => {
                 if (tableFieldVisibility[c.id] === false) return;
                 nestedColumnsConfig.push(c);
@@ -3788,20 +4245,32 @@ let drawerCategoryVisibility = { '信贷': false };
         } else {
             compactColumnsConfig.length = 0;
             pinnedColumnIds.length = 0;
-            
-            compactFrozenColumns.forEach(c => {
-                if (tableFieldVisibility[c.id] === false) return;
-                compactColumnsConfig.push(c);
-                pinnedColumnIds.push(c.id);
-            });
-            
-            compactScrollColumns.forEach(c => {
-                if (tableFieldVisibility[c.id] === false) return;
-                compactColumnsConfig.push(c);
-            });
 
+            const processCompactList = (sourceList, isPinned) => {
+                const expandedMains = [];
+                const expandedUSDTs = [];
+                const othersBefore = [];
+                const othersAfter = [];
+                let seenPair = false;
+
+                sourceList.forEach(c => {
+                    if (tableFieldVisibility[c.id] === false) return;
+                    othersBefore.push(c);
+                });
+
+                const finalBlock = [...othersBefore, ...expandedMains, ...expandedUSDTs, ...othersAfter];
+                finalBlock.forEach(col => {
+                    compactColumnsConfig.push(col);
+                    if (isPinned) pinnedColumnIds.push(col.id);
+                    compactColumnVisibility[col.id] = true;
+                });
+            };
+
+            processCompactList(compactFrozenColumns, true);
+            processCompactList(compactScrollColumns, false);
+            
             availableDataSource.forEach(c => {
-                compactColumnVisibility[c.id] = false;
+                if(compactColumnsConfig.findIndex(cc => cc.id === c.id) === -1) compactColumnVisibility[c.id] = false;
             });
         }
 
@@ -3896,6 +4365,50 @@ let drawerCategoryVisibility = { '信贷': false };
         }
     }
 
+    const walletDetailModal = document.getElementById('walletDetailModal');
+    const walletDetailTitle = document.getElementById('walletDetailTitle');
+    const walletDetailCurrency = document.getElementById('walletDetailCurrency');
+    const walletDetailBody = document.getElementById('walletDetailBody');
+    const btnWalletDetailClose = document.getElementById('btnWalletDetailClose');
+
+    window.openWalletDetailModal = function (title, wallet, mainAmount) {
+        if (!walletDetailModal) return;
+        walletDetailTitle.textContent = title;
+        walletDetailCurrency.textContent = wallet;
+
+        // Formatted amount if it's a number string
+        let formattedMain = mainAmount;
+        if (!isNaN(parseFloat(mainAmount)) && mainAmount.toString().indexOf(',') === -1 && mainAmount !== '-') {
+            formattedMain = parseFloat(mainAmount).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+        }
+
+        // Use mock data mimicking the screenshot
+        const mockCurrencies = [
+            { curr: 'RMB', val: wallet === 'RMB' ? formattedMain : '2,727' },
+            { curr: 'VND', val: '22,326,998' },
+            { curr: 'PHP', val: '11,039' },
+            { curr: 'MYR', val: '420.69' },
+            { curr: 'USDT', val: wallet === 'USDT' ? formattedMain : '51.62' }
+        ];
+
+        let html = '';
+        mockCurrencies.forEach(item => {
+            html += `<tr class="wallet-detail-table-row">
+                <td>${item.curr}</td>
+                <td>${item.val}</td>
+            </tr>`;
+        });
+        walletDetailBody.innerHTML = html;
+
+        walletDetailModal.classList.add('show');
+    };
+
+    if (btnWalletDetailClose) {
+        btnWalletDetailClose.addEventListener('click', () => {
+            walletDetailModal.classList.remove('show');
+        });
+    }
+
     function showToast(message) {
         const toast = document.createElement('div');
         toast.textContent = message;
@@ -3913,12 +4426,173 @@ let drawerCategoryVisibility = { '信贷': false };
         toast.style.opacity = '0';
         toast.style.transition = 'opacity 0.3s';
         document.body.appendChild(toast);
-        
+
         setTimeout(() => toast.style.opacity = '1', 10);
         setTimeout(() => {
             toast.style.opacity = '0';
             setTimeout(() => toast.remove(), 300);
         }, 3000);
     }
+
+    // Add global event listener for unit dropdowns
+    document.addEventListener('click', function(e) {
+        // Handle dropdown toggle
+        const btn = e.target.closest('.custom-unit-dropdown button');
+        if (btn) {
+            const dropdown = btn.closest('.custom-unit-dropdown');
+            const menu = dropdown.querySelector('.dropdown-menu');
+            // Close all other menus
+            document.querySelectorAll('.custom-unit-dropdown .dropdown-menu').forEach(m => {
+                if (m !== menu) m.style.display = 'none';
+            });
+            
+            if (menu.style.display === 'none') {
+                const rect = btn.getBoundingClientRect();
+                menu.style.position = 'fixed';
+                menu.style.top = (rect.bottom + 4) + 'px';
+                menu.style.left = (rect.right - 120) + 'px';
+                menu.style.width = '120px';
+                menu.style.zIndex = '99999';
+                menu.style.display = 'block';
+            } else {
+                menu.style.display = 'none';
+            }
+            return;
+        }
+
+        // Handle unit selection
+        const item = e.target.closest('.dropdown-menu .dropdown-item');
+        if (item) {
+            const dropdown = item.closest('.custom-unit-dropdown');
+            const btn = dropdown.querySelector('button');
+            const menu = dropdown.querySelector('.dropdown-menu');
+            const newUnit = item.getAttribute('data-value');
+            
+            // Update button text
+            const valSpan = btn.querySelector('.selected-val') || btn.querySelector('span');
+            if (valSpan) {
+                valSpan.textContent = newUnit;
+            }
+            
+            // Update checkmarks and colors
+            menu.querySelectorAll('.dropdown-item').forEach(el => {
+                const icon = el.querySelector('i.ph-check');
+                if (icon) {
+                    if (el === item) {
+                        icon.style.display = 'inline-block';
+                        el.style.background = '#f8fafc';
+                        el.style.color = '#4f46e5';
+                    } else {
+                        icon.style.display = 'none';
+                        el.style.background = 'transparent';
+                        el.style.color = '#334155';
+                    }
+                }
+            });
+            
+            // Hide menu
+            menu.style.display = 'none';
+            
+            // Re-format amount fields in this card
+            const cardBody = dropdown.closest('.detail-card').querySelector('.detail-card-body');
+            const expandedRow = dropdown.closest('.expanded-detail-row');
+            if (!expandedRow) return;
+            
+            const prevRow = expandedRow.previousElementSibling;
+            const btnExpand = prevRow ? prevRow.querySelector('.expand-btn') : null;
+            const uid = btnExpand ? btnExpand.getAttribute('data-uid') : null;
+            if (!uid || typeof window.mockUsers === 'undefined') return;
+            
+            const user = window.mockUsers.find(u => u.uid == uid);
+            if (user && cardBody) {
+                // Mock exchange rates relative to USDT
+                const rates = { USDT: 1, RMB: 7.2, VND: 25000, PHP: 58, MYR: 4.7 };
+                const baseRate = rates[user.currency || 'RMB'] || 1;
+                const targetRate = rates[newUnit] || 1;
+                const conversionFactor = targetRate / baseRate;
+                
+                // Update micro-header currency labels
+                const labels = cardBody.querySelectorAll('.main-currency-label');
+                labels.forEach(l => l.textContent = newUnit);
+
+                // Synchronize all dropdown titles and checkmarks in this card
+                cardBody.querySelectorAll('.custom-unit-dropdown').forEach(dd => {
+                    const titleSpan = dd.querySelector('.dropdown-title');
+                    if (titleSpan) {
+                        const mainCurrency = dd.getAttribute('data-main-currency');
+                        if (newUnit === mainCurrency) {
+                            titleSpan.textContent = '主钱包';
+                        } else {
+                            titleSpan.textContent = '钱包';
+                        }
+                    }
+                    dd.querySelectorAll('.dropdown-item').forEach(el => {
+                        const icon = el.querySelector('i.ph-check');
+                        if (icon) {
+                            if (el.getAttribute('data-value') === newUnit) {
+                                icon.style.display = 'inline-block';
+                                el.style.background = '#f8fafc';
+                                el.style.color = '#4f46e5';
+                            } else {
+                                icon.style.display = 'none';
+                                el.style.background = 'transparent';
+                                el.style.color = '#334155';
+                            }
+                        }
+                    });
+                });
+
+                // Find all amount fields in this card and re-render them
+                const dsFields = cardBody.querySelectorAll('.ds-field');
+                dsFields.forEach(field => {
+                    const dsId = field.getAttribute('data-ds-id');
+                    const valSpan = field.querySelector('.val');
+                    if (!valSpan) return;
+                    
+                    let rawVal = null;
+                    let isAmount = false;
+                    
+                    switch(dsId) {
+                        case 'ds_depTotal_main': rawVal = user.deposit; isAmount = true; break;
+                        case 'ds_wdrTotal_main': rawVal = user.withdraw; isAmount = true; break;
+                        case 'ds_wdrFee_main': rawVal = user.withdrawPre; isAmount = true; break;
+                        case 'ds_sysAdd_main': rawVal = user.adminAdd !== undefined ? user.adminAdd : 200; isAmount = true; break;
+                        case 'ds_sysSub_main': rawVal = user.adminDeduct !== undefined ? user.adminDeduct : 0; isAmount = true; break;
+                        case 'ds_commBal': rawVal = user.commissionBal; isAmount = true; break;
+                        case 'ds_balTreas': rawVal = 15000; isAmount = true; break;
+                        case 'ds_balInt': rawVal = 35; isAmount = true; break;
+                        case 'ds_debt': rawVal = user.arrears; isAmount = true; break;
+                    }
+                    
+                    if (isAmount) {
+                        if (window.dataMode === 'nodata' && (dsId === 'ds_sysAdd_main' || dsId === 'ds_sysSub_main' || dsId === 'ds_balTreas' || dsId === 'ds_balInt')) {
+                            // Keep nodata '-'
+                        } else if (rawVal === '-' || rawVal === '获取失败' || rawVal === '载入中' || rawVal === undefined || rawVal === null) {
+                            valSpan.textContent = '-';
+                        } else {
+                            let parsedVal = parseFloat(rawVal) || 0;
+                            let convertedVal = parsedVal * conversionFactor;
+                            if (typeof formatAmount === 'function') {
+                                valSpan.textContent = formatAmount(convertedVal, newUnit);
+                            }
+                        }
+                    }
+                });
+            }
+            return;
+        }
+
+        // Click outside closes menus
+        document.querySelectorAll('.custom-unit-dropdown .dropdown-menu').forEach(m => {
+            m.style.display = 'none';
+        });
+    });
+
+    // Close menus on any scroll to prevent floating detached menus
+    document.addEventListener('scroll', function() {
+        document.querySelectorAll('.custom-unit-dropdown .dropdown-menu').forEach(m => {
+            m.style.display = 'none';
+        });
+    }, true);
 
 });

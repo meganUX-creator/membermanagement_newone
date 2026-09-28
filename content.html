@@ -64,11 +64,11 @@
                         <div class="custom-select-single" id="dropdownStatus">
                             <div class="select-selected">
                                 <span class="inline-label">状态：</span>
-                                <span class="selected-val">正常</span>
+                                <span class="selected-val">全部</span>
                                 <i class="ph ph-caret-down"></i>
                             </div>
                             <ul class="select-options">
-                                <li data-value="" class="active">所有</li>
+                                <li data-value="" class="active">全部</li>
                                 <li data-value="正常">正常</li>
                                 <li data-value="冻结">冻结</li>
                                 <li data-value="停用">停用</li>
@@ -79,7 +79,7 @@
                         <div class="custom-select-single" id="dropdownLevel">
                             <div class="select-selected">
                                 <span class="inline-label">用户层级：</span>
-                                <span class="selected-val">默认层</span>
+                                <span class="selected-val">全部</span>
                                 <i class="ph ph-caret-down"></i>
                             </div>
                             <ul class="select-options">
@@ -106,6 +106,23 @@
                                 <li data-value="钻石会员">钻石会员</li>
                                 <li data-value="至尊会员">至尊会员</li>
                                 <li data-value="管理员">管理员</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="form-group" data-filter-id="currency">
+                        <div class="custom-select-single" id="dropdownCurrency">
+                            <div class="select-selected">
+                                <span class="inline-label">主钱包币种：</span>
+                                <span class="selected-val">全部</span>
+                                <i class="ph ph-caret-down"></i>
+                            </div>
+                            <ul class="select-options">
+                                <li data-value="" class="active">全部</li>
+                                <li data-value="RMB">RMB</li>
+                                <li data-value="VND">VND</li>
+                                <li data-value="PHP">PHP</li>
+                                <li data-value="MYR">MYR</li>
+                                <li data-value="USDT">USDT</li>
                             </ul>
                         </div>
                     </div>
@@ -178,14 +195,14 @@
                     <div class="form-group" data-filter-id="bankCard">
                         <div class="input-with-inline-label">
                             <span class="inline-label">绑定银行卡：</span>
-                            <input type="text" placeholder="银行卡号" id="inputBankCardOuter">
+                            <input type="text" placeholder="请输入银行卡号" id="inputBankCardOuter">
                         </div>
                     </div>
 
                     <div class="form-group" data-filter-id="notLoginDays">
                         <div class="input-with-suffix">
                             <span class="inline-label">未登入天数 (大于)：</span>
-                            <input type="text" placeholder="天数" id="inputOfflineDaysOuter">
+                            <input type="text" placeholder="请输入天数" id="inputOfflineDaysOuter">
                             <span class="suffix">天</span>
                         </div>
                     </div>
@@ -193,28 +210,28 @@
                     <div class="form-group" data-filter-id="agentId">
                         <div class="input-with-inline-label">
                             <span class="inline-label">代理Id：</span>
-                            <input type="text" placeholder="代理Id" id="inputAgentIdOuter">
+                            <input type="text" placeholder="请输入代理Id" id="inputAgentIdOuter">
                         </div>
                     </div>
 
                     <div class="form-group" data-filter-id="vipLevel">
                         <div class="input-with-inline-label">
                             <span class="inline-label">VIP会员等级：</span>
-                            <input type="text" placeholder="VIP会员等级" id="inputVipLevelOuter">
+                            <input type="text" placeholder="请输入VIP会员等级" id="inputVipLevelOuter">
                         </div>
                     </div>
 
                     <div class="form-group" data-filter-id="loginIp">
                         <div class="input-with-inline-label">
                             <span class="inline-label">登录IP：</span>
-                            <input type="text" placeholder="登录IP" id="inputIpOuter">
+                            <input type="text" placeholder="请输入登录IP" id="inputIpOuter">
                         </div>
                     </div>
 
                     <div class="form-group" data-filter-id="depositAmount">
                         <div class="input-with-inline-label">
                             <span class="inline-label">存款金额大于：</span>
-                            <input type="text" placeholder="金额" id="inputDepositOuter">
+                            <input type="text" placeholder="请输入金额" id="inputDepositOuter">
                         </div>
                     </div>
 
@@ -326,32 +343,31 @@
             </button>
             <div class="bottom-stats-left">
                 <div class="stat-item">
-                    <span class="stat-label">用户余额宝总额</span>
-                    <span class="stat-value"><strong id="statYuEBao">$ 15,057</strong> <span class="stat-unit">T</span></span>
+                    <span class="stat-label">用户余额宝总金额 <span class="ued-tooltip" data-tooltip="数据已排除测试账号"><i class="ph ph-question"></i></span></span>
+                    <span class="stat-value"><strong id="statYuEBao">41.25</strong> <span class="stat-unit">USDT</span></span>
                 </div>
                 <div class="stat-divider"></div>
                 <div class="stat-item">
-                    <span class="stat-label">用户总金额</span>
-                    <span class="stat-value"><strong id="statTotalAmount">$ 20,417,771</strong></span>
+                    <span class="stat-label">用户总额度 <span class="ued-tooltip" data-tooltip="数据已排除测试账号"><i class="ph ph-question"></i></span></span>
+                    <span class="stat-value"><strong id="statTotalAmount">25,818.78</strong> <span class="stat-unit">USDT</span></span>
                 </div>
                 <div class="stat-divider"></div>
                 <div class="stat-item">
-                    <span class="stat-label">三方游戏总余额总额 <i class="ph ph-info" title="参考值"></i></span>
-                    <span class="stat-value"><strong id="statThirdParty">$ 620,847</strong></span>
+                    <span class="stat-label">三方游戏总余额 <span class="ued-tooltip" data-tooltip="参考值"><i class="ph ph-info"></i></span></span>
+                    <span class="stat-value"><strong id="statThirdParty">0</strong> <span class="stat-unit">USDT</span></span>
                 </div>
                 <div class="stat-divider"></div>
                 <div class="stat-item">
-                    <span class="stat-label">注册</span>
-                    <span class="stat-value text-indigo"><strong id="statReg">15</strong> <span class="stat-unit">人</span></span>
+                    <span class="stat-label">当日注册</span>
+                    <span class="stat-value text-indigo"><strong id="statReg">2</strong> <span class="stat-unit">人</span></span>
                 </div>
                 <div class="stat-divider"></div>
                 <div class="stat-item">
-                    <span class="stat-label">有效首充</span>
-                    <span class="stat-value text-emerald"><strong id="statFirstDep">1</strong> <span class="stat-unit">人</span></span>
+                    <span class="stat-label">当日注册有效用户（首充）</span>
+                    <span class="stat-value text-emerald"><strong id="statFirstDep">0</strong> <span class="stat-unit">人</span></span>
                 </div>
             </div>
             <div class="bottom-stats-right">
-                <span class="stats-exclude-badge">数据已排除测试账号</span>
             </div>
         </div>
     </main>
@@ -410,30 +426,30 @@
                 <div class="form-row-2">
                     <div class="form-group">
                         <label>绑定银行卡</label>
-                        <input type="text" id="inputBankCard" value="" placeholder="银行卡号">
+                        <input type="text" id="inputBankCard" value="" placeholder="请输入银行卡号">
                     </div>
                     <div class="form-group">
                         <label>未登入天数 (大于)</label>
                         <div class="input-with-suffix">
-                            <input type="text" id="inputOfflineDays" placeholder="天数">
+                            <input type="text" id="inputOfflineDays" placeholder="请输入天数">
                             <span>天</span>
                         </div>
                     </div>
                     <div class="form-group">
                         <label>代理Id</label>
-                        <input type="text" id="inputAgentId" value="" placeholder="代理Id">
+                        <input type="text" id="inputAgentId" value="" placeholder="请输入代理Id">
                     </div>
                     <div class="form-group">
                         <label>VIP会员等级</label>
-                        <input type="text" id="inputVipLevel" value="" placeholder="VIP会员等级">
+                        <input type="text" id="inputVipLevel" value="" placeholder="请输入VIP会员等级">
                     </div>
                     <div class="form-group">
                         <label>登录IP</label>
-                        <input type="text" id="inputIp" value="" placeholder="登录IP">
+                        <input type="text" id="inputIp" value="" placeholder="请输入登录IP">
                     </div>
                     <div class="form-group">
                         <label>存款金额大于</label>
-                        <input type="text" id="inputDeposit" value="" placeholder="金额">
+                        <input type="text" id="inputDeposit" value="" placeholder="请输入金额">
                     </div>
                 </div>
             </div>近
@@ -1305,9 +1321,37 @@
             </div>
         </div>
 
+        <!-- Wallet Detail Modal -->
+        <div class="modal-overlay" id="walletDetailModal">
+            <div class="modal-content" style="width: 480px; max-width: 90vw;">
+                <div class="modal-header">
+                    <h3 id="walletDetailTitle">存款总额</h3>
+                    <button class="btn-icon btn-close-modal" id="btnWalletDetailClose">
+                        <i class="ph ph-x"></i>
+                    </button>
+                </div>
+                <div class="modal-body" style="padding: 20px;">
+                    <div style="margin-bottom: 12px; font-size: 14px; color: var(--text-main); display: flex; align-items: center; padding-bottom: 12px; border-bottom: 1px dashed var(--border-color);">
+                        主钱包：<span style="color: var(--primary-color); font-weight: 600; margin-left: 4px;" id="walletDetailCurrency">RMB</span>
+                    </div>
+                    <table class="table" style="width: 100%; border-collapse: collapse; border: 1px solid var(--border-color);">
+                        <thead style="background-color: var(--bg-color);">
+                            <tr>
+                                <th style="border-bottom: 1px solid var(--border-color); border-right: 1px solid var(--border-color); padding: 12px; text-align: center; color: var(--text-muted); font-weight: 500;">币种</th>
+                                <th style="border-bottom: 1px solid var(--border-color); padding: 12px; text-align: center; color: var(--text-muted); font-weight: 500;">金额</th>
+                            </tr>
+                        </thead>
+                        <tbody id="walletDetailBody">
+                            <!-- Rendered via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- Subordinate Modal -->
         <div class="modal-overlay" id="subordinateModal">
-            <div class="modal-content" style="width: 1000px; max-width: 95vw; background-color: var(--card-bg);">
+            <div class="modal-content" style="width: 1000px; max-width: 95vw;">
                 <div class="modal-header">
                     <h3>下级会员</h3>
                     <button class="btn-icon btn-close-modal" id="btnSubordinateModalClose">
@@ -1323,7 +1367,7 @@
                                 <i class="ph ph-caret-down"></i>
                             </div>
                         </div>
-                        <input type="text" placeholder="下级账号"
+                        <input type="text" placeholder="请输入下级账号"
                             style="width: 200px; border: 1px solid var(--border-color); border-radius: 4px; padding: 4px 8px; background: var(--bg-color); color: var(--text-color);">
                         <button class="btn btn-primary" style="padding: 4px 16px;">搜索</button>
                     </div>
