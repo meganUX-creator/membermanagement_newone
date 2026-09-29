@@ -3668,17 +3668,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 nestedColumnsConfig.some(c => c.id === col.id) : 
                 compactColumnsConfig.some(c => c.id === col.id);
             
-            if (!isLeftPanel && inMainTable) {
-                html += `
-                <div data-id="${col.id}" style="display: inline-flex;">
-                    <label style="border: 1px solid #f1f5f9; border-radius: 4px; padding: 6px 12px; display: inline-flex; align-items: center; gap: 8px; color: #94a3b8; background: #f8fafc; font-size: 13px; font-weight: 500; cursor: not-allowed; text-decoration: line-through;">
-                        <input type="checkbox" checked disabled style="accent-color: #3b82f6; width: 14px; height: 14px; margin: 0; cursor: not-allowed;">
-                        <span>${col.label || col.name || col.id}</span>
-                        <div style="background: #eef2ff; color: #4f46e5; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-left: 4px;">已在主表</div>
-                    </label>
-                </div>
-                `;
-            } else {
+
                 const isChecked = isLeftPanel ? (tableFieldVisibility[col.id] !== false) : (dataSourceFieldVisibility[col.id] !== false);
                 const onChangeHtml = isLeftPanel ? `onchange="window.toggleTableFieldVisibility('${col.id}', this.checked)"` : `onchange="window.toggleDataSourceFieldVisibility('${col.id}')"`;
                 
@@ -3702,17 +3692,20 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     `;
                 } else {
-                    html += `
+                    if (inMainTable) {
+                        html += `<div style="background: #eef2ff; color: #4f46e5; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-left: 4px; flex-shrink: 0;">已在主表</div>`;
+                    } else {
+                        html += `
                         <div style="display:flex; align-items:center; margin-left: 4px; border-left: 1px solid ${border}; padding-left: 6px;">
                             <button type="button" style="background:none; border:none; color:#3b82f6; cursor:pointer; padding: 0 4px; display:flex; align-items:center; justify-content:center;" onclick="window.promoteColumnFromCard('${col.id}')" title="加入表格"><i class="ph-bold ph-plus"></i></button>
                         </div>
-                    `;
+                        `;
+                    }
                 }
                 html += `
                     </label>
                 </div>
                 `;
-            }
         });
         html += '</div>';
         return html;
