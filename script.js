@@ -744,10 +744,10 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 'currency', group: '额度', label: '主钱包币种', checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="currency">${user.currency || 'RMB'}</td>` },
         { id: 'availableCredit', group: '额度', label: '可用额度', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-money" data-col="availableCredit">${formatAmount(user.availableCredit, user.currency)}</td>` },
         { id: 'thirdBal', group: '额度', label: '三方余额', sortable: true, checkboxIndex: 5, render: (user) => `<td data-col="thirdBal"><div style="display:flex;align-items:center;justify-content:flex-start;">${formatAmount(user.thirdBal, user.currency)} <i class="ph ph-arrows-clockwise refresh-icon-compact" data-uid="${user.uid}" style="margin-left:4px;cursor:pointer;color:#2563eb;" title="刷新余额"></i></div></td>` },
-        { id: 'ds_depTotal_main', group: '主钱包', label: '存款总额', tag: '主钱包', tagColor: 'blue', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money ${user.deposit > 0 ? 'highlight' : ''}" data-col="ds_depTotal_main">${formatAmount(user.deposit, user.currency)}</td>` },
-        { id: 'ds_wdrTotal_main', group: '主钱包', label: '取款总额', tag: '主钱包', tagColor: 'blue', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money" data-col="ds_wdrTotal_main">${formatAmount(user.withdraw, user.currency)}</td>` },
-        { id: 'ds_depTotal_summary', group: '汇总 USDT', label: '存款总额', tag: '汇总', tagColor: 'purple', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money ${user.deposit > 0 ? 'highlight' : ''}" data-col="ds_depTotal_summary">${formatAmount(user.deposit, 'USDT')}</td>` },
-        { id: 'ds_wdrTotal_summary', group: '汇总 USDT', label: '取款总额', tag: '汇总', tagColor: 'purple', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money" data-col="ds_wdrTotal_summary">${formatAmount(user.withdraw, 'USDT')}</td>` },
+        { id: 'ds_depTotal_main', category: '存取款资料', group: '主钱包', label: '存款总额', tag: '主钱包', tagColor: 'blue', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money ${user.deposit > 0 ? 'highlight' : ''}" data-col="ds_depTotal_main">${formatAmount(user.deposit, user.currency)}</td>` },
+        { id: 'ds_wdrTotal_main', category: '存取款资料', group: '主钱包', label: '取款总额', tag: '主钱包', tagColor: 'blue', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money" data-col="ds_wdrTotal_main">${formatAmount(user.withdraw, user.currency)}</td>` },
+        { id: 'ds_depTotal_summary', category: '存取款资料', group: '汇总 USDT', label: '存款总额', tag: '汇总', tagColor: 'purple', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money ${user.deposit > 0 ? 'highlight' : ''}" data-col="ds_depTotal_summary">${formatAmount(user.deposit, 'USDT')}</td>` },
+        { id: 'ds_wdrTotal_summary', category: '存取款资料', group: '汇总 USDT', label: '取款总额', tag: '汇总', tagColor: 'purple', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money" data-col="ds_wdrTotal_summary">${formatAmount(user.withdraw, 'USDT')}</td>` },
         { id: 'ip', group: '日期信息', label: '登入IP', checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="ip"><div class="ip-row" style="display: flex; align-items: center; gap: 4px;">${renderDataState(user.ip, 'ip')}</div></td>` },
         { id: 'date', group: '日期信息', label: '新增时间', sortable: true, checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="date">${user.date}</td>` },
         { id: 'lastLogin', group: '日期信息', label: '登入时间', sortable: true, checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="lastLogin">${user.lastLogin}</td>` },
@@ -3799,7 +3799,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const leftGroupOrder = [];
         list.forEach(col => {
             if (['action'].includes(col.id)) return;
-            const grp = col.category || '其他';
+            const grp = col.category || col.group || '其他';
             if (!leftGroups[grp]) {
                 leftGroups[grp] = [];
                 leftGroupOrder.push(grp);
@@ -3864,7 +3864,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const leftGroupOrder = [];
         list.forEach(col => {
             if (['action'].includes(col.id)) return;
-            const grp = col.category || '其他';
+            const grp = col.category || col.group || '其他';
             if (!leftGroups[grp]) {
                 leftGroups[grp] = [];
                 leftGroupOrder.push(grp);
@@ -3899,7 +3899,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const leftGroupOrder = [];
         list.forEach(col => {
             if (['action'].includes(col.id)) return;
-            const grp = col.category || '其他';
+            const grp = col.category || col.group || '其他';
             if (!leftGroups[grp]) {
                 leftGroups[grp] = [];
                 leftGroupOrder.push(grp);
