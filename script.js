@@ -3674,6 +3674,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <label style="border: 1px solid #f1f5f9; border-radius: 4px; padding: 6px 12px; display: inline-flex; align-items: center; gap: 8px; color: #94a3b8; background: #f8fafc; font-size: 13px; font-weight: 500; cursor: not-allowed; text-decoration: line-through;">
                         <input type="checkbox" checked disabled style="accent-color: #3b82f6; width: 14px; height: 14px; margin: 0; cursor: not-allowed;">
                         <span>${col.label || col.name || col.id}</span>
+                        ${col.tag ? `<span style="font-size: 10px; background: #f1f5f9; color: #94a3b8; padding: 2px 6px; border-radius: 4px; border: 1px solid #e2e8f0; flex-shrink: 0; margin-left: 2px;">${col.tag}</span>` : ''}
                         <div style="background: #eef2ff; color: #4f46e5; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-left: 4px;">已在主表</div>
                     </label>
                 </div>
@@ -3691,6 +3692,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <label style="border: 1px solid ${border}; border-radius: 4px; padding: 6px 12px; display: inline-flex; align-items: center; gap: 8px; color: ${color}; background: ${bg}; font-size: 13px; font-weight: 500; cursor: pointer; ${isMandatory ? 'opacity: 0.8;' : ''}">
                         <input type="checkbox" ${isChecked ? 'checked' : ''} ${isMandatory ? 'disabled' : onChangeHtml} style="accent-color: #3b82f6; width: 14px; height: 14px; margin: 0; ${isMandatory ? 'cursor: not-allowed;' : 'cursor: pointer;'}">
                         <span style="cursor: pointer; user-select: none;">${col.label || col.name || col.id} ${isMandatory ? '<i class="ph-fill ph-lock-key" style="color:#3b82f6; font-size:12px; margin-left:2px;"></i>' : ''}</span>
+                        ${col.tag ? `<span style="font-size: 10px; background: ${col.tagColor === 'blue' ? '#eff6ff' : '#faf5ff'}; color: ${col.tagColor === 'blue' ? '#3b82f6' : '#a855f7'}; padding: 2px 6px; border-radius: 4px; border: 1px solid ${col.tagColor === 'blue' ? '#bfdbfe' : '#e9d5ff'}; flex-shrink: 0; margin-left: 2px;">${col.tag}</span>` : ''}
                         `;
                 
                 if (isLeftPanel) {
@@ -3784,13 +3786,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderDrawerStates() {
         const col1 = document.getElementById('col1-table-fields');
         const col2 = document.getElementById('col2-card-fields');
-        const col3 = document.getElementById('col3-backup-fields');
 
-        if (!col1 || !col2 || !col3) return;
+        if (!col1 || !col2) return;
 
         col1.innerHTML = '';
         col2.innerHTML = '';
-        col3.innerHTML = '';
 
         const list = currentTableMode === 'nested' ? nestedColumnsConfig : compactColumnsConfig;
         
@@ -3799,7 +3799,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const leftGroupOrder = [];
         list.forEach(col => {
             if (['action'].includes(col.id)) return;
-            const grp = col.group || col.category || '其他';
+            const grp = col.category || '其他';
             if (!leftGroups[grp]) {
                 leftGroups[grp] = [];
                 leftGroupOrder.push(grp);
@@ -3864,7 +3864,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const leftGroupOrder = [];
         list.forEach(col => {
             if (['action'].includes(col.id)) return;
-            const grp = col.group || col.category || '其他';
+            const grp = col.category || '其他';
             if (!leftGroups[grp]) {
                 leftGroups[grp] = [];
                 leftGroupOrder.push(grp);
@@ -3899,7 +3899,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const leftGroupOrder = [];
         list.forEach(col => {
             if (['action'].includes(col.id)) return;
-            const grp = col.group || col.category || '其他';
+            const grp = col.category || '其他';
             if (!leftGroups[grp]) {
                 leftGroups[grp] = [];
                 leftGroupOrder.push(grp);
