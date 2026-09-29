@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderDrawerStates();
         window.applyDrawerOrderToTable();
     };
-    let drawerCategoryOrder = ['基本资料', '存取款 (主钱包)', '存取款 (汇总 USDT)', '成长与积分', '推荐关系', '余额宝', '用户标签', '信贷', '其他'];
+    let drawerCategoryOrder = ['基本资料', '存取款资料', '成长与积分', '推荐关系', '余额宝', '信贷', '用户标签', '其他'];
     let drawerCategoryVisibility = { '信贷': false };
 
     window.moveCategoryUp = function (cat) {
@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (card.classList.contains('ds-field')) {
                         const dsId = card.getAttribute('data-ds-id');
                         const isCol1 = activeLists.frozen.some(c => c.id === dsId) || activeLists.scroll.some(c => c.id === dsId);
-                        const isVisible = dataSourceFieldVisibility[dsId] !== false && !isCol1 && drawerCategoryVisibility[cat] !== false;
+                        const isVisible = dataSourceFieldVisibility[dsId] !== false && !isCol1;
                         card.style.display = isVisible ? '' : 'none';
                     } else {
                         const body = card.querySelector('.detail-card-body');
@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 }
                             });
 
-                            if (drawerCategoryVisibility[cat] === false || !hasVisibleField) {
+                            if (!hasVisibleField) {
                                 card.style.display = 'none';
                             } else {
                                 card.style.display = 'block';
@@ -734,11 +734,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     let compactColumnsConfig = [
-        { id: 'online', group: '基本', label: '在线', checkboxIndex: 1, render: (user) => `<td data-col="online" style="text-align: center;">${dataMode === 'nodata' ? '-' : `<span class="status-dot-icon ${user.offlineDays === 0 ? 'online' : 'offline'}" title="${user.offlineDays === 0 ? '在线' : '离线'}"></span>`}</td>` },
-        { id: 'uid', group: '基本', label: '用户ID', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="uid">${dataMode === 'nodata' ? '-' : renderDataState(user.uid, 'copyable')}</td>` },
-        { id: 'account', group: '基本', label: '会员名', checkboxIndex: 3, render: (user) => `<td data-col="account"><a href="#" class="cell-username user-detail-link" data-uid="${user.uid}">${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : renderDataState(user.account, 'copyable')}</a></td>` },
-        { id: 'agentId', group: '基本', label: '代理', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="agentId">${renderDataState(user.agentId)}</td>` },
-        { id: 'status', group: '基本', label: '状态', checkboxIndex: 1, render: (user) => `<td data-col="status"><span class="user-custom-tag ${user.status === '正常' ? 'tag-green' : user.status === '冻结' ? 'tag-blue' : 'tag-red'}">${user.status}</span></td>` },
+        { id: 'online', group: '账号信息', label: '在线', checkboxIndex: 1, render: (user) => `<td data-col="online" style="text-align: center;">${dataMode === 'nodata' ? '-' : `<span class="status-dot-icon ${user.offlineDays === 0 ? 'online' : 'offline'}" title="${user.offlineDays === 0 ? '在线' : '离线'}"></span>`}</td>` },
+        { id: 'uid', group: '账号信息', label: '用户ID', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="uid">${dataMode === 'nodata' ? '-' : renderDataState(user.uid, 'copyable')}</td>` },
+        { id: 'account', group: '账号信息', label: '会员名', checkboxIndex: 3, render: (user) => `<td data-col="account"><a href="#" class="cell-username user-detail-link" data-uid="${user.uid}">${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : renderDataState(user.account, 'copyable')}</a></td>` },
+        { id: 'agentId', group: '账号信息', label: '代理', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="agentId">${renderDataState(user.agentId)}</td>` },
+        { id: 'status', group: '账号信息', label: '状态', checkboxIndex: 1, render: (user) => `<td data-col="status"><span class="user-custom-tag ${user.status === '正常' ? 'tag-green' : user.status === '冻结' ? 'tag-blue' : 'tag-red'}">${user.status}</span></td>` },
         { id: 'vipLevel', group: '等级', label: 'VIP等级', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="vipLevel">${user.vipLevel || 'VIP ' + (user.vipLevel || 1)}</td>` },
         { id: 'payLevel', group: '等级', label: '支付层级', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="payLevel">${user.payLevel}</td>` },
         { id: 'currency', group: '额度', label: '主钱包币种', checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="currency">${user.currency || 'RMB'}</td>` },
@@ -1931,7 +1931,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <div style="width:60px; height:60px; background:#6366f1; color:white; border-radius:8px; display:flex; justify-content:center; align-items:center; font-size:24px; font-weight:bold;">${user.account.charAt(0).toUpperCase()}</div>
                             </div>
                             <!-- 基本资料 -->
-                            <div class="detail-card" data-category="基本资料" style="flex: 0 0 auto; width: 510px; display: ${drawerCategoryVisibility['基本资料'] !== false ? 'block' : 'none'};">
+                            <div class="detail-card" data-category="基本资料" style="flex: 0 0 auto; width: 510px; display: ${(dataSourceFieldVisibility['ds_realname'] !== false || dataSourceFieldVisibility['ds_birthday'] !== false || dataSourceFieldVisibility['ds_accountType'] !== false || dataSourceFieldVisibility['ds_memberType'] !== false || dataSourceFieldVisibility['ds_level'] !== false || dataSourceFieldVisibility['ds_regMode'] !== false || dataSourceFieldVisibility['ds_nickname'] !== false || dataSourceFieldVisibility['ds_phone'] !== false) ? 'block' : 'none'};">
                                 <div class="detail-card-header"><i class="ph ph-user"></i> 基本资料</div>
                                 <div class="detail-card-body grid-2-col">
                                     <div class="ds-field" data-ds-id="ds_realname" style="display:${dataSourceFieldVisibility['ds_realname'] !== false ? '' : 'none'}"><span class="lbl">真实姓名</span> <span class="val" title="${dataMode === 'nodata' ? '' : user.realName}">${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : (user.realName && user.realName.length > 15 ? user.realName.substring(0, 15) + '...' : user.realName)}</span></div>
@@ -1945,7 +1945,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </div>
                             </div>
                             <!-- 存取款数据 (主钱包 / 汇总) Combined Card -->
-                            <div class="detail-card" data-category="存取款 (主钱包)" style="flex: 1 1 100%; display: ${drawerCategoryVisibility['存取款 (主钱包)'] !== false ? 'flex' : 'none'}; min-width: max-content; width: auto; flex-direction: column;">
+                            <div class="detail-card" data-category="存取款资料" style="flex: 1 1 100%; display: ${(dataSourceFieldVisibility['ds_depTotal_main'] !== false || dataSourceFieldVisibility['ds_depTotal_summary'] !== false || dataSourceFieldVisibility['ds_depCount_main'] !== false || dataSourceFieldVisibility['ds_depCount_summary'] !== false || dataSourceFieldVisibility['ds_wdrTotal_main'] !== false || dataSourceFieldVisibility['ds_wdrTotal_summary'] !== false || dataSourceFieldVisibility['ds_wdrCount_main'] !== false || dataSourceFieldVisibility['ds_wdrCount_summary'] !== false || dataSourceFieldVisibility['ds_wdrFee_main'] !== false || dataSourceFieldVisibility['ds_wdrFee_summary'] !== false || dataSourceFieldVisibility['ds_sysAdd_main'] !== false || dataSourceFieldVisibility['ds_sysAdd_summary'] !== false || dataSourceFieldVisibility['ds_sysSub_main'] !== false || dataSourceFieldVisibility['ds_sysSub_summary'] !== false) ? 'flex' : 'none'}; min-width: max-content; width: auto; flex-direction: column;">
                                 <div class="detail-card-header" style="display: none;"></div>
                                 <div class="detail-card-body" data-no-sort="true" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px 0; padding: 16px;">
                                     <!-- Column 1 -->
@@ -2053,7 +2053,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </div>
                             </div>
                             <!-- 成长与积分 -->
-                            <div class="detail-card" data-category="成长与积分" style="flex: 0 0 auto; width: 240px; display: ${drawerCategoryVisibility['成长与积分'] !== false ? 'block' : 'none'};">
+                            <div class="detail-card" data-category="成长与积分" style="flex: 0 0 auto; width: 240px; display: ${(dataSourceFieldVisibility['ds_growth'] !== false || dataSourceFieldVisibility['ds_vipGrowth'] !== false || dataSourceFieldVisibility['ds_points'] !== false) ? 'block' : 'none'};">
                                 <div class="detail-card-header"><i class="ph ph-trend-up"></i> 成长与积分</div>
                                 <div class="detail-card-body flex-list-col">
                                     <div class="ds-field" data-ds-id="ds_growth" style="display:${dataSourceFieldVisibility['ds_growth'] !== false ? '' : 'none'}"><span class="lbl">成长值</span> <span class="val">${user.growth || '0'}</span></div>
@@ -2062,7 +2062,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </div>
                             </div>
                             <!-- 推荐关系 -->
-                            <div class="detail-card" data-category="推荐关系" style="flex: 0 0 auto; width: 240px; display: ${drawerCategoryVisibility['推荐关系'] !== false ? 'block' : 'none'};">
+                            <div class="detail-card" data-category="推荐关系" style="flex: 0 0 auto; width: 240px; display: ${(dataSourceFieldVisibility['ds_inviter'] !== false || dataSourceFieldVisibility['ds_inviteCode'] !== false || dataSourceFieldVisibility['ds_team'] !== false || dataSourceFieldVisibility['ds_commBal'] !== false) ? 'block' : 'none'};">
                                 <div class="detail-card-header">
                                     <div style="display: flex; align-items: center; gap: 8px;"><i class="ph ph-share-network"></i> 推荐关系</div>
                                     ${renderDropdownUI(user.currency || 'RMB')}
@@ -2075,7 +2075,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </div>
                             </div>
                             <!-- 余额宝 -->
-                            <div class="detail-card" data-category="余额宝" style="flex: 0 0 auto; width: 240px; display: ${drawerCategoryVisibility['余额宝'] !== false ? 'block' : 'none'};">
+                            <div class="detail-card" data-category="余额宝" style="flex: 0 0 auto; width: 240px; display: ${(dataSourceFieldVisibility['ds_balTreas'] !== false || dataSourceFieldVisibility['ds_balInt'] !== false) ? 'block' : 'none'};">
                                 <div class="detail-card-header">
                                     <div style="display: flex; align-items: center; gap: 8px;"><i class="ph ph-wallet"></i> 余额宝</div>
                                     ${renderDropdownUI(user.currency || 'RMB')}
@@ -2093,7 +2093,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </div>
                             </div>
                             <!-- 信贷 -->
-                            <div class="detail-card" data-category="信贷" style="flex: 0 0 auto; width: 240px; display: ${drawerCategoryVisibility['信贷'] !== false ? 'block' : 'none'};">
+                            <div class="detail-card" data-category="信贷" style="flex: 0 0 auto; width: 240px; display: ${(dataSourceFieldVisibility['ds_debt'] !== false || dataSourceFieldVisibility['ds_creditVal'] !== false) ? 'block' : 'none'};">
                                 <div class="detail-card-header">
                                     <div style="display: flex; align-items: center; gap: 8px;"><i class="ph ph-credit-card"></i> 信贷</div>
                                     ${renderDropdownUI(user.currency || 'RMB')}
@@ -2106,7 +2106,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         <!-- 其他 (备注等底部信息) -->
                         <!-- 其他 (备注等底部信息) -->
-                        <div class="detail-card" data-category="其他" style="display: ${drawerCategoryVisibility['其他'] !== false ? 'block' : 'none'}; border: none; box-shadow: none; background: transparent; padding: 0;">
+                        <div class="detail-card" data-category="其他" style="display: ${(dataSourceFieldVisibility['ds_remark'] !== false || dataSourceFieldVisibility['ds_followup'] !== false) ? 'block' : 'none'}; border: none; box-shadow: none; background: transparent; padding: 0;">
                             <div style="width:100%; border-bottom: 1px dashed #e2e8f0; margin: 16px 0;"></div>
                             <div class="detail-card-body" style="width:100%; display:flex; gap:32px; margin-bottom: 8px; padding: 0 40px;">
                                 <div class="ds-field" data-ds-id="ds_remark" style="display:${dataSourceFieldVisibility['ds_remark'] !== false ? 'flex' : 'none'}; gap:8px;"><span style="color:#64748b;">备注</span> ${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : `<span title="${user.remark || ''}">${user.remark ? (user.remark.length > 20 ? user.remark.substring(0, 20) + '...' : user.remark) : '-'}</span>`}</div>
@@ -3486,6 +3486,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 'ds_creditVal', label: '信用值', category: '信贷', sortable: true },
         { id: 'ds_tags', label: '用户标签', category: '用户标签' },
         { id: 'ds_remark', label: '备注', category: '其他' },
+        { id: 'ds_followup', label: '回访备注', category: '其他' },
     ].map(col => {
         if (!col.group) {
             col.group = col.category || '其他';
@@ -3570,6 +3571,21 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
+        // Update parent card visibility
+        document.querySelectorAll('.detail-card').forEach(card => {
+            if (card.dataset.category === '存取款资料') {
+                const hasVisibleRow = Array.from(card.querySelectorAll('[data-ds-row]')).some(el => el.style.display !== 'none');
+                card.style.display = hasVisibleRow ? 'flex' : 'none';
+            } else if (card.dataset.category !== '其他' && card.dataset.category !== '用户标签') {
+                const hasVisibleField = Array.from(card.querySelectorAll('.ds-field')).some(el => el.style.display !== 'none');
+                card.style.display = hasVisibleField ? 'block' : 'none';
+            } else if (card.dataset.category === '其他' || card.dataset.category === '用户标签') {
+                const hasVisibleField = Array.from(card.querySelectorAll('.ds-field')).some(el => el.style.display !== 'none');
+                // Other and User Tags cards have border:none or specific layouts, but their wrapper visibility applies normally
+                card.style.display = hasVisibleField ? (card.dataset.category === '其他' ? 'block' : '') : 'none';
+            }
+        });
+        
         renderDrawerStates();
         window.applyDrawerOrderToTable();
     };
@@ -3577,15 +3593,29 @@ document.addEventListener('DOMContentLoaded', () => {
     window.resetCustomColumns = function () {
         if (!confirm('确定要重置所有自订栏位设定吗？')) return;
         // Reset data source visibility
-        dataSourceFieldVisibility = {};
-        drawerCategoryVisibility = { '信贷': false };
+        dataSourceFieldVisibility = { 'ds_debt': false, 'ds_creditVal': false };
         renderDrawerStates();
-        // Update all visible expanded rows
+        
+        // Update all fields
         document.querySelectorAll('.ds-field').forEach(el => {
-            el.style.display = '';
+            const id = el.dataset.dsId || el.dataset.dsRow; // Handle basic fields and rows
+            if (!id) return;
+            const isVisible = dataSourceFieldVisibility[id] !== false;
+            el.style.display = isVisible ? '' : 'none';
         });
-        document.querySelectorAll('.detail-card[data-category="信贷"]').forEach(card => {
-            card.style.display = 'none';
+        
+        // Update parent card visibility
+        document.querySelectorAll('.detail-card').forEach(card => {
+            if (card.dataset.category === '存取款资料') {
+                const hasVisibleRow = Array.from(card.querySelectorAll('[data-ds-row]')).some(el => el.style.display !== 'none');
+                card.style.display = hasVisibleRow ? 'flex' : 'none';
+            } else if (card.dataset.category !== '其他' && card.dataset.category !== '用户标签') {
+                const hasVisibleField = Array.from(card.querySelectorAll('.ds-field')).some(el => el.style.display !== 'none');
+                card.style.display = hasVisibleField ? 'block' : 'none';
+            } else if (card.dataset.category === '其他' || card.dataset.category === '用户标签') {
+                const hasVisibleField = Array.from(card.querySelectorAll('.ds-field')).some(el => el.style.display !== 'none');
+                card.style.display = hasVisibleField ? (card.dataset.category === '其他' ? 'block' : '') : 'none';
+            }
         });
     };
 
@@ -3677,7 +3707,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const border = isChecked ? '#bfdbfe' : '#e2e8f0';
                 
                 html += `
-                <div data-id="${col.id}" style="display: inline-flex;">
+                <div data-id="${col.id}" class="draggable-pill" draggable="true" style="display: inline-flex; cursor: grab;">
                     <label style="border: 1px solid ${border}; border-radius: 4px; padding: 6px 12px; display: inline-flex; align-items: center; gap: 8px; color: ${color}; background: ${bg}; font-size: 13px; font-weight: 500; cursor: pointer; ${isMandatory ? 'opacity: 0.8;' : ''}">
                         <input type="checkbox" ${isChecked ? 'checked' : ''} ${isMandatory ? 'disabled' : onChangeHtml} style="accent-color: #3b82f6; width: 14px; height: 14px; margin: 0; ${isMandatory ? 'cursor: not-allowed;' : 'cursor: pointer;'}">
                         <span style="cursor: pointer; user-select: none;">${col.label || col.name || col.id} ${isMandatory ? '<i class="ph-fill ph-lock-key" style="color:#3b82f6; font-size:12px; margin-left:2px;"></i>' : ''}</span>
@@ -3717,11 +3747,10 @@ document.addEventListener('DOMContentLoaded', () => {
             '推荐关系': 'ph-bold ph-share-network',
             '余额宝': 'ph-bold ph-wallet',
             '信贷': 'ph-bold ph-credit-card',
-            '用户标签': 'ph-bold ph-tag',
             '其他': 'ph-bold ph-folder',
             '大头照': 'ph-bold ph-user-square',
+            '账号信息': 'ph-bold ph-user',
             '基本资料': 'ph-bold ph-user',
-            '基本': 'ph-bold ph-user',
             '成长与积分': 'ph-bold ph-trend-up',
             '主钱包': 'ph-bold ph-wallet',
             '汇总 USDT': 'ph-bold ph-wallet'
@@ -3735,17 +3764,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const downFn = isLeftPanel ? `window.moveLeftCategoryDown('${groupName}')` : `window.moveRightCategoryDown('${groupName}')`;
 
         let innerHtml = `
-            <div class="category-block-draggable" data-cat="${groupName}" style="margin-bottom: 24px;">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; cursor: grab;">
+            <div class="category-block-draggable" data-cat="${groupName}" draggable="${groupName !== '其他' ? 'true' : 'false'}" style="margin-bottom: 16px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; background: #fdfdfd;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; cursor: ${groupName !== '其他' ? 'grab' : 'default'};">
                     <div style="display: flex; align-items: center; gap: 6px;">
-                        <i class="ph-bold ph-dots-six-vertical" style="color: #cbd5e1;"></i>
-                        <i class="${catIcons[groupName] || 'ph-bold ph-folder'}" style="color: #94a3b8; font-size: 16px;"></i>
+                        ${groupName !== '其他' ? '<i class="ph-bold ph-dots-six-vertical" style="color: #cbd5e1;"></i>' : ''}
                         <span style="font-size: 14px; font-weight: 600; color: #475569;">${groupName}</span>
                     </div>
-                    <div style="display:flex; align-items:center; border: 1px solid #e2e8f0; background: #fff; border-radius: 6px; overflow: hidden;" onclick="event.stopPropagation()">
+                    ${groupName === '其他' ? '' : `<div style="display:flex; align-items:center; border: 1px solid #e2e8f0; background: #fff; border-radius: 6px; overflow: hidden;" onclick="event.stopPropagation()">
                         <button type="button" style="background:none; border:none; color:#94a3b8; cursor:pointer; padding: 4px 8px; border-right: 1px solid #e2e8f0; display:flex; align-items:center; justify-content:center;" onclick="${upFn}" title="向上移动"><i class="ph-bold ph-caret-up"></i></button>
                         <button type="button" style="background:none; border:none; color:#94a3b8; cursor:pointer; padding: 4px 8px; display:flex; align-items:center; justify-content:center;" onclick="${downFn}" title="向下移动"><i class="ph-bold ph-caret-down"></i></button>
-                    </div>
+                    </div>`}
                 </div>
         `;
 
@@ -3765,7 +3793,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         } else {
             innerHtml += `
-                <div style="border: 1px solid ${blockBorder}; border-radius: 6px; background: #f8fafc; padding: 12px;">
+                <div style="padding-top: 4px;">
                     ${renderPills(cols, isLeftPanel)}
                 </div>
             `;
@@ -3920,8 +3948,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     window.moveRightCategoryUp = function(catName) {
+        if (catName === '其他') return; // Cannot move 其他 up
         const idx = drawerCategoryOrder.indexOf(catName);
         if (idx > 0) {
+            if (drawerCategoryOrder[idx - 1] === '其他') return; // Cannot swap with 其他
             const temp = drawerCategoryOrder[idx - 1];
             drawerCategoryOrder[idx - 1] = drawerCategoryOrder[idx];
             drawerCategoryOrder[idx] = temp;
@@ -3931,8 +3961,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.moveRightCategoryDown = function(catName) {
+        if (catName === '其他') return; // Cannot move 其他 down
         const idx = drawerCategoryOrder.indexOf(catName);
         if (idx > -1 && idx < drawerCategoryOrder.length - 1) {
+            if (drawerCategoryOrder[idx + 1] === '其他') return; // Cannot swap with 其他
             const temp = drawerCategoryOrder[idx + 1];
             drawerCategoryOrder[idx + 1] = drawerCategoryOrder[idx];
             drawerCategoryOrder[idx] = temp;
@@ -4004,6 +4036,16 @@ document.addEventListener('DOMContentLoaded', () => {
             renderTable(true);
         }
     }
+
+    window.toggleDrawerCategory = function (category, isVisible) {
+        availableDataSource.forEach(col => {
+            if ((col.category || '其他') === category) {
+                dataSourceFieldVisibility[col.id] = isVisible;
+            }
+        });
+        renderDrawerStates();
+        updateTableFromDrawer();
+    };
 
     // Withdrawal Info Add logic
     const btnAddWithdraw = document.getElementById('btnAddWithdraw');
@@ -4319,5 +4361,136 @@ document.addEventListener('DOMContentLoaded', () => {
             m.style.display = 'none';
         });
     }, true);
+
+    // --- Drag and Drop Logic ---
+    let draggedElement = null;
+    let dragType = null; // 'pill' or 'category'
+
+    document.addEventListener('dragstart', (e) => {
+        const pill = e.target.closest('.draggable-pill');
+        const cat = e.target.closest('.category-block-draggable');
+        
+        if (pill) {
+            draggedElement = pill;
+            dragType = 'pill';
+            pill.style.opacity = '0.5';
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', 'pill');
+        } else if (cat) {
+            draggedElement = cat;
+            dragType = 'category';
+            cat.style.opacity = '0.5';
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', 'category');
+        }
+    });
+
+    document.addEventListener('dragend', (e) => {
+        if (draggedElement) {
+            draggedElement.style.opacity = '1';
+            draggedElement = null;
+            dragType = null;
+        }
+    });
+
+    document.addEventListener('dragover', (e) => {
+        e.preventDefault(); // allow drop
+        e.dataTransfer.dropEffect = 'move';
+    });
+    
+    document.addEventListener('dragenter', (e) => {
+        e.preventDefault();
+    });
+
+    document.addEventListener('drop', (e) => {
+        e.preventDefault();
+        if (!draggedElement) return;
+
+        if (dragType === 'pill') {
+            const dropTarget = e.target.closest('.draggable-pill');
+            if (dropTarget && dropTarget !== draggedElement) {
+                const idFrom = draggedElement.getAttribute('data-id');
+                const idTo = dropTarget.getAttribute('data-id');
+                
+                // Only allow swapping in the left panel (main table columns)
+                let list = currentTableMode === 'nested' ? nestedColumnsConfig : compactColumnsConfig;
+                
+                const idxFrom = list.findIndex(c => c.id === idFrom);
+                const idxTo = list.findIndex(c => c.id === idTo);
+                
+                if (idxFrom !== -1 && idxTo !== -1) {
+                    const temp = list[idxFrom];
+                    list[idxFrom] = list[idxTo];
+                    list[idxTo] = temp;
+                    renderDrawerStates();
+                    updateTableFromDrawer();
+                }
+            }
+        } else if (dragType === 'category') {
+            const dropTarget = e.target.closest('.category-block-draggable');
+            if (dropTarget && dropTarget !== draggedElement) {
+                const catFrom = draggedElement.getAttribute('data-cat');
+                const catTo = dropTarget.getAttribute('data-cat');
+                
+                if (catFrom === '其他' || catTo === '其他') return; // Do not move '其他'
+                
+                const isLeftPanel = draggedElement.closest('#col1-table-fields') !== null;
+                const dropTargetIsLeftPanel = dropTarget.closest('#col1-table-fields') !== null;
+                
+                // Prevent dragging between left and right panels
+                if (isLeftPanel !== dropTargetIsLeftPanel) return;
+
+                if (isLeftPanel) {
+                    let list = currentTableMode === 'nested' ? nestedColumnsConfig : compactColumnsConfig;
+                    const leftGroups = {};
+                    const leftGroupOrder = [];
+                    list.forEach(col => {
+                        if (['action'].includes(col.id)) return;
+                        const grp = col.category || col.group || '其他';
+                        if (!leftGroups[grp]) {
+                            leftGroups[grp] = [];
+                            leftGroupOrder.push(grp);
+                        }
+                        leftGroups[grp].push(col);
+                    });
+                    
+                    const idxFrom = leftGroupOrder.indexOf(catFrom);
+                    const idxTo = leftGroupOrder.indexOf(catTo);
+                    
+                    if (idxFrom !== -1 && idxTo !== -1) {
+                        const temp = leftGroupOrder[idxFrom];
+                        leftGroupOrder[idxFrom] = leftGroupOrder[idxTo];
+                        leftGroupOrder[idxTo] = temp;
+                        
+                        const newList = [];
+                        leftGroupOrder.forEach(grp => {
+                            newList.push(...leftGroups[grp]);
+                        });
+                        
+                        if (currentTableMode === 'nested') {
+                            nestedColumnsConfig.length = 0;
+                            nestedColumnsConfig.push(...newList);
+                        } else {
+                            compactColumnsConfig.length = 0;
+                            compactColumnsConfig.push(...newList);
+                        }
+                        renderDrawerStates();
+                        updateTableFromDrawer();
+                    }
+                } else {
+                    const idxFrom = drawerCategoryOrder.indexOf(catFrom);
+                    const idxTo = drawerCategoryOrder.indexOf(catTo);
+                    
+                    if (idxFrom !== -1 && idxTo !== -1) {
+                        const temp = drawerCategoryOrder[idxFrom];
+                        drawerCategoryOrder[idxFrom] = drawerCategoryOrder[idxTo];
+                        drawerCategoryOrder[idxTo] = temp;
+                        renderDrawerStates();
+                        if(typeof window.applyDrawerOrderToTable === 'function') window.applyDrawerOrderToTable();
+                    }
+                }
+            }
+        }
+    });
 
 });

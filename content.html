@@ -1240,7 +1240,7 @@
         <div class="drawer-header">
             <div class="drawer-title">
                 <h3><i class="ph ph-columns"></i> 自订栏位设定</h3>
-                <span class="drawer-subtitle">拖曳排序、锁定栏位或新增进阶资料</span>
+                <span class="drawer-subtitle" style="display: none;"></span>
             </div>
             <div class="drawer-actions">
                 <button class="btn btn-outline btn-sm" onclick="window.resetCustomColumns()" title="重置所有设定">
@@ -1255,42 +1255,28 @@
             </div>
         </div>
         
-        <div class="drawer-body custom-column-layout" style="display: flex; flex-direction: row; gap: 16px; padding: 16px; height: calc(100% - 60px); overflow-y: hidden; background: #fff;">
-            <!-- 第一栏: 主表格栏位 (flex-[3]) -->
-            <div class="column-panel" style="flex: 3; display: flex; flex-direction: column; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.02);">
-                <div class="panel-header" style="padding: 12px 16px; background: #eff6ff; border-bottom: 1px solid #bfdbfe; display: flex; justify-content: space-between; align-items: center;">
-                    <h4 style="margin: 0; font-size: 12px; font-weight: 600; color: #1e3a8a; display: flex; align-items: center; gap: 6px;"><i class="ph-bold ph-tree-structure"></i> 主表格栏位</h4>
-                    <span class="badge" id="badge-col1" style="background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">0</span>
-                </div>
-                <div class="column-zones-container" id="col1-table-fields" style="flex: 1; overflow-y: auto; padding: 12px; display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: max-content; gap: 8px; align-items: start;">
-                    <!-- JS 生成 -->
-                </div>
-            </div>
-
-            <!-- 第二栏: 展开卡片栏位 (flex-[3]) -->
-            <div class="column-panel" style="flex: 3; display: flex; flex-direction: column; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.02);">
-                <div class="panel-header" style="padding: 12px 16px; background: #faf5ff; border-bottom: 1px solid #e9d5ff; display: flex; justify-content: space-between; align-items: center;">
-                    <h4 style="margin: 0; font-size: 12px; font-weight: 600; color: #6b21a8; display: flex; align-items: center; gap: 6px;"><i class="ph-bold ph-arrows-out-line-horizontal"></i> 展开卡片</h4>
-                    <span class="badge" id="badge-col2" style="background: #f3e8ff; color: #7e22ce; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">0</span>
-                </div>
-                <div class="column-zones-container" id="col2-card-fields" style="flex: 1; overflow-y: auto; padding: 12px;">
-                    <!-- JS 生成 -->
-                </div>
-            </div>
-
-            <!-- 第三栏: 备用栏位库 (flex-[1]) -->
-            <div class="column-panel" style="flex: 1; display: flex; flex-direction: column; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.02);">
-                <div class="panel-header" style="padding: 12px 16px; background: #f1f5f9; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-                    <h4 style="margin: 0; font-size: 12px; font-weight: 600; color: #475569; display: flex; align-items: center; gap: 6px;"><i class="ph-bold ph-archive"></i> 备用栏位</h4>
-                    <span class="badge" id="badge-col3" style="background: #e2e8f0; color: #334155; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">0</span>
-                </div>
-                <div style="padding: 12px; border-bottom: 1px solid #e2e8f0;">
-                    <div class="search-box" style="display: flex; align-items: center; background: #f1f5f9; border-radius: 6px; padding: 6px 12px;">
-                        <i class="ph ph-magnifying-glass" style="color: #94a3b8; margin-right: 8px;"></i>
-                        <input type="text" id="backupFieldSearch" placeholder="搜寻栏位..." style="border: none; background: transparent; outline: none; width: 100%; font-size: 13px;">
+        <div class="drawer-body custom-column-layout" style="display: flex; flex-direction: row; gap: 16px; padding: 8px 16px 16px 16px; height: calc(100% - 60px); overflow-y: hidden; background: #fff;">
+            <!-- 第一栏: 主表格栏位 (flex: 1) -->
+            <div class="column-panel" style="flex: 1; display: flex; flex-direction: column; background: #fff; overflow: hidden;">
+                <div class="panel-header" style="padding: 8px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0;">
+                    <h4 style="margin: 0; font-size: 14px; font-weight: bold; color: #3b82f6; display: flex; align-items: center; gap: 6px;"><i class="ph-bold ph-list" style="color: #94a3b8;"></i> 主表栏位 <span style="color: #64748b; font-weight: normal;">(上方表格列)</span></h4>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <a href="#" id="toggleAllLeftBtn" style="font-size: 12px; color: #3b82f6; text-decoration: none; font-weight: 500;">展开/收起</a>
+                        <span class="badge" id="badge-col1" style="background: #eff6ff; color: #3b82f6; border: 1px solid #bfdbfe; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">18</span>
                     </div>
                 </div>
-                <div class="column-zones-container" id="col3-backup-fields" style="flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+                <div class="column-zones-container" id="col1-table-fields" style="flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px;">
+                    <!-- JS 生成 -->
+                </div>
+            </div>
+
+            <!-- 第二栏: 展开卡片栏位 (flex: 1) -->
+            <div class="column-panel" style="flex: 1; display: flex; flex-direction: column; background: #fff; overflow: hidden; border-left: 1px solid #e2e8f0;">
+                <div class="panel-header" style="padding: 8px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0;">
+                    <h4 style="margin: 0; font-size: 14px; font-weight: bold; color: #8b5cf6; display: flex; align-items: center; gap: 6px;"><i class="ph-bold ph-cards" style="color: #94a3b8;"></i> 展开卡片 <span style="color: #64748b; font-weight: normal;">(列表底展开内容)</span></h4>
+                    <div style="color: #64748b; font-size: 12px;">勾选即显示在展开区</div>
+                </div>
+                <div class="column-zones-container" id="col2-card-fields" style="flex: 1; overflow-y: auto; padding: 12px;">
                     <!-- JS 生成 -->
                 </div>
             </div>
