@@ -3486,8 +3486,10 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 'ds_creditVal', label: '信用值', category: '信贷', sortable: true },
         { id: 'ds_tags', label: '用户标签', category: '用户标签' },
         { id: 'ds_remark', label: '备注', category: '其他' },
-        { id: 'ds_followup', label: '回访备注', category: '其他' }
     ].map(col => {
+        if (!col.group) {
+            col.group = col.category || '其他';
+        }
         col.render = (user) => {
             let val = '-';
             let extraClass = 'cell-val';
@@ -3657,6 +3659,128 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
+
+    function renderPills(cols, isLeftPanel) {
+        let html = '<div style="display: flex; flex-wrap: wrap; gap: 8px;">';
+        cols.forEach(col => {
+            const isMandatory = ['uid', 'account', 'action', 'memberInfo'].includes(col.id);
+            const inMainTable = currentTableMode === 'nested' ? 
+                nestedColumnsConfig.some(c => c.id === col.id) : 
+                compactColumnsConfig.some(c => c.id === col.id);
+            
+            if (!isLeftPanel && inMainTable) {
+                html += `
+                <div data-id="${col.id}" style="display: inline-flex;">
+                    <label style="border: 1px solid #f1f5f9; border-radius: 4px; padding: 6px 12px; display: inline-flex; align-items: center; gap: 8px; color: #94a3b8; background: #f8fafc; font-size: 13px; font-weight: 500; cursor: not-allowed; text-decoration: line-through;">
+                        <input type="checkbox" checked disabled style="accent-color: #3b82f6; width: 14px; height: 14px; margin: 0; cursor: not-allowed;">
+                        <span>${col.label || col.name || col.id}</span>
+                        <div style="background: #eef2ff; color: #4f46e5; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-left: 4px;">已在主表</div>
+                    </label>
+                </div>
+                `;
+            } else {
+                const isChecked = isLeftPanel ? (tableFieldVisibility[col.id] !== false) : (dataSourceFieldVisibility[col.id] !== false);
+                const onChangeHtml = isLeftPanel ? `onchange="window.toggleTableFieldVisibility('${col.id}', this.checked)"` : `onchange="window.toggleDataSourceFieldVisibility('${col.id}')"`;
+                
+                const color = isChecked ? '#3b82f6' : '#64748b';
+                const bg = isChecked ? '#eff6ff' : '#fff';
+                const border = isChecked ? '#bfdbfe' : '#e2e8f0';
+                
+                html += `
+                <div data-id="${col.id}" style="display: inline-flex;">
+                    <label style="border: 1px solid ${border}; border-radius: 4px; padding: 6px 12px; display: inline-flex; align-items: center; gap: 8px; color: ${color}; background: ${bg}; font-size: 13px; font-weight: 500; cursor: pointer; ${isMandatory ? 'opacity: 0.8;' : ''}">
+                        <input type="checkbox" ${isChecked ? 'checked' : ''} ${isMandatory ? 'disabled' : onChangeHtml} style="accent-color: #3b82f6; width: 14px; height: 14px; margin: 0; ${isMandatory ? 'cursor: not-allowed;' : 'cursor: pointer;'}">
+                        <span style="cursor: pointer; user-select: none;">${col.label || col.name || col.id} ${isMandatory ? '<i class="ph-fill ph-lock-key" style="color:#3b82f6; font-size:12px; margin-left:2px;"></i>' : ''}</span>
+                        `;
+                
+                if (isLeftPanel) {
+                    html += `
+                        <div style="display:flex; align-items:center; margin-left: 4px; gap: 2px; border-left: 1px solid ${border}; padding-left: 6px;">
+                            <button type="button" style="background:none; border:none; color:#94a3b8; cursor:pointer; padding: 0 4px; display:flex; align-items:center; justify-content:center;" onclick="window.moveColumnLeft('${col.id}')" title="向左移动"><i class="ph-bold ph-caret-left"></i></button>
+                            ${(!isMandatory && availableDataSource.some(c => c.id === col.id)) ? `<button type="button" style="background:none; border:none; color:#94a3b8; cursor:pointer; padding: 0 4px; display:flex; align-items:center; justify-content:center;" onclick="window.demoteColumnToCard('${col.id}')" title="移除"><i class="ph-bold ph-minus"></i></button>` : ''}
+                            <button type="button" style="background:none; border:none; color:#94a3b8; cursor:pointer; padding: 0 4px; display:flex; align-items:center; justify-content:center;" onclick="window.moveColumnRight('${col.id}')" title="向右移动"><i class="ph-bold ph-caret-right"></i></button>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div style="display:flex; align-items:center; margin-left: 4px; border-left: 1px solid ${border}; padding-left: 6px;">
+                            <button type="button" style="background:none; border:none; color:#3b82f6; cursor:pointer; padding: 0 4px; display:flex; align-items:center; justify-content:center;" onclick="window.promoteColumnFromCard('${col.id}')" title="加入表格"><i class="ph-bold ph-plus"></i></button>
+                        </div>
+                    `;
+                }
+                html += `
+                    </label>
+                </div>
+                `;
+            }
+        });
+        html += '</div>';
+        return html;
+    }
+
+    function renderCategoryCard(groupName, cols, isLeftPanel) {
+        const catIcons = {
+            '存取款资料': 'ph-bold ph-wallet',
+            '推荐关系': 'ph-bold ph-share-network',
+            '余额宝': 'ph-bold ph-wallet',
+            '信贷': 'ph-bold ph-credit-card',
+            '用户标签': 'ph-bold ph-tag',
+            '其他': 'ph-bold ph-folder',
+            '大头照': 'ph-bold ph-user-square',
+            '基本资料': 'ph-bold ph-user',
+            '基本': 'ph-bold ph-user',
+            '成长与积分': 'ph-bold ph-trend-up',
+            '主钱包': 'ph-bold ph-wallet',
+            '汇总 USDT': 'ph-bold ph-wallet'
+        };
+
+        let blockBorder = '#e2e8f0';
+        if (groupName === '主钱包') blockBorder = '#bfdbfe';
+        else if (groupName === '汇总 USDT') blockBorder = '#e9d5ff';
+
+        const upFn = isLeftPanel ? `window.moveLeftCategoryUp('${groupName}')` : `window.moveRightCategoryUp('${groupName}')`;
+        const downFn = isLeftPanel ? `window.moveLeftCategoryDown('${groupName}')` : `window.moveRightCategoryDown('${groupName}')`;
+
+        let innerHtml = `
+            <div class="category-block-draggable" data-cat="${groupName}" style="margin-bottom: 24px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; cursor: grab;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <i class="ph-bold ph-dots-six-vertical" style="color: #cbd5e1;"></i>
+                        <i class="${catIcons[groupName] || 'ph-bold ph-folder'}" style="color: #94a3b8; font-size: 16px;"></i>
+                        <span style="font-size: 14px; font-weight: 600; color: #475569;">${groupName}</span>
+                    </div>
+                    <div style="display:flex; align-items:center; border: 1px solid #e2e8f0; background: #fff; border-radius: 6px; overflow: hidden;" onclick="event.stopPropagation()">
+                        <button type="button" style="background:none; border:none; color:#94a3b8; cursor:pointer; padding: 4px 8px; border-right: 1px solid #e2e8f0; display:flex; align-items:center; justify-content:center;" onclick="${upFn}" title="向上移动"><i class="ph-bold ph-caret-up"></i></button>
+                        <button type="button" style="background:none; border:none; color:#94a3b8; cursor:pointer; padding: 4px 8px; display:flex; align-items:center; justify-content:center;" onclick="${downFn}" title="向下移动"><i class="ph-bold ph-caret-down"></i></button>
+                    </div>
+                </div>
+        `;
+
+        if (groupName === '存取款资料') {
+            const mainWalletCols = cols.filter(c => c.tag === '主钱包');
+            const summaryCols = cols.filter(c => c.tag === '汇总');
+            
+            innerHtml += `
+                <div style="border: 1px solid #eff6ff; border-radius: 6px; background: #f8fafc; padding: 12px; margin-bottom: 12px;">
+                    <div style="font-size: 13px; font-weight: 600; color: #1d4ed8; margin-bottom: 12px;">主钱包</div>
+                    ${renderPills(mainWalletCols, isLeftPanel)}
+                </div>
+                <div style="border: 1px solid #faf5ff; border-radius: 6px; background: #f8fafc; padding: 12px;">
+                    <div style="font-size: 13px; font-weight: 600; color: #7e22ce; margin-bottom: 12px;">汇总 (USDT)</div>
+                    ${renderPills(summaryCols, isLeftPanel)}
+                </div>
+            `;
+        } else {
+            innerHtml += `
+                <div style="border: 1px solid ${blockBorder}; border-radius: 6px; background: #f8fafc; padding: 12px;">
+                    ${renderPills(cols, isLeftPanel)}
+                </div>
+            `;
+        }
+        innerHtml += `</div>`;
+        return innerHtml;
+    }
+
     function renderDrawerStates() {
         const col1 = document.getElementById('col1-table-fields');
         const col2 = document.getElementById('col2-card-fields');
@@ -3668,470 +3792,50 @@ document.addEventListener('DOMContentLoaded', () => {
         col2.innerHTML = '';
         col3.innerHTML = '';
 
-        const activeLists = getActiveLists();
-
-        // 1. Render Table Fields (Column 1)
-        activeLists.frozen.forEach((col, idx) => {
-            col1.appendChild(createCol1Item(col, idx, 'frozen'));
-        });
-        activeLists.scroll.forEach((col, idx) => {
-            col1.appendChild(createCol1Item(col, idx, 'scroll'));
-        });
-
-        // Split availableDataSource into card fields and backup fields
-        const cardFields = [];
-        const backupFields = [];
-        availableDataSource.forEach(col => {
-            const isCol1 = col.category !== '存取款资料' && (activeLists.frozen.some(tc => tc.id === col.id) || activeLists.scroll.some(tc => tc.id === col.id));
-            if (!isCol1) {
-                if (dataSourceFieldVisibility[col.id] !== false) {
-                    cardFields.push(col);
-                } else {
-                    backupFields.push(col);
-                }
+        const list = currentTableMode === 'nested' ? nestedColumnsConfig : compactColumnsConfig;
+        
+        // --- Left Panel ---
+        const leftGroups = {};
+        const leftGroupOrder = [];
+        list.forEach(col => {
+            if (['action'].includes(col.id)) return;
+            const grp = col.group || col.category || '其他';
+            if (!leftGroups[grp]) {
+                leftGroups[grp] = [];
+                leftGroupOrder.push(grp);
             }
+            leftGroups[grp].push(col);
         });
 
-        // 2. Render Card Fields (Column 2) - Grouped by accordion
-        const groupedCardFields = {};
-        cardFields.forEach(col => {
-            const cat = col.category || '其他';
-            if (!groupedCardFields[cat]) groupedCardFields[cat] = [];
-            groupedCardFields[cat].push(col);
+        leftGroupOrder.forEach(grp => {
+            col1.innerHTML += renderCategoryCard(grp, leftGroups[grp], true);
         });
 
+        // --- Right Panel ---
+        const rightGroups = {};
+        availableDataSource.forEach(col => {
+            const grp = col.category || '其他';
+            if (!rightGroups[grp]) rightGroups[grp] = [];
+            rightGroups[grp].push(col);
+        });
+
+        const catKeys = Object.keys(rightGroups).sort((a, b) => {
+            const idxA = drawerCategoryOrder.indexOf(a);
+            const idxB = drawerCategoryOrder.indexOf(b);
+            return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
+        });
+
+        catKeys.forEach(grp => {
+            col2.innerHTML += renderCategoryCard(grp, rightGroups[grp], false);
+        });
 
         const badge1 = document.getElementById('badge-col1');
         const badge2 = document.getElementById('badge-col2');
-        const badge3 = document.getElementById('badge-col3');
-        if (badge1) badge1.textContent = activeLists.frozen.length + activeLists.scroll.length;
-        if (badge2) badge2.textContent = cardFields.length;
-        if (badge3) badge3.textContent = backupFields.length;
-
-        // Sort groupedCardFields keys
-
-
-        const catKeys = Object.keys(groupedCardFields).sort((a, b) => {
-            const visA = drawerCategoryVisibility[a] !== false;
-            const visB = drawerCategoryVisibility[b] !== false;
-            if (visA !== visB) return visA ? -1 : 1;
-
-            // If visibility is the same, sort by predefined order
-            const idxA = drawerCategoryOrder.indexOf(a);
-            const idxB = drawerCategoryOrder.indexOf(b);
-            const finalIdxA = idxA === -1 ? 999 : idxA;
-            const finalIdxB = idxB === -1 ? 999 : idxB;
-            return finalIdxA - finalIdxB;
-        });
-
-        const getCategoryIcon = (cat) => {
-            switch (cat) {
-                case '基本资料': return 'ph-fill ph-user';
-                case '存取款 (主钱包)': return 'ph-fill ph-wallet';
-                case '存取款 (汇总 USDT)': return 'ph-fill ph-coins';
-                case '成长与积分': return 'ph-fill ph-trend-up';
-                case '推荐关系': return 'ph-fill ph-share-network';
-                case '余额宝': return 'ph-fill ph-wallet';
-                case '用户标签': return 'ph-fill ph-tag';
-                case '信贷': return 'ph-fill ph-credit-card';
-                default: return 'ph-fill ph-folder';
-            }
-        };
-
-        catKeys.forEach(cat => {
-            const block = document.createElement('div');
-            block.className = 'category-block';
-            block.style.marginBottom = '12px';
-            const isVisible = drawerCategoryVisibility[cat] !== false;
-
-            // Accordion Block Container styling
-            block.style.border = '1px solid #e2e8f0';
-            block.style.borderRadius = '8px';
-            block.style.overflow = 'hidden';
-            block.style.opacity = isVisible ? '1' : '0.4';
-            block.style.transition = 'all 0.2s';
-            block.style.background = '#fff';
-            block.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
-            block.style.flexShrink = '0';
-
-            block.draggable = true;
-            block.dataset.cat = cat;
-
-            // Calculate selected count
-            const selectedCount = groupedCardFields[cat] ? groupedCardFields[cat].length : 0;
-            const totalCount = availableDataSource.filter(c => c.category === cat || (cat === '其他' && !c.category)).length;
-
-            // Accordion Header styling
-            block.innerHTML = `
-                <div class="category-title" style="padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; cursor: move; border-bottom: ${isVisible ? '1px solid #e2e8f0' : 'none'}; background: #ffffff;">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <i class="ph-fill ph-folder" style="color:#94a3b8; font-size:18px;"></i>
-                        <span style="font-size:15px; font-weight:700; color: #4338ca; ${isVisible ? '' : 'opacity:0.4; text-decoration:line-through;'}">${cat}</span>
-                    </div>
-                    <div style="display:flex; align-items:center;">
-                        <span style="font-size: 11px; font-weight: 600; color: #4f46e5; background: #eef2ff; padding: 4px 10px; border-radius: 99px;">已选 ${selectedCount} / ${totalCount}</span>
-                    </div>
-                </div>
-            `;
-
-            // Grid containing fields
-            const grid = document.createElement('div');
-            grid.style.padding = '12px';
-            grid.style.display = isVisible ? 'grid' : 'none';
-            grid.style.gridTemplateColumns = '1fr 1fr';
-            grid.style.gap = '10px';
-            grid.style.background = '#f8fafc';
-            grid.style.maxHeight = '250px';
-            grid.style.overflowY = 'auto';
-
-            if (isVisible) {
-                if (cat === '存取款资料') {
-                    grid.style.display = 'flex';
-                    grid.style.flexDirection = 'column';
-                    grid.style.gap = '16px';
-                    grid.style.padding = '16px';
-                    grid.style.background = '#fff';
-
-                    const mainWalletFields = groupedCardFields[cat].filter(col => col.tag === '主钱包');
-                    const summaryFields = groupedCardFields[cat].filter(col => col.tag === '汇总');
-
-                    if (mainWalletFields.length > 0) {
-                        const mainBox = document.createElement('div');
-                        mainBox.style.flexShrink = '0';
-                        mainBox.style.border = '1px solid #eff6ff';
-                        mainBox.style.borderRadius = '8px';
-                        mainBox.style.background = '#f8fafc';
-                        mainBox.style.overflow = 'hidden';
-                        mainBox.innerHTML = `
-                            <div style="padding: 12px 16px; border-bottom: 1px dashed #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <div style="width: 8px; height: 8px; border-radius: 50%; background: #3b82f6;"></div>
-                                    <span style="font-weight: 600; color: #1e40af; font-size: 14px;">主钱包</span>
-                                </div>
-                                <span style="font-size: 12px; color: #3b82f6; border: 1px solid #bfdbfe; padding: 2px 8px; border-radius: 4px; background: #fff;">可切换币种</span>
-                            </div>
-                            <div class="fields-grid" style="padding: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;"></div>
-                        `;
-                        const mainGrid = mainBox.querySelector('.fields-grid');
-                        mainWalletFields.forEach(col => mainGrid.appendChild(createCol2Item(col)));
-                        grid.appendChild(mainBox);
-                    }
-
-                    if (summaryFields.length > 0) {
-                        const summaryBox = document.createElement('div');
-                        summaryBox.style.flexShrink = '0';
-                        summaryBox.style.border = '1px solid #faf5ff';
-                        summaryBox.style.borderRadius = '8px';
-                        summaryBox.style.background = '#f8fafc';
-                        summaryBox.style.overflow = 'hidden';
-                        summaryBox.innerHTML = `
-                            <div style="padding: 12px 16px; border-bottom: 1px dashed #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <div style="width: 8px; height: 8px; border-radius: 50%; background: #a855f7;"></div>
-                                    <span style="font-weight: 600; color: #6b21a8; font-size: 14px;">汇总</span>
-                                </div>
-                                <span style="font-size: 12px; color: #a855f7; border: 1px solid #e9d5ff; padding: 2px 8px; border-radius: 4px; background: #fff;">USDT</span>
-                            </div>
-                            <div class="fields-grid" style="padding: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;"></div>
-                        `;
-                        const summaryGrid = summaryBox.querySelector('.fields-grid');
-                        summaryFields.forEach(col => summaryGrid.appendChild(createCol2Item(col)));
-                        grid.appendChild(summaryBox);
-                    }
-                } else {
-                    groupedCardFields[cat].forEach(col => {
-                        grid.appendChild(createCol2Item(col));
-                    });
-                }
-            }
-
-            block.appendChild(grid);
-            col2.appendChild(block);
-        });
-
-        // 3. Render Backup Fields (Column 3)
-        backupFields.forEach(col => {
-            col3.appendChild(createCol3Item(col));
-        });
-
-        initDragAndDrop();
-        updateTableFromDrawer();
+        if (badge1) badge1.textContent = list.length - 1; // subtract action
+        if (badge2) badge2.textContent = availableDataSource.length;
     }
-
-
-    function createCol1Item(col, index, type) {
-        const div = document.createElement('div');
-        div.className = 'column-item';
-        div.style.display = 'flex';
-        div.style.justifyContent = 'space-between';
-        div.style.alignItems = 'center';
-        div.style.padding = '8px 12px';
-        div.style.background = '#fff';
-        div.style.border = '1px solid #e2e8f0';
-        div.style.borderRadius = '8px';
-        div.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
-
-        div.draggable = true;
-        div.dataset.id = col.id;
-        div.dataset.type = type;
-
-        const isMandatory = ['uid', 'account', 'memberInfo'].includes(col.id);
-
-        let actionButtons = '';
-
-        // Sorting buttons
-        actionButtons += `<div style="display: flex; flex-direction: column; gap: 2px; border-right: 1px solid #e2e8f0; padding-right: 4px; margin-right: 4px;">
-            <button type="button" style="background:none; border:none; color:var(--text-muted); cursor:pointer; height: 12px; line-height: 12px; font-size: 10px; ${index === 0 ? 'opacity: 0.3; cursor: not-allowed;' : ''}" onclick="window.moveColumnUp('${col.id}', '${type}')"><i class="ph-bold ph-caret-up"></i></button>
-            <button type="button" style="background:none; border:none; color:var(--text-muted); cursor:pointer; height: 12px; line-height: 12px; font-size: 10px;" onclick="window.moveColumnDown('${col.id}', '${type}')"><i class="ph-bold ph-caret-down"></i></button>
-        </div>`;
-
-        if (!col.isNative) {
-            let hasCardEquivalent = dataSourceFieldVisibility[col.id] === 'card';
-            // Move to Card
-            if (!hasCardEquivalent) {
-                actionButtons += `<button type="button" class="btn-action-icon" style="color:#8b5cf6;" title="移至卡片" onclick="window.demoteColumnToCard('${col.id}', '${type}')"><i class="ph ph-arrow-right"></i></button>`;
-            }
-            // Hide (Move to Backup)
-            actionButtons += `<button type="button" class="btn-action-icon" style="color:#94a3b8;" title="隐藏" onclick="window.demoteColumnToBackup('${col.id}', '${type}')"><i class="ph ph-x"></i></button>`;
-        } else {
-            actionButtons += `<button type="button" class="btn-action-icon" style="color:#cbd5e1; cursor:not-allowed;" title="${isMandatory ? '无法移除' : '固定在主表格'}"><i class="ph ph-x"></i></button>`;
-        }
-
-        div.innerHTML = `
-            <div class="column-item-left" style="display:flex; align-items:center; gap:8px; flex:1; min-width:0;">
-                <i class="ph ph-dots-six-vertical" style="color:#cbd5e1; cursor:grab;"></i>
-                <input type="checkbox" ${isMandatory ? 'checked disabled' : (tableFieldVisibility[col.id] !== false ? 'checked' : '')} onchange="window.toggleTableFieldVisibility('${col.id}', this.checked)" style="cursor:pointer; margin:0; width:14px; height:14px; accent-color:#3b82f6;">
-                <span class="column-name" style="font-size:12px; font-weight:600; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; ${tableFieldVisibility[col.id] === false ? 'opacity:0.4; text-decoration:line-through;' : ''}">${col.label} ${isMandatory ? '<i class="ph-fill ph-lock-key" style="color:#3b82f6; font-size:12px;"></i>' : ''}</span>
-                ${col.tag ? `<span style="font-size: 10px; background: ${col.tagColor === 'blue' ? '#eff6ff' : '#faf5ff'}; color: ${col.tagColor === 'blue' ? '#3b82f6' : '#a855f7'}; padding: 2px 6px; border-radius: 4px; border: 1px solid ${col.tagColor === 'blue' ? '#bfdbfe' : '#e9d5ff'}; flex-shrink: 0;">${col.tag}</span>` : ''}
-            </div>
-            <div class="column-item-actions" style="display:flex; align-items:center; gap:4px;">
-                ${actionButtons}
-            </div>
-        `;
-        return div;
-    }
-
-    function createCol2Item(col) {
-        const div = document.createElement('div');
-        div.style.display = 'flex';
-        div.style.justifyContent = 'space-between';
-        div.style.alignItems = 'center';
-        div.style.padding = '6px 12px';
-        div.style.background = '#fff';
-        div.style.border = '1px solid #e2e8f0';
-        div.style.borderRadius = '8px';
-        div.draggable = true;
-        div.dataset.id = col.id;
-
-        let hasTableEquivalent = compactColumnsConfig.some(c => c.id === col.id);
-
-        div.innerHTML = `
-            <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0;">
-                <i class="ph ph-dots-six-vertical" style="color:#cbd5e1; cursor:grab; font-size: 16px;"></i>
-                <input type="checkbox" checked onchange="if(!this.checked) window.hideCardColumn('${col.id}')" style="cursor:pointer; margin:0; width:14px; height:14px; accent-color:#3b82f6; flex-shrink: 0;">
-                <span style="font-size:13px; font-weight:500; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${col.label}</span>
-                ${col.tag ? `<span style="font-size: 10px; background: ${col.tagColor === 'blue' ? '#eff6ff' : '#faf5ff'}; color: ${col.tagColor === 'blue' ? '#3b82f6' : '#a855f7'}; padding: 2px 6px; border-radius: 4px; border: 1px solid ${col.tagColor === 'blue' ? '#bfdbfe' : '#e9d5ff'}; flex-shrink: 0;">${col.tag}</span>` : ''}
-            </div>
-            <div style="display:flex; align-items:center; border: 1px solid #f1f5f9; background: #f8fafc; border-radius: 6px; overflow: hidden;">
-                <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 4px 8px; border-right: 1px solid #f1f5f9; background: #f8fafc;">
-                    <button type="button" style="background:none; border:none; color:#cbd5e1; cursor:pointer; height: 10px; line-height: 10px; font-size: 10px; padding: 0;" onclick="window.moveCardUp('${col.id}', '${col.ds_category || '其他'}')"><i class="ph-bold ph-caret-up"></i></button>
-                    <button type="button" style="background:none; border:none; color:#cbd5e1; cursor:pointer; height: 10px; line-height: 10px; font-size: 10px; padding: 0;" onclick="window.moveCardDown('${col.id}', '${col.ds_category || '其他'}')"><i class="ph-bold ph-caret-down"></i></button>
-                </div>
-                ${!hasTableEquivalent ? `
-                <div style="padding: 4px 8px; border-right: 1px solid #f1f5f9; background: #f8fafc; display: flex; align-items: center; justify-content: center;">
-                    <button type="button" class="btn-action-icon" style="color:#3b82f6; border: none; background: transparent; padding: 0; cursor: pointer; display: flex;" title="提至表格" onclick="window.promoteColumnFromCard('${col.id}')"><i class="ph ph-arrow-left" style="font-size: 13px; font-weight: bold;"></i></button>
-                </div>
-                ` : ''}
-                <div style="padding: 4px 8px; background: #f8fafc; display: flex; align-items: center; justify-content: center;">
-                    <button type="button" class="btn-action-icon" style="color:#94a3b8; border: none; background: transparent; padding: 0; cursor: pointer; display: flex;" title="隐藏" onclick="window.hideCardColumn('${col.id}')"><i class="ph ph-x" style="font-size: 13px; font-weight: bold;"></i></button>
-                </div>
-            </div>
-        `;
-        return div;
-    }
-
-    function createCol3Item(col) {
-        const div = document.createElement('div');
-        div.style.display = 'flex';
-        div.style.justifyContent = 'space-between';
-        div.style.alignItems = 'center';
-        div.style.padding = '8px 12px';
-        div.style.background = '#fff';
-        div.style.border = '1px solid #e2e8f0';
-        div.style.borderRadius = '8px';
-        div.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
-        div.draggable = true;
-        div.dataset.id = col.id;
-
-        div.innerHTML = `
-            <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0;">
-                <i class="ph ph-dots-six-vertical" style="color:#cbd5e1; cursor:grab;"></i>
-                <span style="font-size:13px; font-weight:500; color:#334155; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${col.label}</span>
-                ${col.tag ? `<span style="font-size: 10px; background: ${col.tagColor === 'blue' ? '#eff6ff' : '#faf5ff'}; color: ${col.tagColor === 'blue' ? '#3b82f6' : '#a855f7'}; padding: 2px 6px; border-radius: 4px; border: 1px solid ${col.tagColor === 'blue' ? '#bfdbfe' : '#e9d5ff'}; flex-shrink: 0;">${col.tag}</span>` : ''}
-            </div>
-            <div style="display:flex; gap:8px;">
-                <button type="button" style="color:#3b82f6; font-size:12px; font-weight:600; background:transparent; border:none; cursor:pointer; display:flex; align-items:center; gap:2px;" title="加至表格" onclick="window.promoteColumnFromBackup('${col.id}')">+表</button>
-                <button type="button" style="color:#8b5cf6; font-size:12px; font-weight:600; background:transparent; border:none; cursor:pointer; display:flex; align-items:center; gap:2px;" title="加至卡片" onclick="window.addBackupToCard('${col.id}')">+卡</button>
-            </div>
-        `;
-        return div;
-    }
-
-    // --- Action Methods ---
-
-    window.demoteColumnToCard = function (id, type) {
-        const list = type === 'frozen' ? getActiveLists().frozen : getActiveLists().scroll;
-        const idx = list.findIndex(c => c.id === id);
-        if (idx > -1) {
-            if (list[idx].isNative) {
-                renderDrawerStates();
-                return;
-            }
-            const col = list.splice(idx, 1)[0];
-            availableDataSource.push(col);
-            dataSourceFieldVisibility[col.id] = true;
-            renderDrawerStates();
-            updateTableFromDrawer();
-        }
-    };
-
-    window.demoteColumnToBackup = function (id, type) {
-        const list = type === 'frozen' ? getActiveLists().frozen : getActiveLists().scroll;
-        const idx = list.findIndex(c => c.id === id);
-        if (idx > -1) {
-            if (list[idx].isNative) {
-                renderDrawerStates();
-                return;
-            }
-            const col = list.splice(idx, 1)[0];
-            availableDataSource.push(col);
-            dataSourceFieldVisibility[col.id] = false;
-            renderDrawerStates();
-            updateTableFromDrawer();
-        }
-    };
-
-    window.promoteColumnFromCard = function (id) {
-        const targetList = currentTableMode === 'nested' ? nestedScrollColumns : compactScrollColumns;
-        if (targetList.some(c => c.id === id) || (currentTableMode === 'nested' ? nestedFrozenColumns : compactFrozenColumns).some(c => c.id === id)) {
-            // Already in table, just remove it from availableDataSource if it's not deposit/withdraw
-            const idx = availableDataSource.findIndex(c => c.id === id);
-            if (idx > -1) {
-                if (availableDataSource[idx].category !== '存取款资料') {
-                    availableDataSource.splice(idx, 1);
-                    delete dataSourceFieldVisibility[id];
-                }
-            }
-            renderDrawerStates();
-            return;
-        }
-
-        const idx = availableDataSource.findIndex(c => c.id === id);
-        if (idx > -1) {
-            const isDepositWithdraw = availableDataSource[idx].category === '存取款资料';
-            const col = isDepositWithdraw ? { ...availableDataSource[idx] } : availableDataSource.splice(idx, 1)[0];
-            col.isNative = false;
-            const insertIntoGroup = (targetList, colToInsert) => {
-                let actionIdx = targetList.findIndex(c => c.id === 'action');
-                let appendIdx = actionIdx !== -1 ? actionIdx : targetList.length;
-
-                if (!colToInsert.group) {
-                    targetList.splice(appendIdx, 0, colToInsert);
-                    return;
-                }
-
-                let lastIdx = -1;
-                for (let i = 0; i < targetList.length; i++) {
-                    if (targetList[i].group === colToInsert.group) {
-                        lastIdx = i;
-                    }
-                }
-
-                if (lastIdx !== -1) {
-                    targetList.splice(lastIdx + 1, 0, colToInsert);
-                } else {
-                    targetList.splice(appendIdx, 0, colToInsert);
-                }
-            };
-
-            if (currentTableMode === 'nested') {
-                insertIntoGroup(nestedScrollColumns, col);
-                nestedColumnVisibility[col.id] = true;
-            } else {
-                insertIntoGroup(compactScrollColumns, col);
-                compactColumnVisibility[col.id] = true;
-            }
-            // Cleanup card visibility flag only if we actually moved it
-            if (!isDepositWithdraw) {
-                delete dataSourceFieldVisibility[col.id];
-            }
-            renderDrawerStates();
-            updateTableFromDrawer();
-        }
-    };
-
-    window.hideCardColumn = function (id) {
-        dataSourceFieldVisibility[id] = false;
-        renderDrawerStates();
-        window.applyDrawerOrderToTable();
-    };
-
-    window.promoteColumnFromBackup = function (id) {
-        // Backup to table is same logic as card to table
-        window.promoteColumnFromCard(id);
-    };
-
-    window.addBackupToCard = function (id) {
-        dataSourceFieldVisibility[id] = true;
-        renderDrawerStates();
-        window.applyDrawerOrderToTable();
-    };
-
-
-    window.moveCardUp = function (id, cat) {
-        const activeLists = getActiveLists();
-        const inCardItems = availableDataSource.filter(c => {
-            const isCol1 = c.category !== '存取款资料' && (activeLists.frozen.some(tc => tc.id === c.id) || activeLists.scroll.some(tc => tc.id === c.id));
-            const resolvedCat = c.ds_category || c.category || '其他';
-            return !isCol1 && dataSourceFieldVisibility[c.id] !== false && resolvedCat === cat;
-        });
-        const idx = inCardItems.findIndex(c => c.id === id);
-        if (idx > 0) {
-            const itemToMove = inCardItems[idx];
-            const itemBefore = inCardItems[idx - 1];
-            const actualIdx1 = availableDataSource.findIndex(c => c.id === itemToMove.id);
-            const actualIdx2 = availableDataSource.findIndex(c => c.id === itemBefore.id);
-            const temp = availableDataSource[actualIdx1];
-            availableDataSource[actualIdx1] = availableDataSource[actualIdx2];
-            availableDataSource[actualIdx2] = temp;
-            renderDrawerStates();
-            window.applyDrawerOrderToTable();
-        }
-    };
-
-    window.moveCardDown = function (id, cat) {
-        const activeLists = getActiveLists();
-        const inCardItems = availableDataSource.filter(c => {
-            const isCol1 = c.category !== '存取款资料' && (activeLists.frozen.some(tc => tc.id === c.id) || activeLists.scroll.some(tc => tc.id === c.id));
-            const resolvedCat = c.ds_category || c.category || '其他';
-            return !isCol1 && dataSourceFieldVisibility[c.id] !== false && resolvedCat === cat;
-        });
-        const idx = inCardItems.findIndex(c => c.id === id);
-        if (idx > -1 && idx < inCardItems.length - 1) {
-            const itemToMove = inCardItems[idx];
-            const itemAfter = inCardItems[idx + 1];
-            const actualIdx1 = availableDataSource.findIndex(c => c.id === itemToMove.id);
-            const actualIdx2 = availableDataSource.findIndex(c => c.id === itemAfter.id);
-            const temp = availableDataSource[actualIdx1];
-            availableDataSource[actualIdx1] = availableDataSource[actualIdx2];
-            availableDataSource[actualIdx2] = temp;
-            renderDrawerStates();
-            window.applyDrawerOrderToTable();
-        }
-    };
-
-    window.moveColumnUp = function (id, type) {
-        let list = type === 'frozen' ? getActiveLists().frozen : getActiveLists().scroll;
+    window.moveColumnLeft = function (id) {
+        let list = currentTableMode === 'nested' ? nestedColumnsConfig : compactColumnsConfig;
         const idx = list.findIndex(c => c.id === id);
         if (idx > 0) {
             const temp = list[idx - 1];
@@ -4142,8 +3846,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    window.moveColumnDown = function (id, type) {
-        let list = type === 'frozen' ? getActiveLists().frozen : getActiveLists().scroll;
+    window.moveColumnRight = function (id) {
+        let list = currentTableMode === 'nested' ? nestedColumnsConfig : compactColumnsConfig;
         const idx = list.findIndex(c => c.id === id);
         if (idx > -1 && idx < list.length - 1) {
             const temp = list[idx + 1];
@@ -4154,127 +3858,157 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    let draggedItem = null;
-
-    function initDragAndDrop() {
-        const items = document.querySelectorAll('.column-item');
-        const zones = document.querySelectorAll('.sortable-list');
-
-        items.forEach(item => {
-            item.addEventListener('dragstart', (e) => {
-                draggedItem = item;
-                setTimeout(() => item.style.display = 'none', 0);
-            });
-
-            item.addEventListener('dragend', () => {
-                setTimeout(() => {
-                    if (draggedItem) draggedItem.style.display = 'flex';
-                    draggedItem = null;
-                    updateListsFromDOM();
-                }, 0);
-            });
-        });
-
-        zones.forEach(zone => {
-            zone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                const afterElement = getDragAfterElement(zone, e.clientY);
-                if (afterElement == null) {
-                    zone.appendChild(draggedItem);
-                } else {
-                    zone.insertBefore(draggedItem, afterElement);
-                }
-            });
-        });
-    }
-
-    function getDragAfterElement(container, y) {
-        const draggableElements = [...container.querySelectorAll('.column-item:not([style*="display: none"])')];
-        return draggableElements.reduce((closest, child) => {
-            const box = child.getBoundingClientRect();
-            const offset = y - box.top - box.height / 2;
-            if (offset < 0 && offset > closest.offset) {
-                return { offset: offset, element: child };
-            } else {
-                return closest;
+    window.moveLeftCategoryUp = function(groupName) {
+        let list = currentTableMode === 'nested' ? nestedColumnsConfig : compactColumnsConfig;
+        const leftGroups = {};
+        const leftGroupOrder = [];
+        list.forEach(col => {
+            if (['action'].includes(col.id)) return;
+            const grp = col.group || col.category || '其他';
+            if (!leftGroups[grp]) {
+                leftGroups[grp] = [];
+                leftGroupOrder.push(grp);
             }
-        }, { offset: Number.NEGATIVE_INFINITY }).element;
-    }
-
-    function updateListsFromDOM() {
-        const newFrozen = [];
-        const newScroll = [];
-
-        document.querySelectorAll('#frozenColumnsList .column-item').forEach(el => {
-            const id = el.dataset.id;
-            let col = customFrozenColumns.find(c => c.id === id) || customScrollColumns.find(c => c.id === id);
-            if (col) newFrozen.push(col);
+            leftGroups[grp].push(col);
         });
+        const idx = leftGroupOrder.indexOf(groupName);
+        if (idx > 0) {
+            const temp = leftGroupOrder[idx - 1];
+            leftGroupOrder[idx - 1] = leftGroupOrder[idx];
+            leftGroupOrder[idx] = temp;
+            const newList = [];
+            leftGroupOrder.forEach(g => newList.push(...leftGroups[g]));
+            const actionCol = list.find(c => c.id === 'action');
+            if (actionCol) newList.push(actionCol);
+            
+            if (currentTableMode === 'nested') {
+                nestedColumnsConfig.length = 0;
+                nestedColumnsConfig.push(...newList);
+            } else {
+                compactColumnsConfig.length = 0;
+                compactColumnsConfig.push(...newList);
+            }
+            renderDrawerStates();
+            updateTableFromDrawer();
+        }
+    };
 
-        document.querySelectorAll('#scrollColumnsList .column-item').forEach(el => {
-            const id = el.dataset.id;
-            let col = customFrozenColumns.find(c => c.id === id) || customScrollColumns.find(c => c.id === id);
-            if (col) newScroll.push(col);
+    window.moveLeftCategoryDown = function(groupName) {
+        let list = currentTableMode === 'nested' ? nestedColumnsConfig : compactColumnsConfig;
+        const leftGroups = {};
+        const leftGroupOrder = [];
+        list.forEach(col => {
+            if (['action'].includes(col.id)) return;
+            const grp = col.group || col.category || '其他';
+            if (!leftGroups[grp]) {
+                leftGroups[grp] = [];
+                leftGroupOrder.push(grp);
+            }
+            leftGroups[grp].push(col);
         });
+        const idx = leftGroupOrder.indexOf(groupName);
+        if (idx > -1 && idx < leftGroupOrder.length - 1) {
+            const temp = leftGroupOrder[idx + 1];
+            leftGroupOrder[idx + 1] = leftGroupOrder[idx];
+            leftGroupOrder[idx] = temp;
+            const newList = [];
+            leftGroupOrder.forEach(g => newList.push(...leftGroups[g]));
+            const actionCol = list.find(c => c.id === 'action');
+            if (actionCol) newList.push(actionCol);
+            
+            if (currentTableMode === 'nested') {
+                nestedColumnsConfig.length = 0;
+                nestedColumnsConfig.push(...newList);
+            } else {
+                compactColumnsConfig.length = 0;
+                compactColumnsConfig.push(...newList);
+            }
+            renderDrawerStates();
+            updateTableFromDrawer();
+        }
+    };
+    
+    window.moveRightCategoryUp = function(catName) {
+        const idx = drawerCategoryOrder.indexOf(catName);
+        if (idx > 0) {
+            const temp = drawerCategoryOrder[idx - 1];
+            drawerCategoryOrder[idx - 1] = drawerCategoryOrder[idx];
+            drawerCategoryOrder[idx] = temp;
+            renderDrawerStates();
+            if(typeof window.applyDrawerOrderToTable === 'function') window.applyDrawerOrderToTable();
+        }
+    };
 
-        customFrozenColumns = newFrozen;
-        customScrollColumns = newScroll;
-        renderDrawerStates();
-        window.applyDrawerOrderToTable();
-    }
+    window.moveRightCategoryDown = function(catName) {
+        const idx = drawerCategoryOrder.indexOf(catName);
+        if (idx > -1 && idx < drawerCategoryOrder.length - 1) {
+            const temp = drawerCategoryOrder[idx + 1];
+            drawerCategoryOrder[idx + 1] = drawerCategoryOrder[idx];
+            drawerCategoryOrder[idx] = temp;
+            renderDrawerStates();
+            if(typeof window.applyDrawerOrderToTable === 'function') window.applyDrawerOrderToTable();
+        }
+    };
+
+    window.demoteColumnToCard = function (id) {
+        let list = currentTableMode === 'nested' ? nestedColumnsConfig : compactColumnsConfig;
+        const idx = list.findIndex(c => c.id === id);
+        if (idx > -1) {
+            list.splice(idx, 1);
+            if (currentTableMode === 'compact' && typeof compactColumnVisibility !== 'undefined') {
+                compactColumnVisibility[id] = false;
+            } else if (currentTableMode === 'nested' && typeof nestedColumnVisibility !== 'undefined') {
+                nestedColumnVisibility[id] = false;
+            }
+            renderDrawerStates();
+            updateTableFromDrawer();
+            if(typeof window.applyDrawerOrderToTable === 'function') window.applyDrawerOrderToTable();
+        }
+    };
+
+    window.promoteColumnFromCard = function (id) {
+        let list = currentTableMode === 'nested' ? nestedColumnsConfig : compactColumnsConfig;
+        const col = availableDataSource.find(c => c.id === id);
+        if (col && !list.some(c => c.id === id)) {
+            const grp = col.group || col.category || '其他';
+            
+            // Find the last index of a column in the same group
+            let insertIdx = -1;
+            for (let i = list.length - 1; i >= 0; i--) {
+                const c = list[i];
+                const cGrp = c.group || c.category || '其他';
+                if (cGrp === grp && c.id !== 'action') {
+                    insertIdx = i + 1;
+                    break;
+                }
+            }
+
+            if (insertIdx !== -1) {
+                list.splice(insertIdx, 0, col);
+            } else {
+                // insert before action if no existing group found
+                const actionIdx = list.findIndex(c => c.id === 'action');
+                if (actionIdx > -1) {
+                    list.splice(actionIdx, 0, col);
+                } else {
+                    list.push(col);
+                }
+            }
+            
+            if (currentTableMode === 'compact' && typeof compactColumnVisibility !== 'undefined') {
+                compactColumnVisibility[id] = true;
+            } else if (currentTableMode === 'nested' && typeof nestedColumnVisibility !== 'undefined') {
+                nestedColumnVisibility[id] = true;
+            }
+            // Reset the right-panel checkbox visibility just in case it was explicitly hidden there
+            dataSourceFieldVisibility[id] = true; 
+            renderDrawerStates();
+            updateTableFromDrawer();
+            if(typeof window.applyDrawerOrderToTable === 'function') window.applyDrawerOrderToTable();
+        }
+    };
 
     function updateTableFromDrawer() {
-        if (currentTableMode === 'nested') {
-            nestedColumnsConfig.length = 0;
-            nestedPinnedColumnIds.length = 0;
-
-            nestedFrozenColumns.forEach(c => {
-                if (tableFieldVisibility[c.id] === false) return;
-                nestedColumnsConfig.push(c);
-                nestedPinnedColumnIds.push(c.id);
-            });
-
-            nestedScrollColumns.forEach(c => {
-                if (tableFieldVisibility[c.id] === false) return;
-                nestedColumnsConfig.push(c);
-            });
-
-            availableDataSource.forEach(c => {
-                nestedColumnVisibility[c.id] = false;
-            });
-        } else {
-            compactColumnsConfig.length = 0;
-            pinnedColumnIds.length = 0;
-
-            const processCompactList = (sourceList, isPinned) => {
-                const expandedMains = [];
-                const expandedUSDTs = [];
-                const othersBefore = [];
-                const othersAfter = [];
-                let seenPair = false;
-
-                sourceList.forEach(c => {
-                    if (tableFieldVisibility[c.id] === false) return;
-                    othersBefore.push(c);
-                });
-
-                const finalBlock = [...othersBefore, ...expandedMains, ...expandedUSDTs, ...othersAfter];
-                finalBlock.forEach(col => {
-                    compactColumnsConfig.push(col);
-                    if (isPinned) pinnedColumnIds.push(col.id);
-                    compactColumnVisibility[col.id] = true;
-                });
-            };
-
-            processCompactList(compactFrozenColumns, true);
-            processCompactList(compactScrollColumns, false);
-            
-            availableDataSource.forEach(c => {
-                if(compactColumnsConfig.findIndex(cc => cc.id === c.id) === -1) compactColumnVisibility[c.id] = false;
-            });
-        }
-
-        // Trigger table render if function exists
         if (typeof renderTable === 'function') {
             renderTable(true);
         }
