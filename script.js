@@ -2,10 +2,16 @@ document.addEventListener('DOMContentLoaded', () => {
     let tableFieldVisibility = {};
     window.toggleTableFieldVisibility = function (id, isVisible) {
         tableFieldVisibility[id] = isVisible;
+        if (currentTableMode === 'nested') {
+            nestedColumnVisibility[id] = isVisible;
+        } else {
+            compactColumnVisibility[id] = isVisible;
+        }
         renderDrawerStates();
+        updateTableFromDrawer();
         window.applyDrawerOrderToTable();
     };
-    let drawerCategoryOrder = ['基本资料', '存取款资料', '成长与积分', '推荐关系', '余额宝', '信贷', '用户标签', '其他'];
+    let drawerCategoryOrder = ['基本资料', '额度', '存取款资料', '成长与积分', '推荐关系', '余额宝', '信贷', '用户标签', '其他'];
     let drawerCategoryVisibility = { '信贷': false };
 
     window.moveCategoryUp = function (cat) {
@@ -1944,8 +1950,19 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <div class="ds-field" data-ds-id="ds_phone" style="display:${dataSourceFieldVisibility['ds_phone'] !== false ? '' : 'none'}"><span class="lbl">手机号</span> <span class="val">${dataMode === 'nodata' ? '-' : renderDataState(user.phone, 'phone')}</span></div>
                                 </div>
                             </div>
+                            <!-- 额度 Card -->
+                            <div class="detail-card" data-category="额度" style="flex: 0 0 auto; width: 240px; display: ${(dataSourceFieldVisibility['availableCredit'] !== false || dataSourceFieldVisibility['thirdBal'] !== false) ? 'block' : 'none'};">
+                                <div class="detail-card-header">
+                                    <div style="display: flex; align-items: center; gap: 8px;"><i class="ph ph-wallet"></i> 额度</div>
+                                    ${renderDropdownUI(user.currency || 'USDT')}
+                                </div>
+                                <div class="detail-card-body flex-list-col" data-no-sort="true">
+                                    <div class="ds-field" data-ds-id="availableCredit" style="display:${dataSourceFieldVisibility['availableCredit'] !== false ? '' : 'none'}"><span class="lbl">可用额度</span> <span class="val">${formatAmount(user.availableCredit, user.currency)}</span></div>
+                                    <div class="ds-field" data-ds-id="thirdBal" style="display:${dataSourceFieldVisibility['thirdBal'] !== false ? '' : 'none'}"><span class="lbl">三方余额</span> <div style="display:flex; align-items:center; justify-content:flex-end; gap:4px;"><span class="val">${formatAmount(user.thirdBal, user.currency)}</span> <i class="ph ph-arrows-clockwise refresh-icon-compact" data-uid="${user.uid}" style="cursor:pointer;color:#3b82f6;" title="刷新余额"></i></div></div>
+                                </div>
+                            </div>
                             <!-- 存取款数据 (主钱包 / 汇总) Combined Card -->
-                            <div class="detail-card" data-category="存取款资料" style="flex: 1 1 100%; display: ${(dataSourceFieldVisibility['ds_depTotal_main'] !== false || dataSourceFieldVisibility['ds_depTotal_summary'] !== false || dataSourceFieldVisibility['ds_depCount_main'] !== false || dataSourceFieldVisibility['ds_depCount_summary'] !== false || dataSourceFieldVisibility['ds_wdrTotal_main'] !== false || dataSourceFieldVisibility['ds_wdrTotal_summary'] !== false || dataSourceFieldVisibility['ds_wdrCount_main'] !== false || dataSourceFieldVisibility['ds_wdrCount_summary'] !== false || dataSourceFieldVisibility['ds_wdrFee_main'] !== false || dataSourceFieldVisibility['ds_wdrFee_summary'] !== false || dataSourceFieldVisibility['ds_sysAdd_main'] !== false || dataSourceFieldVisibility['ds_sysAdd_summary'] !== false || dataSourceFieldVisibility['ds_sysSub_main'] !== false || dataSourceFieldVisibility['ds_sysSub_summary'] !== false) ? 'flex' : 'none'}; min-width: max-content; width: auto; flex-direction: column;">
+                            <div class="detail-card" data-category="存取款资料" style="flex: 1 1 100%; max-width: 950px; display: ${(dataSourceFieldVisibility['ds_depTotal_main'] !== false || dataSourceFieldVisibility['ds_depTotal_summary'] !== false || dataSourceFieldVisibility['ds_depCount_main'] !== false || dataSourceFieldVisibility['ds_depCount_summary'] !== false || dataSourceFieldVisibility['ds_wdrTotal_main'] !== false || dataSourceFieldVisibility['ds_wdrTotal_summary'] !== false || dataSourceFieldVisibility['ds_wdrCount_main'] !== false || dataSourceFieldVisibility['ds_wdrCount_summary'] !== false || dataSourceFieldVisibility['ds_wdrFee_main'] !== false || dataSourceFieldVisibility['ds_wdrFee_summary'] !== false || dataSourceFieldVisibility['ds_sysAdd_main'] !== false || dataSourceFieldVisibility['ds_sysAdd_summary'] !== false || dataSourceFieldVisibility['ds_sysSub_main'] !== false || dataSourceFieldVisibility['ds_sysSub_summary'] !== false) ? 'flex' : 'none'}; min-width: max-content; width: auto; flex-direction: column;">
                                 <div class="detail-card-header" style="display: none;"></div>
                                 <div class="detail-card-body" data-no-sort="true" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px 0; padding: 16px;">
                                     <!-- Column 1 -->
@@ -2129,7 +2146,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     if (currentTableMode === 'compact') {
                         if (customColumnDrawer) {
-                            const tableHeader = document.querySelector('#userTable thead th');
+                            const tableHeader = document.querySelector('#userTable thead tr:last-child th');
                             if (tableHeader) {
                                 const rect = tableHeader.getBoundingClientRect();
                                 const availableSpace = window.innerHeight - rect.bottom - 10;
@@ -3434,21 +3451,27 @@ document.addEventListener('DOMContentLoaded', () => {
     let compactFrozenColumns = [];
     let compactScrollColumns = [];
 
-    // Initialize compact drawer columns from the original config
-    compactColumnsConfig.forEach(col => {
-        col.isNative = true;
-        if (pinnedColumnIds.includes(col.id)) {
-            compactFrozenColumns.push(col);
-        } else {
-            compactScrollColumns.push(col);
-        }
-    });
-
     const getActiveLists = () => {
-        return {
-            frozen: currentTableMode === 'nested' ? nestedFrozenColumns : compactFrozenColumns,
-            scroll: currentTableMode === 'nested' ? nestedScrollColumns : compactScrollColumns
-        };
+        let f = [];
+        let s = [];
+        if (currentTableMode === 'nested') {
+            nestedColumnsConfig.forEach(col => {
+                if (nestedPinnedColumnIds && nestedPinnedColumnIds.includes(col.id) || ['memberInfo', 'levelTeam', 'checkbox', 'action'].includes(col.id)) {
+                    f.push(col);
+                } else {
+                    s.push(col);
+                }
+            });
+        } else {
+            compactColumnsConfig.forEach(col => {
+                if (pinnedColumnIds && pinnedColumnIds.includes(col.id) || ['checkbox', 'action'].includes(col.id)) {
+                    f.push(col);
+                } else {
+                    s.push(col);
+                }
+            });
+        }
+        return { frozen: f, scroll: s };
     };
     let availableDataSource = [
         { id: 'ds_realname', label: '真实姓名', category: '基本资料' },
@@ -3459,6 +3482,8 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 'ds_regMode', label: '注册模式', category: '基本资料' },
         { id: 'ds_nickname', label: '暱称', category: '基本资料' },
         { id: 'ds_phone', label: '手机号', category: '基本资料' },
+        { id: 'availableCredit', label: '可用额度', category: '额度', sortable: true },
+        { id: 'thirdBal', label: '三方余额', category: '额度', sortable: true },
         { id: 'ds_depTotal_main', label: '存款总额', category: '存取款资料', group: '主钱包', tag: '主钱包', tagColor: 'blue', sortable: true },
         { id: 'ds_depCount_main', label: '存款次数', category: '存取款资料', group: '主钱包', tag: '主钱包', tagColor: 'blue' },
         { id: 'ds_wdrTotal_main', label: '取款总额', category: '存取款资料', group: '主钱包', tag: '主钱包', tagColor: 'blue', sortable: true },
@@ -3621,7 +3646,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnCustomColumns && customColumnDrawer) {
         btnCustomColumns.addEventListener('click', () => {
-            const tableHeader = document.querySelector('#userTable thead th');
+            const tableHeader = document.querySelector('#userTable thead tr:last-child th');
             if (tableHeader) {
                 const rect = tableHeader.getBoundingClientRect();
                 const availableSpace = window.innerHeight - rect.bottom - 10;
@@ -3674,7 +3699,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnToggleDrawerHeight.addEventListener('click', () => {
             if (!customColumnDrawer.classList.contains('expanded')) {
                 // Compute max available height below table header by targeting a sticky <th>
-                const tableHeader = document.querySelector('#userTable thead th');
+                const tableHeader = document.querySelector('#userTable thead tr:last-child th');
                 if (tableHeader) {
                     const rect = tableHeader.getBoundingClientRect();
                     // Leave a 10px margin below the header
@@ -3682,10 +3707,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     customColumnDrawer.style.setProperty('--max-drawer-height', `${availableSpace}px`);
                 }
                 customColumnDrawer.classList.add('expanded');
+                btnToggleDrawerHeight.setAttribute('title', '收回');
             } else {
                 customColumnDrawer.classList.remove('expanded');
+                btnToggleDrawerHeight.setAttribute('title', '向上展开');
             }
         });
+
+
     }
 
 
@@ -3707,26 +3736,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 const border = isChecked ? '#bfdbfe' : '#e2e8f0';
                 
                 html += `
-                <div data-id="${col.id}" class="draggable-pill" draggable="true" style="display: inline-flex; cursor: grab;">
+                <div data-id="${col.id}" class="${isLeftPanel ? 'draggable-pill' : ''}" draggable="${isLeftPanel ? 'true' : 'false'}" style="display: inline-flex; ${isLeftPanel ? 'cursor: grab;' : ''}">
                     <label style="border: 1px solid ${border}; border-radius: 4px; padding: 6px 12px; display: inline-flex; align-items: center; gap: 8px; color: ${color}; background: ${bg}; font-size: 13px; font-weight: 500; cursor: pointer; ${isMandatory ? 'opacity: 0.8;' : ''}">
+                        ${isLeftPanel ? '<i class="ph-bold ph-dots-six-vertical pill-drag-handle" style="color: #cbd5e1; font-size: 14px; margin-right: -4px;"></i>' : ''}
                         <input type="checkbox" ${isChecked ? 'checked' : ''} ${isMandatory ? 'disabled' : onChangeHtml} style="accent-color: #3b82f6; width: 14px; height: 14px; margin: 0; ${isMandatory ? 'cursor: not-allowed;' : 'cursor: pointer;'}">
                         <span style="cursor: pointer; user-select: none;">${col.label || col.name || col.id} ${isMandatory ? '<i class="ph-fill ph-lock-key" style="color:#3b82f6; font-size:12px; margin-left:2px;"></i>' : ''}</span>
                         `;
                 
                 if (isLeftPanel) {
                     html += `
-                        <div style="display:flex; align-items:center; margin-left: 4px; gap: 2px; border-left: 1px solid ${border}; padding-left: 6px;">
-                            <button type="button" style="background:none; border:none; color:#94a3b8; cursor:pointer; padding: 0 4px; display:flex; align-items:center; justify-content:center;" onclick="window.moveColumnLeft('${col.id}')" title="向左移动"><i class="ph-bold ph-caret-left"></i></button>
-                            ${(!isMandatory && availableDataSource.some(c => c.id === col.id)) ? `<button type="button" style="background:none; border:none; color:#94a3b8; cursor:pointer; padding: 0 4px; display:flex; align-items:center; justify-content:center;" onclick="window.demoteColumnToCard('${col.id}')" title="移除"><i class="ph-bold ph-minus"></i></button>` : ''}
-                            <button type="button" style="background:none; border:none; color:#94a3b8; cursor:pointer; padding: 0 4px; display:flex; align-items:center; justify-content:center;" onclick="window.moveColumnRight('${col.id}')" title="向右移动"><i class="ph-bold ph-caret-right"></i></button>
+                        <div class="pill-actions-hover" style="display:flex; align-items:center; margin-left: 4px; gap: 4px; border-left: 1px solid ${border}; padding-left: 6px;">
+                            <button type="button" style="background:none; border:none; color:#94a3b8; cursor:pointer; padding: 0 2px; display:flex; align-items:center; justify-content:center;" onclick="window.moveColumnLeft('${col.id}')" title="向左移动"><i class="ph-bold ph-caret-left"></i></button>
+                            <button type="button" style="background:none; border:none; color:#94a3b8; cursor:pointer; padding: 0 2px; display:flex; align-items:center; justify-content:center;" onclick="window.moveColumnRight('${col.id}')" title="向右移动"><i class="ph-bold ph-caret-right"></i></button>
+                            ${(!isMandatory && availableDataSource.some(c => c.id === col.id)) ? `<button type="button" style="background:#fee2e2; border:none; color:#ef4444; border-radius:4px; padding:2px 4px; cursor:pointer; display:flex; align-items:center; justify-content:center; margin-left: 2px;" onclick="window.demoteColumnToCard('${col.id}')" title="从主表移除"><i class="ph-bold ph-x" style="font-size: 12px;"></i></button>` : ''}
                         </div>
                     `;
                 } else {
                     if (inMainTable) {
-                        html += `<div style="background: #eef2ff; color: #4f46e5; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-left: 4px; flex-shrink: 0;">已在主表</div>`;
+                        html += `<button type="button" onclick="window.demoteColumnToCard('${col.id}')" title="取消新增到主表" style="background: #eef2ff; border: none; color: #4f46e5; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-left: 4px; flex-shrink: 0; cursor: pointer; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">已在主表</button>`;
                     } else {
                         html += `
-                        <div style="display:flex; align-items:center; margin-left: 4px; border-left: 1px solid ${border}; padding-left: 6px;">
+                        <div class="pill-actions-hover" style="display:flex; align-items:center; margin-left: 4px; border-left: 1px solid ${border}; padding-left: 6px;">
                             <button type="button" style="background:none; border:none; color:#3b82f6; cursor:pointer; padding: 0 4px; display:flex; align-items:center; justify-content:center;" onclick="window.promoteColumnFromCard('${col.id}')" title="加入表格"><i class="ph-bold ph-plus"></i></button>
                         </div>
                         `;
@@ -3763,11 +3793,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const upFn = isLeftPanel ? `window.moveLeftCategoryUp('${groupName}')` : `window.moveRightCategoryUp('${groupName}')`;
         const downFn = isLeftPanel ? `window.moveLeftCategoryDown('${groupName}')` : `window.moveRightCategoryDown('${groupName}')`;
 
+        let list = currentTableMode === 'nested' ? nestedColumnsConfig : compactColumnsConfig;
+        const allInMainTable = cols.length > 0 && cols.every(c => list.some(colInList => colInList.id === c.id));
+        const canDrag = groupName !== '其他' && (isLeftPanel || !allInMainTable);
+        const dragAttr = canDrag ? 'true' : 'false';
+        const cursorStyle = canDrag ? 'grab' : 'default';
+        const dragIconHtml = canDrag ? '<i class="ph-bold ph-dots-six-vertical" style="color: #cbd5e1;"></i>' : '';
+
         let innerHtml = `
-            <div class="category-block-draggable" data-cat="${groupName}" draggable="${groupName !== '其他' ? 'true' : 'false'}" style="margin-bottom: 16px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; background: #fdfdfd;">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; cursor: ${groupName !== '其他' ? 'grab' : 'default'};">
+            <div class="category-block-draggable" data-cat="${groupName}" draggable="${dragAttr}" style="margin-bottom: 16px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; background: #fdfdfd;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; cursor: ${cursorStyle};">
                     <div style="display: flex; align-items: center; gap: 6px;">
-                        ${groupName !== '其他' ? '<i class="ph-bold ph-dots-six-vertical" style="color: #cbd5e1;"></i>' : ''}
+                        ${dragIconHtml}
                         <span style="font-size: 14px; font-weight: 600; color: #475569;">${groupName}</span>
                     </div>
                     ${groupName === '其他' ? '' : `<div style="display:flex; align-items:center; border: 1px solid #e2e8f0; background: #fff; border-radius: 6px; overflow: hidden;" onclick="event.stopPropagation()">
@@ -4278,12 +4315,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 const targetRate = rates[newUnit] || 1;
                 const conversionFactor = targetRate / baseRate;
                 
+                const detailCard = dropdown.closest('.detail-card');
+                const cardBody = detailCard.querySelector('.detail-card-body');
+                
                 // Update micro-header currency labels
-                const labels = cardBody.querySelectorAll('.main-currency-label');
+                const labels = detailCard.querySelectorAll('.main-currency-label');
                 labels.forEach(l => l.textContent = newUnit);
 
                 // Synchronize all dropdown titles and checkmarks in this card
-                cardBody.querySelectorAll('.custom-unit-dropdown').forEach(dd => {
+                detailCard.querySelectorAll('.custom-unit-dropdown').forEach(dd => {
                     const titleSpan = dd.querySelector('.dropdown-title');
                     if (titleSpan) {
                         const mainCurrency = dd.getAttribute('data-main-currency');
@@ -4329,6 +4369,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         case 'ds_balTreas': rawVal = 15000; isAmount = true; break;
                         case 'ds_balInt': rawVal = 35; isAmount = true; break;
                         case 'ds_debt': rawVal = user.arrears; isAmount = true; break;
+                        case 'ds_creditVal': rawVal = user.creditValue; isAmount = true; break;
+                        case 'availableCredit': rawVal = user.availableCredit; isAmount = true; break;
+                        case 'thirdBal': rawVal = user.thirdBal; isAmount = true; break;
                     }
                     
                     if (isAmount) {
@@ -4365,132 +4408,244 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Drag and Drop Logic ---
     let draggedElement = null;
     let dragType = null; // 'pill' or 'category'
+    let placeholder = null;
 
     document.addEventListener('dragstart', (e) => {
         const pill = e.target.closest('.draggable-pill');
         const cat = e.target.closest('.category-block-draggable');
         
-        if (pill) {
+        if (pill && pill.getAttribute('draggable') === 'true') {
             draggedElement = pill;
             dragType = 'pill';
-            pill.style.opacity = '0.5';
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('text/plain', 'pill');
-        } else if (cat) {
+        } else if (cat && cat.getAttribute('draggable') === 'true') {
             draggedElement = cat;
             dragType = 'category';
-            cat.style.opacity = '0.5';
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('text/plain', 'category');
         }
+        
+        if (!draggedElement) return;
+        
+        placeholder = document.createElement('div');
+        placeholder.className = dragType === 'pill' ? 'drag-placeholder-pill' : 'drag-placeholder';
+        
+        setTimeout(() => {
+            draggedElement.style.display = 'none';
+            if (draggedElement.parentNode) {
+                draggedElement.parentNode.insertBefore(placeholder, draggedElement);
+            }
+        }, 0);
     });
 
-    document.addEventListener('dragend', (e) => {
+    function cleanUpDrag() {
+        if (placeholder && placeholder.parentNode) {
+            placeholder.parentNode.removeChild(placeholder);
+        }
+        placeholder = null;
         if (draggedElement) {
-            draggedElement.style.opacity = '1';
+            draggedElement.style.display = '';
             draggedElement = null;
             dragType = null;
         }
-    });
+    }
+
+    document.addEventListener('dragend', cleanUpDrag);
 
     document.addEventListener('dragover', (e) => {
-        e.preventDefault(); // allow drop
+        e.preventDefault(); 
         e.dataTransfer.dropEffect = 'move';
+        
+        if (!draggedElement || !placeholder) return;
+        
+        const isHoveringLeftPanel = e.target.closest('#col1-table-fields') !== null;
+        const panel = isHoveringLeftPanel ? document.getElementById('col1-table-fields') : e.target.closest('.drawer-body');
+        if (!panel) return;
+        
+        let draggableSelector = dragType === 'pill' ? '.draggable-pill' : '.category-block-draggable';
+        
+        const panelChildren = [...panel.querySelectorAll(`${draggableSelector}:not(.drag-placeholder):not(.drag-placeholder-pill)`)].filter(c => c.style.display !== 'none' && c.getAttribute('data-cat') !== '其他' && c !== draggedElement);
+        
+        const closestChild = panelChildren.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = e.clientY - (box.top + box.height / 2);
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child };
+            } else {
+                return closest;
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+        
+        let insertBeforeNode = closestChild;
+        
+        if (dragType === 'category' && isHoveringLeftPanel) {
+            const qitaNode = panel.querySelector('.category-block-draggable[data-cat="其他"]');
+            if (!insertBeforeNode && qitaNode) {
+                insertBeforeNode = qitaNode;
+            } else if (insertBeforeNode && insertBeforeNode === qitaNode) {
+                insertBeforeNode = qitaNode;
+            }
+        }
+        
+        if (insertBeforeNode) {
+            insertBeforeNode.parentNode.insertBefore(placeholder, insertBeforeNode);
+        } else if (isHoveringLeftPanel) {
+            // Check if appending to container directly
+            const container = dragType === 'pill' ? document.querySelector('#col1-table-fields > div > div') : document.getElementById('col1-table-fields');
+            if (container) container.appendChild(placeholder);
+        }
     });
-    
-    document.addEventListener('dragenter', (e) => {
-        e.preventDefault();
-    });
+
+    document.addEventListener('dragenter', e => e.preventDefault());
 
     document.addEventListener('drop', (e) => {
         e.preventDefault();
-        if (!draggedElement) return;
+        if (!draggedElement || !placeholder) return;
+        
+        const isLeftPanel = draggedElement.closest('#col1-table-fields') !== null;
+        const targetIsLeftPanel = placeholder.closest('#col1-table-fields') !== null;
+        
+        if (dragType === 'pill' && (!isLeftPanel || !targetIsLeftPanel)) {
+            cleanUpDrag();
+            return;
+        }
+        if (dragType === 'category' && isLeftPanel && !targetIsLeftPanel) {
+            cleanUpDrag();
+            return;
+        }
 
         if (dragType === 'pill') {
-            const dropTarget = e.target.closest('.draggable-pill');
-            if (dropTarget && dropTarget !== draggedElement) {
-                const idFrom = draggedElement.getAttribute('data-id');
-                const idTo = dropTarget.getAttribute('data-id');
-                
-                // Only allow swapping in the left panel (main table columns)
-                let list = currentTableMode === 'nested' ? nestedColumnsConfig : compactColumnsConfig;
-                
-                const idxFrom = list.findIndex(c => c.id === idFrom);
-                const idxTo = list.findIndex(c => c.id === idTo);
-                
-                if (idxFrom !== -1 && idxTo !== -1) {
-                    const temp = list[idxFrom];
-                    list[idxFrom] = list[idxTo];
-                    list[idxTo] = temp;
-                    renderDrawerStates();
-                    updateTableFromDrawer();
+            const idFrom = draggedElement.getAttribute('data-id');
+            let list = currentTableMode === 'nested' ? nestedColumnsConfig : compactColumnsConfig;
+            
+            // Find target element to insert before
+            let nextPill = placeholder.nextElementSibling;
+            while(nextPill && (nextPill === draggedElement || !nextPill.classList.contains('draggable-pill'))) {
+                nextPill = nextPill.nextElementSibling;
+            }
+            
+            const idxFrom = list.findIndex(c => c.id === idFrom);
+            if (idxFrom !== -1) {
+                const item = list.splice(idxFrom, 1)[0];
+                let newIdxTo = list.length;
+                if (nextPill) {
+                    const idTo = nextPill.getAttribute('data-id');
+                    const foundIdx = list.findIndex(c => c.id === idTo);
+                    if (foundIdx !== -1) newIdxTo = foundIdx;
                 }
+                list.splice(newIdxTo, 0, item);
+                renderDrawerStates();
+                updateTableFromDrawer();
+                if(typeof window.applyDrawerOrderToTable === 'function') window.applyDrawerOrderToTable();
             }
         } else if (dragType === 'category') {
-            const dropTarget = e.target.closest('.category-block-draggable');
-            if (dropTarget && dropTarget !== draggedElement) {
-                const catFrom = draggedElement.getAttribute('data-cat');
-                const catTo = dropTarget.getAttribute('data-cat');
+            const catFrom = draggedElement.getAttribute('data-cat');
+            if (catFrom === '其他') {
+                cleanUpDrag();
+                return;
+            }
+            
+            let nextCat = placeholder.nextElementSibling;
+            while(nextCat && (nextCat === draggedElement || !nextCat.classList.contains('category-block-draggable'))) {
+                nextCat = nextCat.nextElementSibling;
+            }
+            const targetCat = nextCat ? nextCat.getAttribute('data-cat') : null;
+            
+            if (!isLeftPanel && targetIsLeftPanel) {
+                const colsInCat = availableDataSource.filter(c => (c.category || c.group || '其他') === catFrom);
+                let list = currentTableMode === 'nested' ? nestedColumnsConfig : compactColumnsConfig;
                 
-                if (catFrom === '其他' || catTo === '其他') return; // Do not move '其他'
+                let targetIndex = list.length;
+                if (targetCat) {
+                    const firstIdx = list.findIndex(c => (c.category || c.group || '其他') === targetCat);
+                    if (firstIdx !== -1) targetIndex = firstIdx;
+                }
                 
-                const isLeftPanel = draggedElement.closest('#col1-table-fields') !== null;
-                const dropTargetIsLeftPanel = dropTarget.closest('#col1-table-fields') !== null;
+                const existingCols = [];
+                for (let i = list.length - 1; i >= 0; i--) {
+                    if ((list[i].category || list[i].group || '其他') === catFrom) {
+                        existingCols.unshift(list.splice(i, 1)[0]);
+                        if (i < targetIndex) targetIndex--;
+                    }
+                }
                 
-                // Prevent dragging between left and right panels
-                if (isLeftPanel !== dropTargetIsLeftPanel) return;
-
-                if (isLeftPanel) {
-                    let list = currentTableMode === 'nested' ? nestedColumnsConfig : compactColumnsConfig;
-                    const leftGroups = {};
-                    const leftGroupOrder = [];
-                    list.forEach(col => {
-                        if (['action'].includes(col.id)) return;
-                        const grp = col.category || col.group || '其他';
-                        if (!leftGroups[grp]) {
-                            leftGroups[grp] = [];
-                            leftGroupOrder.push(grp);
+                colsInCat.forEach(c => {
+                    if (c.id === 'action') return;
+                    const existing = existingCols.find(e => e.id === c.id);
+                    if (existing) {
+                        list.splice(targetIndex, 0, existing);
+                    } else {
+                        list.splice(targetIndex, 0, {...c});
+                        if (typeof tableFieldVisibility !== 'undefined') tableFieldVisibility[c.id] = true;
+                        if (currentTableMode === 'nested') {
+                            nestedColumnVisibility[c.id] = true;
+                        } else {
+                            compactColumnVisibility[c.id] = true;
                         }
-                        leftGroups[grp].push(col);
+                        if (typeof dataSourceFieldVisibility !== 'undefined') dataSourceFieldVisibility[c.id] = true;
+                    }
+                    targetIndex++;
+                });
+                renderDrawerStates();
+                updateTableFromDrawer();
+                if(typeof window.applyDrawerOrderToTable === 'function') window.applyDrawerOrderToTable();
+            } else if (isLeftPanel && targetIsLeftPanel) {
+                let list = currentTableMode === 'nested' ? nestedColumnsConfig : compactColumnsConfig;
+                const leftGroups = {};
+                const leftGroupOrder = [];
+                list.forEach(col => {
+                    if (['action'].includes(col.id)) return;
+                    const grp = col.category || col.group || '其他';
+                    if (!leftGroups[grp]) {
+                        leftGroups[grp] = [];
+                        leftGroupOrder.push(grp);
+                    }
+                    leftGroups[grp].push(col);
+                });
+                
+                const idxFrom = leftGroupOrder.indexOf(catFrom);
+                if (idxFrom !== -1) {
+                    const item = leftGroupOrder.splice(idxFrom, 1)[0];
+                    let newIdxTo = leftGroupOrder.length;
+                    if (targetCat) {
+                        const foundIdx = leftGroupOrder.indexOf(targetCat);
+                        if (foundIdx !== -1) newIdxTo = foundIdx;
+                    }
+                    leftGroupOrder.splice(newIdxTo, 0, item);
+                    
+                    const newList = [];
+                    leftGroupOrder.forEach(grp => {
+                        newList.push(...leftGroups[grp]);
                     });
                     
-                    const idxFrom = leftGroupOrder.indexOf(catFrom);
-                    const idxTo = leftGroupOrder.indexOf(catTo);
-                    
-                    if (idxFrom !== -1 && idxTo !== -1) {
-                        const temp = leftGroupOrder[idxFrom];
-                        leftGroupOrder[idxFrom] = leftGroupOrder[idxTo];
-                        leftGroupOrder[idxTo] = temp;
-                        
-                        const newList = [];
-                        leftGroupOrder.forEach(grp => {
-                            newList.push(...leftGroups[grp]);
-                        });
-                        
-                        if (currentTableMode === 'nested') {
-                            nestedColumnsConfig.length = 0;
-                            nestedColumnsConfig.push(...newList);
-                        } else {
-                            compactColumnsConfig.length = 0;
-                            compactColumnsConfig.push(...newList);
-                        }
-                        renderDrawerStates();
-                        updateTableFromDrawer();
+                    if (currentTableMode === 'nested') {
+                        nestedColumnsConfig.length = 0;
+                        nestedColumnsConfig.push(...newList);
+                    } else {
+                        compactColumnsConfig.length = 0;
+                        compactColumnsConfig.push(...newList);
                     }
-                } else {
-                    const idxFrom = drawerCategoryOrder.indexOf(catFrom);
-                    const idxTo = drawerCategoryOrder.indexOf(catTo);
-                    
-                    if (idxFrom !== -1 && idxTo !== -1) {
-                        const temp = drawerCategoryOrder[idxFrom];
-                        drawerCategoryOrder[idxFrom] = drawerCategoryOrder[idxTo];
-                        drawerCategoryOrder[idxTo] = temp;
-                        renderDrawerStates();
-                        if(typeof window.applyDrawerOrderToTable === 'function') window.applyDrawerOrderToTable();
+                    renderDrawerStates();
+                    updateTableFromDrawer();
+                    if(typeof window.applyDrawerOrderToTable === 'function') window.applyDrawerOrderToTable();
+                }
+            } else {
+                const idxFrom = drawerCategoryOrder.indexOf(catFrom);
+                if (idxFrom !== -1) {
+                    const item = drawerCategoryOrder.splice(idxFrom, 1)[0];
+                    let newIdxTo = drawerCategoryOrder.length;
+                    if (targetCat) {
+                        const foundIdx = drawerCategoryOrder.indexOf(targetCat);
+                        if (foundIdx !== -1) newIdxTo = foundIdx;
                     }
+                    drawerCategoryOrder.splice(newIdxTo, 0, item);
+                    renderDrawerStates();
+                    if(typeof window.applyDrawerOrderToTable === 'function') window.applyDrawerOrderToTable();
                 }
             }
         }
+        cleanUpDrag();
     });
 
 });

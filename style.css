@@ -5223,3 +5223,54 @@ input.ued-input-sm {
 .wallet-detail-table-row:last-child td {
     border-bottom: none;
 }
+
+/* Pill Hover Actions */
+.draggable-pill .pill-drag-handle,
+.draggable-pill .pill-actions-hover {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s, visibility 0.2s;
+}
+
+.draggable-pill:hover .pill-drag-handle,
+.draggable-pill:hover .pill-actions-hover {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Adjust layout so drag handle takes space even when hidden, to prevent jumping */
+.draggable-pill .pill-drag-handle {
+    margin-right: -4px; /* Slight adjustment to pull checkbox closer if needed */
+}
+
+/* Drag Drop Indication */
+.drag-over-target {
+    outline: 2px dashed #6366f1 !important;
+    outline-offset: -2px;
+    background-color: #eef2ff !important;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+    transition: all 0.2s ease;
+}
+
+/* Real DOM Placeholder */
+.drag-placeholder {
+    display: block;
+    height: 56px;
+    border: 2px dashed #6366f1;
+    background-color: #eef2ff;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    pointer-events: none;
+}
+
+.drag-placeholder-pill {
+    display: inline-block;
+    height: 34px;
+    width: 90px;
+    border: 2px dashed #6366f1;
+    background-color: #eef2ff;
+    border-radius: 4px;
+    margin-right: 8px;
+    vertical-align: middle;
+    pointer-events: none;
+}
