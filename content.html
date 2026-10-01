@@ -474,7 +474,7 @@
                 <div class="checkbox-list">
                     <label class="checkbox-item">
                         <input type="checkbox" value="status" checked>
-                        <span>账号状态 (原类型分类)</span>
+                        <span>账号状态</span>
                     </label>
                     <label class="checkbox-item">
                         <input type="checkbox" value="level" checked>
@@ -485,16 +485,16 @@
                         <span>会员等级</span>
                     </label>
                     <label class="checkbox-item">
+                        <input type="checkbox" value="currency" checked>
+                        <span>主钱包币种</span>
+                    </label>
+                    <label class="checkbox-item">
                         <input type="checkbox" value="other" checked>
-                        <span>排除条件 (可复选)</span>
+                        <span>排除条件</span>
                     </label>
                     <label class="checkbox-item">
                         <input type="checkbox" value="birthday" checked>
                         <span>生日月份</span>
-                    </label>
-                    <label class="checkbox-item">
-                        <input type="checkbox" value="registerTime" checked>
-                        <span>新增时间范围</span>
                     </label>
                     <label class="checkbox-item">
                         <input type="checkbox" value="bankCard" checked>
@@ -519,6 +519,10 @@
                     <label class="checkbox-item">
                         <input type="checkbox" value="depositAmount" checked>
                         <span>存款金额大于</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="registerTime" checked>
+                        <span>新增时间范围</span>
                     </label>
                 </div>
             </div>
@@ -1242,14 +1246,14 @@
                 <h3><i class="ph ph-columns"></i> 自订栏位设定</h3>
                 <span class="drawer-subtitle" style="display: none;"></span>
             </div>
-            <div class="drawer-actions">
+            <div class="drawer-actions" style="display: flex; align-items: center; gap: 8px;">
                 <button class="btn btn-outline btn-sm" onclick="window.resetCustomColumns()" title="重置所有设定">
                     <i class="ph ph-arrow-counter-clockwise"></i> 重置
                 </button>
-                <button class="btn-icon" id="btnToggleDrawerHeight" title="切换高度">
-                    <i class="ph ph-arrows-out-line-vertical"></i>
+                <button type="button" id="btnToggleDrawerHeight" title="向上展开" style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: 1px solid #e2e8f0; border-radius: 6px; background: #f8fafc; color: #475569; cursor: pointer;">
+                    <i class="ph-bold ph-arrows-out-line-vertical"></i>
                 </button>
-                <button class="btn-icon btn-close-modal" id="btnCloseCustomColumnDrawer">
+                <button type="button" id="btnCloseCustomColumnDrawer" style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: none; background: transparent; color: #94a3b8; cursor: pointer; font-size: 20px;">
                     <i class="ph ph-x"></i>
                 </button>
             </div>
@@ -1260,10 +1264,6 @@
             <div class="column-panel" style="flex: 1; display: flex; flex-direction: column; background: #fff; overflow: hidden;">
                 <div class="panel-header" style="padding: 8px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0;">
                     <h4 style="margin: 0; font-size: 14px; font-weight: bold; color: #3b82f6; display: flex; align-items: center; gap: 6px;"><i class="ph-bold ph-list" style="color: #94a3b8;"></i> 主表栏位 <span style="color: #64748b; font-weight: normal;">(上方表格列)</span></h4>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <a href="#" id="toggleAllLeftBtn" style="font-size: 12px; color: #3b82f6; text-decoration: none; font-weight: 500;">展开/收起</a>
-                        <span class="badge" id="badge-col1" style="background: #eff6ff; color: #3b82f6; border: 1px solid #bfdbfe; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">18</span>
-                    </div>
                 </div>
                 <div class="column-zones-container" id="col1-table-fields" style="flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px;">
                     <!-- JS 生成 -->
@@ -1274,7 +1274,6 @@
             <div class="column-panel" style="flex: 1; display: flex; flex-direction: column; background: #fff; overflow: hidden; border-left: 1px solid #e2e8f0;">
                 <div class="panel-header" style="padding: 8px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0;">
                     <h4 style="margin: 0; font-size: 14px; font-weight: bold; color: #8b5cf6; display: flex; align-items: center; gap: 6px;"><i class="ph-bold ph-cards" style="color: #94a3b8;"></i> 展开卡片 <span style="color: #64748b; font-weight: normal;">(列表底展开内容)</span></h4>
-                    <div style="color: #64748b; font-size: 12px;">勾选即显示在展开区</div>
                 </div>
                 <div class="column-zones-container" id="col2-card-fields" style="flex: 1; overflow-y: auto; padding: 12px;">
                     <!-- JS 生成 -->
@@ -1317,9 +1316,7 @@
                     </button>
                 </div>
                 <div class="modal-body" style="padding: 20px;">
-                    <div style="margin-bottom: 12px; font-size: 14px; color: var(--text-main); display: flex; align-items: center; padding-bottom: 12px; border-bottom: 1px dashed var(--border-color);">
-                        主钱包：<span style="color: var(--primary-color); font-weight: 600; margin-left: 4px;" id="walletDetailCurrency">RMB</span>
-                    </div>
+
                     <table class="table" style="width: 100%; border-collapse: collapse; border: 1px solid var(--border-color);">
                         <thead style="background-color: var(--bg-color);">
                             <tr>

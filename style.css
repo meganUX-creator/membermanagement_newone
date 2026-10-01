@@ -5141,6 +5141,25 @@ input.ued-input-sm {
     transform: translateY(-50%) translateX(3px);
 }
 
+/* Tooltip Bottom */
+.ued-tooltip.tooltip-bottom::after {
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+}
+.ued-tooltip.tooltip-bottom::before {
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-color: transparent transparent #1e293b transparent;
+}
+.ued-tooltip.tooltip-bottom:hover::after {
+    transform: translateX(-50%) translateY(8px);
+}
+.ued-tooltip.tooltip-bottom:hover::before {
+    transform: translateX(-50%) translateY(3px);
+}
+
 .ued-toggle-label {
     display: flex;
     align-items: center;
@@ -5222,4 +5241,211 @@ input.ued-input-sm {
 }
 .wallet-detail-table-row:last-child td {
     border-bottom: none;
+}
+
+/* Pill Hover Actions */
+.draggable-pill .pill-drag-handle,
+.draggable-pill .pill-actions-hover {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s, visibility 0.2s;
+}
+
+.draggable-pill:hover .pill-drag-handle,
+.draggable-pill:hover .pill-actions-hover {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Adjust layout so drag handle takes space even when hidden, to prevent jumping */
+.draggable-pill .pill-drag-handle {
+    margin-right: -4px; /* Slight adjustment to pull checkbox closer if needed */
+}
+
+/* Drag Drop Indication */
+.drag-over-target {
+    outline: 2px dashed #6366f1 !important;
+    outline-offset: -2px;
+    background-color: #eef2ff !important;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+    transition: all 0.2s ease;
+}
+
+/* Real DOM Placeholder */
+.drag-placeholder {
+    display: block;
+    height: 56px;
+    border: 2px dashed #6366f1;
+    background-color: #eef2ff;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    pointer-events: none;
+}
+
+.drag-placeholder-pill {
+    display: inline-block;
+    height: 34px;
+    width: 90px;
+    border: 2px dashed #6366f1;
+    background-color: #eef2ff;
+    border-radius: 4px;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    vertical-align: middle;
+    pointer-events: none;
+}
+
+/* Blocked drop: card already in main table */
+.drop-blocked {
+    outline: 2px dashed #fca5a5;
+    outline-offset: -4px;
+    background-color: #fef2f2;
+    transition: background-color 0.15s, outline-color 0.15s;
+}
+
+.drag-block-hint {
+    position: fixed;
+    z-index: 100000;
+    display: none;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    background: #1e293b;
+    color: #fff;
+    font-size: 12px;
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+}
+
+.drag-block-hint i {
+    color: #f87171;
+    font-size: 14px;
+}
+
+/* Blocked drop: default main-table card dragged over the expanded-card panel */
+.drop-blocked-muted {
+    outline: 2px dashed #cbd5e1;
+    outline-offset: -4px;
+    background-color: #f1f5f9;
+    transition: background-color 0.15s, outline-color 0.15s;
+}
+
+.drop-blocked-muted > * {
+    opacity: 0.5;
+    transition: opacity 0.15s;
+}
+
+.drag-block-hint.is-muted i {
+    color: #94a3b8;
+}
+
+/* Lock marker on default main-table cards */
+.default-card-lock {
+    color: #94a3b8;
+    font-size: 12px;
+    cursor: help;
+}
+
+/* 重置 button: armed (waiting for second click) state */
+#customColumnDrawer .btn.is-confirming {
+    color: #dc2626;
+    border-color: #fca5a5;
+    background: #fef2f2;
+}
+
+/* ── Expanded detail cards: content-driven width with min/max clamps ──
+   Applies to all three data states (无数据 / 正常 / 极限):
+   - 无数据: values are "-", cards fall back to their min-width
+   - 正常:   cards hug their content, label↔value gap never below --dc-gap-min
+   - 极限:   cards stop at max-width, overflowing values truncate with "…" (full text on hover) */
+:root {
+    --dc-gap-min: 24px;        /* min space between a label and its value */
+    --dc-list-min: 200px;      /* single-column cards: 额度 / 成长与积分 / 推荐关系 / 余额宝 / 信贷 */
+    --dc-list-max: 320px;
+    --dc-grid2-col-min: 200px; /* 基本资料: each of the two columns */
+    --dc-grid2-max: 640px;
+    --dc-dw-min: 600px;        /* 存取款资料 */
+    --dc-dw-max: 920px;
+}
+
+.detail-card.dc-list,
+.detail-card.dc-grid2,
+.detail-card.dc-dw {
+    width: max-content;
+    box-sizing: border-box;
+}
+
+.detail-card.dc-list {
+    min-width: var(--dc-list-min);
+    max-width: var(--dc-list-max);
+}
+
+.detail-card.dc-grid2 {
+    min-width: calc(var(--dc-grid2-col-min) * 2 + 32px + 32px);
+    max-width: var(--dc-grid2-max);
+}
+
+.detail-card.dc-dw {
+    min-width: var(--dc-dw-min);
+    max-width: var(--dc-dw-max);
+}
+
+.dc-grid2 .grid-2-col {
+    grid-template-columns: repeat(2, minmax(var(--dc-grid2-col-min), 1fr));
+    column-gap: 32px;
+}
+
+.dc-list .detail-card-header,
+.dc-grid2 .detail-card-header {
+    white-space: nowrap;
+    gap: var(--dc-gap-min);
+}
+
+.dc-list .flex-list-col > .ds-field,
+.dc-grid2 .grid-2-col > .ds-field {
+    gap: var(--dc-gap-min);
+    align-items: center;
+}
+
+.dc-list .ds-field > .lbl,
+.dc-grid2 .ds-field > .lbl {
+    margin-right: 0;
+}
+
+.dc-list .ds-field > :not(.lbl),
+.dc-grid2 .ds-field > :not(.lbl) {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    word-break: normal;
+    text-align: right;
+}
+
+/* 用户标签: fill top-to-bottom, max 4 rows per column, then start a new column */
+.detail-card[data-category="用户标签"] {
+    width: max-content;
+    min-width: 200px;
+    box-sizing: border-box;
+}
+
+.tags-column-grid {
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(var(--tag-rows, 4), auto);
+    grid-auto-columns: max-content;
+    gap: 8px;
+    justify-items: start;
+    align-content: start;
+}
+
+.tags-column-grid .user-custom-tag {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }

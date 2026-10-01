@@ -1,11 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
+    let dataSourceFieldVisibility = { 'ds_debt': false, 'ds_creditVal': false, 'currency': false, 'availableCredit': false, 'thirdBal': false };
     let tableFieldVisibility = {};
     window.toggleTableFieldVisibility = function (id, isVisible) {
         tableFieldVisibility[id] = isVisible;
+        if (currentTableMode === 'nested') {
+            nestedColumnVisibility[id] = isVisible;
+        } else {
+            compactColumnVisibility[id] = isVisible;
+        }
         renderDrawerStates();
+        updateTableFromDrawer();
         window.applyDrawerOrderToTable();
     };
-    let drawerCategoryOrder = ['基本资料', '存取款资料', '成长与积分', '推荐关系', '余额宝', '信贷', '用户标签', '其他'];
+    let drawerCategoryOrder = ['基本资料', '额度', '存取款资料', '成长与积分', '推荐关系', '余额宝', '信贷', '用户标签', '其他'];
     let drawerCategoryVisibility = { '信贷': false };
 
     window.moveCategoryUp = function (cat) {
@@ -683,6 +690,50 @@ document.addEventListener('DOMContentLoaded', () => {
             return Math.floor(num).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
         }
     }
+    window.formatAmount = formatAmount;
+
+    window.openCurrencyModal = function(title, baseAmount, mainCurrency) {
+        const modal = document.getElementById('walletDetailModal');
+        if (!modal) return;
+        const allCurrencies = ['RMB', 'VND', 'PHP', 'MYR', 'USDT'];
+        if (!mainCurrency || !allCurrencies.includes(mainCurrency)) mainCurrency = 'RMB';
+        document.getElementById('walletDetailTitle').textContent = title;
+        const body = document.getElementById('walletDetailBody');
+        if (body) {
+            const rates = {'RMB': 1, 'VND': 3400, 'PHP': 8, 'MYR': 0.65, 'USDT': 0.14};
+            const currentRate = rates[mainCurrency] || 1;
+            const rmbBase = baseAmount / currentRate;
+            const noData = baseAmount === null || baseAmount === undefined || baseAmount === '' || isNaN(Number(baseAmount));
+            let html = '';
+            const sortedCurrencies = [mainCurrency, ...allCurrencies.filter(c => c !== mainCurrency)];
+            sortedCurrencies.forEach(c => {
+                let val = c === mainCurrency ? baseAmount : (rmbBase * rates[c]);
+                if (baseAmount === 0 || isNaN(baseAmount)) val = 0;
+                let formatted = typeof window.formatAmount === 'function' ? window.formatAmount(val, c).replace(/[A-Za-z\s]/g, '') : val.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                if (val === 0 && c !== 'USDT') formatted = '0';
+                if (val === 0 && c === 'USDT') formatted = '0.00';
+                if (noData) formatted = '-';
+                const tagHtml = c === mainCurrency ? `<span style="font-size: 10px; background: #e0e7ff; color: #4f46e5; padding: 2px 4px; border-radius: 4px; margin-right: 6px;">主钱包</span>` : '';
+                html += `
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="border-right: 1px solid var(--border-color); padding: 12px 16px; color: var(--text-main); font-weight: 500; text-align: center;">${tagHtml}${c}</td>
+                    <td style="padding: 12px 16px; color: var(--text-main); font-family: monospace; font-size: 14px; text-align: center;">${formatted}</td>
+                </tr>`;
+            });
+            body.innerHTML = html;
+        }
+        modal.style.display = '';
+        modal.classList.add('show');
+    };
+
+    window.renderClickableAmount = function(title, val, currency, extraStyle = '', isDataModeNoData = false) {
+        const safeCurrency = (currency && ['RMB','VND','PHP','MYR','USDT'].includes(currency)) ? currency : 'RMB';
+        const noData = isDataModeNoData || window.dataMode === 'nodata' || val === undefined || val === null;
+        const formatted = noData ? '-' : (typeof window.formatAmount === 'function' ? window.formatAmount(val, safeCurrency) : val);
+        // "-" stays clickable: the modal then shows "-" for every currency
+        const amountArg = formatted === '-' ? 'null' : val;
+        return `<a href="#" class="val" style="color: #4f46e5; cursor: pointer; text-decoration: none; border-bottom: 1px dashed #4f46e5; ${extraStyle}" onclick="window.openCurrencyModal('${title}', ${amountArg}, '${safeCurrency}'); return false;" title="查看各币种明细">${formatted}</a>`;
+    };
 
     // --- Data State Rendering Helper ---
     function renderDataState(val, type = 'text') {
@@ -742,10 +793,10 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 'vipLevel', group: '等级', label: 'VIP等级', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="vipLevel">${user.vipLevel || 'VIP ' + (user.vipLevel || 1)}</td>` },
         { id: 'payLevel', group: '等级', label: '支付层级', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="payLevel">${user.payLevel}</td>` },
         { id: 'currency', group: '额度', label: '主钱包币种', checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="currency">${user.currency || 'RMB'}</td>` },
-        { id: 'availableCredit', group: '额度', label: '可用额度', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-money" data-col="availableCredit">${formatAmount(user.availableCredit, user.currency)}</td>` },
-        { id: 'thirdBal', group: '额度', label: '三方余额', sortable: true, checkboxIndex: 5, render: (user) => `<td data-col="thirdBal"><div style="display:flex;align-items:center;justify-content:flex-start;">${formatAmount(user.thirdBal, user.currency)} <i class="ph ph-arrows-clockwise refresh-icon-compact" data-uid="${user.uid}" style="margin-left:4px;cursor:pointer;color:#2563eb;" title="刷新余额"></i></div></td>` },
-        { id: 'ds_depTotal_main', category: '存取款资料', group: '主钱包', label: '存款总额', tag: '主钱包', tagColor: 'blue', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money ${user.deposit > 0 ? 'highlight' : ''}" data-col="ds_depTotal_main">${formatAmount(user.deposit, user.currency)}</td>` },
-        { id: 'ds_wdrTotal_main', category: '存取款资料', group: '主钱包', label: '取款总额', tag: '主钱包', tagColor: 'blue', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money" data-col="ds_wdrTotal_main">${formatAmount(user.withdraw, user.currency)}</td>` },
+        { id: 'availableCredit', group: '额度', label: '可用额度', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-money" data-col="availableCredit">${window.renderClickableAmount('可用额度', user.availableCredit, user.currency, '', dataMode === 'nodata')}</td>` },
+        { id: 'thirdBal', group: '额度', label: '三方余额', sortable: true, checkboxIndex: 5, render: (user) => `<td data-col="thirdBal"><div style="display:flex;align-items:center;justify-content:flex-start;">${window.renderClickableAmount('三方余额', user.thirdBal, user.currency, '', dataMode === 'nodata')} <i class="ph ph-arrows-clockwise refresh-icon-compact" data-uid="${user.uid}" style="margin-left:4px;cursor:pointer;color:#2563eb;" title="刷新余额"></i></div></td>` },
+        { id: 'ds_depTotal_main', category: '存取款资料', group: '主钱包', label: '存款总额', tag: '主钱包', tagColor: 'blue', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money ${user.deposit > 0 ? 'highlight' : ''}" data-col="ds_depTotal_main">${window.renderClickableAmount('存款总额', user.deposit, user.currency, 'color: #4f46e5;', dataMode === 'nodata')}</td>` },
+        { id: 'ds_wdrTotal_main', category: '存取款资料', group: '主钱包', label: '取款总额', tag: '主钱包', tagColor: 'blue', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money" data-col="ds_wdrTotal_main">${window.renderClickableAmount('取款总额', user.withdraw, user.currency, 'color: #4f46e5;', dataMode === 'nodata')}</td>` },
         { id: 'ds_depTotal_summary', category: '存取款资料', group: '汇总 USDT', label: '存款总额', tag: '汇总', tagColor: 'purple', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money ${user.deposit > 0 ? 'highlight' : ''}" data-col="ds_depTotal_summary">${formatAmount(user.deposit, 'USDT')}</td>` },
         { id: 'ds_wdrTotal_summary', category: '存取款资料', group: '汇总 USDT', label: '取款总额', tag: '汇总', tagColor: 'purple', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money" data-col="ds_wdrTotal_summary">${formatAmount(user.withdraw, 'USDT')}</td>` },
         { id: 'ip', group: '日期信息', label: '登入IP', checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="ip"><div class="ip-row" style="display: flex; align-items: center; gap: 4px;">${renderDataState(user.ip, 'ip')}</div></td>` },
@@ -965,138 +1016,100 @@ document.addEventListener('DOMContentLoaded', () => {
         const tags = [];
         let advancedCount = 0;
 
-        // 1. Status
+        // 1. 状态
         if (selectedStatusVal) {
             tags.push({ key: 'status', label: `状态: ${selectedStatusVal}`, type: 'single-custom', element: dropdownStatus, defaultValue: '', defaultText: '所有', valueVarSetter: (v) => selectedStatusVal = v });
         }
-        // 2. Level
+        // 2. 用户层级
         if (selectedLevelVal) {
             tags.push({ key: 'level', label: `层级: ${selectedLevelVal}`, type: 'single-custom', element: dropdownLevel, defaultValue: '', defaultText: '全部', valueVarSetter: (v) => selectedLevelVal = v });
         }
-        // 3. VIP (Multiple Select)
+        // 3. 会员等级
         if (selectedVipVal) {
             tags.push({ key: 'vip', label: `等级: ${selectedVipVal}`, type: 'single-custom', element: dropdownVip, defaultValue: '', defaultText: '请选择', valueVarSetter: (v) => selectedVipVal = v });
         }
+        // 4. 主钱包币种
         if (selectedCurrencyVal) {
             tags.push({ key: 'currency', label: `主钱包币种: ${selectedCurrencyVal}`, type: 'single-custom', element: dropdownCurrency, defaultValue: '', defaultText: '全部币种', valueVarSetter: (v) => selectedCurrencyVal = v });
         }
-        // 4. Other
+        // 5. 排除条件
         const selectedOthers = getMultiSelectValues(dropdownOther);
         if (selectedOthers.length > 0) {
             tags.push({ key: 'other', label: `其他: ${selectedOthers.join(', ')}`, type: 'multi-custom', element: dropdownOther });
         }
-        // 5. Account
+        // 6. 账号搜寻
         if (inputAccount && inputAccount.value.trim()) {
             let labelPrefix = '账号';
             if (currentAccountType === 'exact') labelPrefix = '账号(精确)';
             if (currentAccountType === 'fuzzy') labelPrefix = '账号(模糊)';
             if (currentAccountType === 'multi') labelPrefix = '账号(多笔)';
-
             tags.push({ key: 'account', label: `${labelPrefix}: ${inputAccount.value.trim()}`, type: 'input', element: inputAccount });
         }
-
-        // 6. Dynamic Filters
-        const dynamicFilters = document.querySelectorAll('.dynamic-filter-tag');
-        dynamicFilters.forEach((filter, index) => {
-            const input = filter.querySelector('.dynamic-filter-input');
-            const labelEl = filter.querySelector('.dynamic-filter-label');
-            const val = input.value.trim();
-            if (val) {
-                const clone = labelEl.cloneNode(true);
-                const badge = clone.querySelector('.type-badge');
-                if (badge) badge.remove();
-                const labelText = clone.textContent.trim();
-
-                tags.push({
-                    key: 'dynamic_' + index,
-                    label: `${labelText}: ${val}`,
-                    type: 'dynamic',
-                    element: filter,
-                    clearFunc: () => filter.remove()
-                });
-            }
-        });
-
-        // 6. Test Accounts Toggle
+        // 7. 过滤测试账号
         if (filterTestAccountsToggle && filterTestAccountsToggle.checked) {
             tags.push({ key: 'filterTestAccounts', label: `过滤测试账号`, type: 'checkbox', element: filterTestAccountsToggle });
         }
-
-        // Advanced filter fields
-        if (selectBirthday.value) {
+        // 8. 生日月份
+        if (selectedBirthdayOuterVal) {
+            tags.push({ key: 'birthdayOuter', label: `生日: ${selectedBirthdayOuterVal}月`, type: 'single-custom', element: dropdownBirthdayOuter, defaultValue: '', defaultText: '全部', valueVarSetter: (v) => selectedBirthdayOuterVal = v });
+        }
+        if (selectBirthday && selectBirthday.value) {
             tags.push({ key: 'birthday', label: `生日: ${selectBirthday.value}`, type: 'native-select', element: selectBirthday });
             advancedCount++;
         }
-        if (inputDateStart.value || inputDateEnd.value) {
-            const startStr = inputDateStart.value ? inputDateStart.value.replace('T', ' ') : '??';
-            const endStr = inputDateEnd.value ? inputDateEnd.value.replace('T', ' ') : '??';
-            tags.push({
-                key: 'dateRange',
-                label: `时间: ${startStr} ~ ${endStr}`,
-                type: 'inputs',
-                elements: [inputDateStart, inputDateEnd]
-            });
+        // 9. 绑定银行卡
+        if (inputBankCardOuter && inputBankCardOuter.value.trim()) {
+            tags.push({ key: 'bankCardOuter', label: `绑定银行卡: ${inputBankCardOuter.value.trim()}`, type: 'input', element: inputBankCardOuter });
+        }
+        if (inputBankCard && inputBankCard.value.trim()) {
+            tags.push({ key: 'bankCard', label: `银行卡末码: *${inputBankCard.value.trim()}`, type: 'input', element: inputBankCard });
             advancedCount++;
+        }
+        // 10. 未登入天数
+        if (inputOfflineDaysOuter && inputOfflineDaysOuter.value.trim()) {
+            tags.push({ key: 'offlineDaysOuter', label: `未登入天数 > ${inputOfflineDaysOuter.value.trim()}`, type: 'input', element: inputOfflineDaysOuter });
+        }
+        if (inputOfflineDays && inputOfflineDays.value.trim()) {
+            tags.push({ key: 'offlineDays', label: `未登入天数 > ${inputOfflineDays.value.trim()}`, type: 'input', element: inputOfflineDays });
+            advancedCount++;
+        }
+        // 11. 代理Id
+        const inputAgentIdOuter = document.getElementById('inputAgentIdOuter');
+        if (inputAgentIdOuter && inputAgentIdOuter.value.trim()) {
+            tags.push({ key: 'agentIdOuter', label: `代理Id: ${inputAgentIdOuter.value.trim()}`, type: 'input', element: inputAgentIdOuter });
         }
         const inputAgentId = document.getElementById('inputAgentId');
         if (inputAgentId && inputAgentId.value.trim()) {
             tags.push({ key: 'agentId', label: `代理Id: ${inputAgentId.value.trim()}`, type: 'input', element: inputAgentId });
             advancedCount++;
         }
+        // 12. VIP会员等级
+        const inputVipLevelOuter = document.getElementById('inputVipLevelOuter');
+        if (inputVipLevelOuter && inputVipLevelOuter.value.trim()) {
+            tags.push({ key: 'vipLevelOuter', label: `VIP等级: ${inputVipLevelOuter.value.trim()}`, type: 'input', element: inputVipLevelOuter });
+        }
         const inputVipLevel = document.getElementById('inputVipLevel');
         if (inputVipLevel && inputVipLevel.value.trim()) {
             tags.push({ key: 'vipLevel', label: `VIP等级: ${inputVipLevel.value.trim()}`, type: 'input', element: inputVipLevel });
             advancedCount++;
         }
-        if (inputQuickLogin.value.trim()) {
-            tags.push({ key: 'quickLogin', label: `快速登入: ${inputQuickLogin.value.trim()}`, type: 'input', element: inputQuickLogin });
-            advancedCount++;
+        // 13. 登录IP
+        if (inputIpOuter && inputIpOuter.value.trim()) {
+            tags.push({ key: 'ipOuter', label: `登入 IP: ${inputIpOuter.value.trim()}`, type: 'input', element: inputIpOuter });
         }
-        if (inputUid.value.trim()) {
-            tags.push({ key: 'uid', label: `UID: ${inputUid.value.trim()}`, type: 'input', element: inputUid });
-            advancedCount++;
-        }
-        if (inputInviteCode.value.trim()) {
-            tags.push({ key: 'inviteCode', label: `邀请码: ${inputInviteCode.value.trim()}`, type: 'input', element: inputInviteCode });
-            advancedCount++;
-        }
-        if (inputNickname.value.trim()) {
-            tags.push({ key: 'nickname', label: `暱称: ${inputNickname.value.trim()}`, type: 'input', element: inputNickname });
-            advancedCount++;
-        }
-        if (inputRealName.value.trim()) {
-            tags.push({ key: 'realName', label: `姓名: ${inputRealName.value.trim()}`, type: 'input', element: inputRealName });
-            advancedCount++;
-        }
-        if (inputBankCard.value.trim()) {
-            tags.push({ key: 'bankCard', label: `银行卡末码: *${inputBankCard.value.trim()}`, type: 'input', element: inputBankCard });
-            advancedCount++;
-        }
-        if (inputOfflineDays.value.trim()) {
-            tags.push({ key: 'offlineDays', label: `未登入天数 > ${inputOfflineDays.value.trim()}`, type: 'input', element: inputOfflineDays });
-            advancedCount++;
-        }
-        if (inputIp.value.trim()) {
+        if (inputIp && inputIp.value.trim()) {
             tags.push({ key: 'ip', label: `IP: ${inputIp.value.trim()}`, type: 'input', element: inputIp });
             advancedCount++;
         }
-        if (inputDeposit.value.trim()) {
+        // 14. 存款金额大于
+        if (inputDepositOuter && inputDepositOuter.value.trim()) {
+            tags.push({ key: 'depositOuter', label: `存款大于 ${inputDepositOuter.value.trim()}`, type: 'input', element: inputDepositOuter });
+        }
+        if (inputDeposit && inputDeposit.value.trim()) {
             tags.push({ key: 'deposit', label: `存款 > ${inputDeposit.value.trim()}`, type: 'input', element: inputDeposit });
             advancedCount++;
         }
-
-        // Outer fields processing
-        const inputAgentIdOuter = document.getElementById('inputAgentIdOuter');
-        if (inputAgentIdOuter && inputAgentIdOuter.value.trim()) {
-            tags.push({ key: 'agentIdOuter', label: `代理Id: ${inputAgentIdOuter.value.trim()}`, type: 'input', element: inputAgentIdOuter });
-        }
-        const inputVipLevelOuter = document.getElementById('inputVipLevelOuter');
-        if (inputVipLevelOuter && inputVipLevelOuter.value.trim()) {
-            tags.push({ key: 'vipLevelOuter', label: `VIP等级: ${inputVipLevelOuter.value.trim()}`, type: 'input', element: inputVipLevelOuter });
-        }
-        if (selectedBirthdayOuterVal) {
-            tags.push({ key: 'birthdayOuter', label: `生日: ${selectedBirthdayOuterVal}月`, type: 'single-custom', element: dropdownBirthdayOuter, defaultValue: '', defaultText: '全部', valueVarSetter: (v) => selectedBirthdayOuterVal = v });
-        }
+        // 15. 新增时间
         if (inputDateStartOuter && inputDateEndOuter && (inputDateStartOuter.value || inputDateEndOuter.value)) {
             const startStr = inputDateStartOuter.value ? inputDateStartOuter.value.replace('T', ' ') : '??';
             const endStr = inputDateEndOuter.value ? inputDateEndOuter.value.replace('T', ' ') : '??';
@@ -1107,18 +1120,58 @@ document.addEventListener('DOMContentLoaded', () => {
                 elements: [inputDateStartOuter, inputDateEndOuter]
             });
         }
-        if (inputBankCardOuter && inputBankCardOuter.value.trim()) {
-            tags.push({ key: 'bankCardOuter', label: `绑定银行卡: ${inputBankCardOuter.value.trim()}`, type: 'input', element: inputBankCardOuter });
+        if (inputDateStart && inputDateEnd && (inputDateStart.value || inputDateEnd.value)) {
+            const startStr = inputDateStart.value ? inputDateStart.value.replace('T', ' ') : '??';
+            const endStr = inputDateEnd.value ? inputDateEnd.value.replace('T', ' ') : '??';
+            tags.push({
+                key: 'dateRange',
+                label: `时间: ${startStr} ~ ${endStr}`,
+                type: 'inputs',
+                elements: [inputDateStart, inputDateEnd]
+            });
+            advancedCount++;
         }
-        if (inputOfflineDaysOuter && inputOfflineDaysOuter.value.trim()) {
-            tags.push({ key: 'offlineDaysOuter', label: `未登入天数 > ${inputOfflineDaysOuter.value.trim()}`, type: 'input', element: inputOfflineDaysOuter });
+        // 16. 快速登入 / UID / 邀请码 / 暱称 / 姓名
+        if (inputQuickLogin && inputQuickLogin.value.trim()) {
+            tags.push({ key: 'quickLogin', label: `快速登入: ${inputQuickLogin.value.trim()}`, type: 'input', element: inputQuickLogin });
+            advancedCount++;
         }
-        if (inputIpOuter && inputIpOuter.value.trim()) {
-            tags.push({ key: 'ipOuter', label: `登入 IP: ${inputIpOuter.value.trim()}`, type: 'input', element: inputIpOuter });
+        if (inputUid && inputUid.value.trim()) {
+            tags.push({ key: 'uid', label: `UID: ${inputUid.value.trim()}`, type: 'input', element: inputUid });
+            advancedCount++;
         }
-        if (inputDepositOuter && inputDepositOuter.value.trim()) {
-            tags.push({ key: 'depositOuter', label: `存款大于 ${inputDepositOuter.value.trim()}`, type: 'input', element: inputDepositOuter });
+        if (inputInviteCode && inputInviteCode.value.trim()) {
+            tags.push({ key: 'inviteCode', label: `邀请码: ${inputInviteCode.value.trim()}`, type: 'input', element: inputInviteCode });
+            advancedCount++;
         }
+        if (inputNickname && inputNickname.value.trim()) {
+            tags.push({ key: 'nickname', label: `暱称: ${inputNickname.value.trim()}`, type: 'input', element: inputNickname });
+            advancedCount++;
+        }
+        if (inputRealName && inputRealName.value.trim()) {
+            tags.push({ key: 'realName', label: `姓名: ${inputRealName.value.trim()}`, type: 'input', element: inputRealName });
+            advancedCount++;
+        }
+        // 17. 动态筛选
+        const dynamicFilters = document.querySelectorAll('.dynamic-filter-tag');
+        dynamicFilters.forEach((filter, index) => {
+            const input = filter.querySelector('.dynamic-filter-input');
+            const labelEl = filter.querySelector('.dynamic-filter-label');
+            const val = input.value.trim();
+            if (val) {
+                const clone = labelEl.cloneNode(true);
+                const badge = clone.querySelector('.type-badge');
+                if (badge) badge.remove();
+                const labelText = clone.textContent.trim();
+                tags.push({
+                    key: 'dynamic_' + index,
+                    label: `${labelText}: ${val}`,
+                    type: 'dynamic',
+                    element: filter,
+                    clearFunc: () => filter.remove()
+                });
+            }
+        });
 
         // Render badge count
         advancedBadge.textContent = advancedCount;
@@ -1346,7 +1399,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 // Advanced Filters
-                if (selectedCurrencyVal && user.currency !== selectedCurrencyVal) return false;
+                if (selectedCurrencyVal && (user.currency || 'RMB') !== selectedCurrencyVal) return false;
 
                 const formattedDateStart = dateStartVal ? dateStartVal.replace('T', ' ') : '';
                 const formattedDateEnd = dateEndVal ? dateEndVal.replace('T', ' ') : '';
@@ -1899,26 +1952,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     expandTr.style.display = 'none';
 
                     const renderDropdownUI = (mainCurrency) => {
-                        const allCurrencies = ['USDT', 'RMB', 'VND', 'PHP', 'MYR'];
-                        const otherCurrencies = allCurrencies.filter(c => c !== mainCurrency);
                         return `
-                        <div class="custom-unit-dropdown" style="margin-left: auto; position: relative;">
-                            <button type="button" style="background: #eef2ff; color: #4f46e5; border-radius: 6px; padding: 4px 8px; border: none; display: flex; align-items: center; gap: 4px; font-size: 12px; cursor: pointer; font-weight: 500;">
-                                单位: <span>${mainCurrency}</span> <i class="ph ph-caret-down"></i>
-                            </button>
-                            <div class="dropdown-menu" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 4px; background: white; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); z-index: 10; width: 120px; padding: 4px 0; text-align: left;">
-                                <div style="padding: 4px 12px; font-size: 12px; color: #94a3b8; font-weight: 500;">主钱包</div>
-                                <div class="dropdown-item" data-value="${mainCurrency}" style="padding: 6px 12px; font-size: 13px; color: #4f46e5; background: #f8fafc; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
-                                    ${mainCurrency} <i class="ph ph-check" style="color: #10b981; display: inline-block;"></i>
-                                </div>
-                                <div style="height: 1px; background: #e2e8f0; margin: 4px 0;"></div>
-                                <div style="padding: 4px 12px; font-size: 12px; color: #94a3b8; font-weight: 500;">其他币种</div>
-                                ${otherCurrencies.map(u => `
-                                <div class="dropdown-item" data-value="${u}" style="padding: 6px 12px; font-size: 13px; color: #334155; background: transparent; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
-                                    ${u} <i class="ph ph-check" style="color: #10b981; display: none;"></i>
-                                </div>
-                                `).join('')}
-                            </div>
+                        <div style="margin-left: auto; color: #4f46e5; display: inline-flex; align-items: center; font-size: 12px; font-weight: 500;">
+                            单位:<span style="margin-left: 2px;">${mainCurrency}</span>
                         </div>
                         `;
                     };
@@ -1931,50 +1967,61 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <div style="width:60px; height:60px; background:#6366f1; color:white; border-radius:8px; display:flex; justify-content:center; align-items:center; font-size:24px; font-weight:bold;">${user.account.charAt(0).toUpperCase()}</div>
                             </div>
                             <!-- 基本资料 -->
-                            <div class="detail-card" data-category="基本资料" style="flex: 0 0 auto; width: 510px; display: ${(dataSourceFieldVisibility['ds_realname'] !== false || dataSourceFieldVisibility['ds_birthday'] !== false || dataSourceFieldVisibility['ds_accountType'] !== false || dataSourceFieldVisibility['ds_memberType'] !== false || dataSourceFieldVisibility['ds_level'] !== false || dataSourceFieldVisibility['ds_regMode'] !== false || dataSourceFieldVisibility['ds_nickname'] !== false || dataSourceFieldVisibility['ds_phone'] !== false) ? 'block' : 'none'};">
+                            <div class="detail-card dc-grid2" data-category="基本资料" style="flex: 0 0 auto; display: ${(dataSourceFieldVisibility['ds_realname'] !== false || dataSourceFieldVisibility['ds_birthday'] !== false || dataSourceFieldVisibility['ds_accountType'] !== false || dataSourceFieldVisibility['ds_memberType'] !== false || dataSourceFieldVisibility['ds_level'] !== false || dataSourceFieldVisibility['ds_regMode'] !== false || dataSourceFieldVisibility['ds_nickname'] !== false || dataSourceFieldVisibility['ds_phone'] !== false) ? 'block' : 'none'};">
                                 <div class="detail-card-header"><i class="ph ph-user"></i> 基本资料</div>
                                 <div class="detail-card-body grid-2-col">
-                                    <div class="ds-field" data-ds-id="ds_realname" style="display:${dataSourceFieldVisibility['ds_realname'] !== false ? '' : 'none'}"><span class="lbl">真实姓名</span> <span class="val" title="${dataMode === 'nodata' ? '' : user.realName}">${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : (user.realName && user.realName.length > 15 ? user.realName.substring(0, 15) + '...' : user.realName)}</span></div>
+                                    <div class="ds-field" data-ds-id="ds_realname" style="display:${dataSourceFieldVisibility['ds_realname'] !== false ? '' : 'none'}"><span class="lbl">真实姓名</span> <span class="val" title="${dataMode === 'nodata' ? '' : user.realName}">${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : (user.realName || '-')}</span></div>
                                     <div class="ds-field" data-ds-id="ds_birthday" style="display:${dataSourceFieldVisibility['ds_birthday'] !== false ? '' : 'none'}"><span class="lbl">生日</span> <span class="val">${dataMode === 'nodata' ? '-' : '1991-02-11'}</span></div>
                                     <div class="ds-field" data-ds-id="ds_accountType" style="display:${dataSourceFieldVisibility['ds_accountType'] !== false ? '' : 'none'}"><span class="lbl">账号类型</span> <span class="val">${user.accountType || '普通账号'}</span></div>
                                     <div class="ds-field" data-ds-id="ds_memberType" style="display:${dataSourceFieldVisibility['ds_memberType'] !== false ? '' : 'none'}"><span class="lbl">会员类型</span> <span class="val">${user.userType || '代理会员'}</span></div>
                                     <div class="ds-field" data-ds-id="ds_level" style="display:${dataSourceFieldVisibility['ds_level'] !== false ? '' : 'none'}"><span class="lbl">等级</span> <span class="val">${dataMode === 'nodata' ? '-' : (user.vipLevel ? 'VIP ' + user.vipLevel : 'VIP 1')}</span></div>
                                     <div class="ds-field" data-ds-id="ds_regMode" style="display:${dataSourceFieldVisibility['ds_regMode'] !== false ? '' : 'none'}"><span class="lbl">注册模式</span> <span class="val">${user.registerMode || '一般注册'}</span></div>
-                                    <div class="ds-field" data-ds-id="ds_nickname" style="display:${dataSourceFieldVisibility['ds_nickname'] !== false ? '' : 'none'}"><span class="lbl">昵称</span> <span class="val" style="line-height: 1.8; padding: 2px 0;">${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : (user.nickname || '-')}</span></div>
+                                    <div class="ds-field" data-ds-id="ds_nickname" style="display:${dataSourceFieldVisibility['ds_nickname'] !== false ? '' : 'none'}"><span class="lbl">昵称</span> <span class="val">${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : (user.nickname || '-')}</span></div>
                                     <div class="ds-field" data-ds-id="ds_phone" style="display:${dataSourceFieldVisibility['ds_phone'] !== false ? '' : 'none'}"><span class="lbl">手机号</span> <span class="val">${dataMode === 'nodata' ? '-' : renderDataState(user.phone, 'phone')}</span></div>
                                 </div>
                             </div>
+                            <!-- 额度 Card -->
+                            <div class="detail-card dc-list" data-category="额度" style="flex: 0 0 auto; display: ${(dataSourceFieldVisibility['currency'] !== false || dataSourceFieldVisibility['availableCredit'] !== false || dataSourceFieldVisibility['thirdBal'] !== false) ? 'block' : 'none'};">
+                                <div class="detail-card-header">
+                                    <div style="display: flex; align-items: center; gap: 8px;"><i class="ph ph-wallet"></i> 额度</div>
+                                    ${renderDropdownUI(user.currency || 'USDT')}
+                                </div>
+                                <div class="detail-card-body flex-list-col" data-no-sort="true">
+                                    <div class="ds-field" data-ds-id="currency" style="display:${dataSourceFieldVisibility['currency'] !== false ? '' : 'none'}"><span class="lbl">主钱包币种</span> <span class="val">${dataMode === 'nodata' ? '-' : (user.currency || 'RMB')}</span></div>
+                                    <div class="ds-field" data-ds-id="availableCredit" style="display:${dataSourceFieldVisibility['availableCredit'] !== false ? '' : 'none'}"><span class="lbl">可用额度</span> ${window.renderClickableAmount('可用额度', user.availableCredit, user.currency, '', dataMode === 'nodata')}</div>
+                                    <div class="ds-field" data-ds-id="thirdBal" style="display:${dataSourceFieldVisibility['thirdBal'] !== false ? '' : 'none'}"><span class="lbl">三方余额</span> <div style="display:flex; align-items:center; justify-content:flex-end; gap:4px;">${window.renderClickableAmount('三方余额', user.thirdBal, user.currency, '', dataMode === 'nodata')} <i class="ph ph-arrows-clockwise refresh-icon-compact" data-uid="${user.uid}" style="cursor:pointer;color:#3b82f6;" title="刷新余额"></i></div></div>
+                                </div>
+                            </div>
                             <!-- 存取款数据 (主钱包 / 汇总) Combined Card -->
-                            <div class="detail-card" data-category="存取款资料" style="flex: 1 1 100%; display: ${(dataSourceFieldVisibility['ds_depTotal_main'] !== false || dataSourceFieldVisibility['ds_depTotal_summary'] !== false || dataSourceFieldVisibility['ds_depCount_main'] !== false || dataSourceFieldVisibility['ds_depCount_summary'] !== false || dataSourceFieldVisibility['ds_wdrTotal_main'] !== false || dataSourceFieldVisibility['ds_wdrTotal_summary'] !== false || dataSourceFieldVisibility['ds_wdrCount_main'] !== false || dataSourceFieldVisibility['ds_wdrCount_summary'] !== false || dataSourceFieldVisibility['ds_wdrFee_main'] !== false || dataSourceFieldVisibility['ds_wdrFee_summary'] !== false || dataSourceFieldVisibility['ds_sysAdd_main'] !== false || dataSourceFieldVisibility['ds_sysAdd_summary'] !== false || dataSourceFieldVisibility['ds_sysSub_main'] !== false || dataSourceFieldVisibility['ds_sysSub_summary'] !== false) ? 'flex' : 'none'}; min-width: max-content; width: auto; flex-direction: column;">
-                                <div class="detail-card-header" style="display: none;"></div>
+                            <div class="detail-card dc-dw" data-category="存取款资料" style="flex: 0 0 auto; display: ${(dataSourceFieldVisibility['ds_depTotal_main'] !== false || dataSourceFieldVisibility['ds_depTotal_summary'] !== false || dataSourceFieldVisibility['ds_depCount_main'] !== false || dataSourceFieldVisibility['ds_depCount_summary'] !== false || dataSourceFieldVisibility['ds_wdrTotal_main'] !== false || dataSourceFieldVisibility['ds_wdrTotal_summary'] !== false || dataSourceFieldVisibility['ds_wdrCount_main'] !== false || dataSourceFieldVisibility['ds_wdrCount_summary'] !== false || dataSourceFieldVisibility['ds_wdrFee_main'] !== false || dataSourceFieldVisibility['ds_wdrFee_summary'] !== false || dataSourceFieldVisibility['ds_sysAdd_main'] !== false || dataSourceFieldVisibility['ds_sysAdd_summary'] !== false || dataSourceFieldVisibility['ds_sysSub_main'] !== false || dataSourceFieldVisibility['ds_sysSub_summary'] !== false) ? 'flex' : 'none'}; flex-direction: column;">
+                                <div class="detail-card-header" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px 0; width: 100%; box-sizing: border-box; align-items: center;">
+                                    <div style="display: flex; align-items: center; padding-right: 24px;">
+                                        <span style="font-weight: 600; white-space: nowrap; width: 100px; display: flex; align-items: center; gap: 8px;">
+                                            <i class="ph ph-bank"></i> 存取款资料
+                                        </span>
+                                        <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; justify-items: end;">
+                                            <div style="min-width: 90px; display: flex; align-items: center; justify-content: flex-end; gap: 4px; font-weight: 600; font-size: 12px;">主钱包 <span class="ued-tooltip tooltip-bottom" data-tooltip="当前币种: ${user.currency || 'RMB'}"><i class="ph ph-question" style="color: #94a3b8; font-size: 14px;"></i></span></div>
+                                            <div style="min-width: 90px; display: flex; align-items: center; justify-content: flex-end; gap: 4px; color: #6366f1; font-weight: 600; font-size: 12px;">汇总 <span class="ued-tooltip tooltip-bottom" data-tooltip="当前币种: USDT"><i class="ph ph-question" style="color: #94a3b8; font-size: 14px;"></i></span></div>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; align-items: center; padding-left: 24px;">
+                                        <span style="width: 100px;"></span>
+                                        <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; justify-items: end;">
+                                            <div style="min-width: 90px; display: flex; align-items: center; justify-content: flex-end; gap: 4px; font-weight: 600; font-size: 12px;">主钱包 <span class="ued-tooltip tooltip-bottom" data-tooltip="当前币种: ${user.currency || 'RMB'}"><i class="ph ph-question" style="color: #94a3b8; font-size: 14px;"></i></span></div>
+                                            <div style="min-width: 90px; display: flex; align-items: center; justify-content: flex-end; gap: 4px; color: #6366f1; font-weight: 600; font-size: 12px;">汇总 <span class="ued-tooltip tooltip-bottom" data-tooltip="当前币种: USDT"><i class="ph ph-question" style="color: #94a3b8; font-size: 14px;"></i></span></div>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="detail-card-body" data-no-sort="true" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px 0; padding: 16px;">
                                     <!-- Column 1 -->
                                     <div style="display: flex; flex-direction: column; gap: 12px; padding-right: 24px;">
-                                        <!-- Micro Header -->
-                                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; align-items: center; min-height: 29px;">
-                                            <span style="font-size: 15px; font-weight: 600; color: #1e293b; white-space: nowrap; width: 100px;">存取款资料</span>
-                                            <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; justify-items: end;">
-                                                <div class="custom-unit-dropdown" data-main-currency="${user.currency || 'RMB'}" style="display: inline-block; position: relative; min-width: 90px; width: auto; text-align: right; white-space: nowrap;">
-                                                    <button type="button" style="background: none; border: none; padding: 0; color: #4338ca; font-weight: 600; font-size: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: flex-end; width: 100%; white-space: nowrap;">
-                                                        <span class="dropdown-title">主钱包</span>
-                                                        <span style="display: flex; align-items: center; gap: 4px; font-size: 11px; margin-top: 2px;">(<span class="selected-val main-currency-label">${user.currency || 'RMB'}</span>) <i class="ph ph-caret-down"></i></span>
-                                                    </button>
-                                                    <div class="dropdown-menu" style="display: none; position: absolute; right: 0; top: 100%; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); z-index: 10; min-width: 80px; text-align: left;">
-                                                        ${['USDT', 'RMB', 'VND', 'PHP', 'MYR'].map(c => `<div class="dropdown-item" data-value="${c}" style="padding: 8px 12px; font-size: 13px; color: #1e293b; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">${c}${c === (user.currency || 'RMB') ? ' <span style="font-size: 10px; background: #eff6ff; color: #3b82f6; padding: 2px 4px; border-radius: 4px; border: 1px solid #bfdbfe;">主钱包</span>' : ''}</div>`).join('')}
-                                                    </div>
-                                                </div>
-                                                <span style="min-width: 90px; width: auto; text-align: right; white-space: nowrap; color: #6366f1; font-weight: 600; display: flex; flex-direction: column; align-items: flex-end;">
-                                                    <span style="font-size: 12px;">汇总</span>
-                                                    <span style="font-size: 11px; margin-top: 2px;">(USDT)</span>
-                                                </span>
-                                            </div>
-                                        </div>
+                                        <!-- Micro Header Removed -->
                                         
                                         <!-- Rows -->
                                         <div data-ds-row="ds_depTotal" style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
                                             <span style="width: 100px; color: #64748b; font-weight: 500;">存款总额</span>
                                             <div class="ds-val-grid" style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; justify-items: end;">
-                                                <div class="ds-field" data-ds-id="ds_depTotal_main" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;"><span class="val" style="font-family: monospace; font-weight: 600; color: #334155;">${formatAmount(user.deposit, user.currency)}</span></div>
+                                                <div class="ds-field" data-ds-id="ds_depTotal_main" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;">${window.renderClickableAmount('存款总额', user.deposit, user.currency, 'font-family: monospace; font-weight: 600; color: #4f46e5;', dataMode === 'nodata')}</div>
                                                 <div class="ds-field" data-ds-id="ds_depTotal_summary" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;"><span class="val" style="font-family: monospace; font-weight: 600; color: #4338ca; background: #f8fafc; padding: 2px 6px; border-radius: 4px;">${formatAmount(user.deposit, 'USDT')}</span></div>
                                             </div>
                                         </div>
@@ -1990,7 +2037,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                         <div data-ds-row="ds_wdrTotal" style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
                                             <span style="width: 100px; color: #64748b; font-weight: 500;">取款总额</span>
                                             <div class="ds-val-grid" style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; justify-items: end;">
-                                                <div class="ds-field" data-ds-id="ds_wdrTotal_main" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;"><span class="val" style="font-family: monospace; font-weight: 600; color: #334155;">${formatAmount(user.withdraw, user.currency)}</span></div>
+                                                <div class="ds-field" data-ds-id="ds_wdrTotal_main" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;">${window.renderClickableAmount('取款总额', user.withdraw, user.currency, 'font-family: monospace; font-weight: 600; color: #4f46e5;', dataMode === 'nodata')}</div>
                                                 <div class="ds-field" data-ds-id="ds_wdrTotal_summary" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;"><span class="val" style="font-family: monospace; font-weight: 600; color: #4338ca; background: #f8fafc; padding: 2px 6px; border-radius: 4px;">${formatAmount(user.withdraw, 'USDT')}</span></div>
                                             </div>
                                         </div>
@@ -2006,30 +2053,13 @@ document.addEventListener('DOMContentLoaded', () => {
                                     
                                     <!-- Column 2 -->
                                     <div style="display: flex; flex-direction: column; gap: 12px; padding-left: 24px; border-left: 1px solid #f1f5f9;">
-                                        <!-- Micro Header -->
-                                        <div style="display: flex; justify-content: flex-end; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; align-items: center; min-height: 29px;">
-                                            <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; justify-items: end; margin-left: 100px;">
-                                                <div class="custom-unit-dropdown" data-main-currency="${user.currency || 'RMB'}" style="display: inline-block; position: relative; min-width: 90px; width: auto; text-align: right; white-space: nowrap;">
-                                                    <button type="button" style="background: none; border: none; padding: 0; color: #4338ca; font-weight: 600; font-size: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: flex-end; width: 100%; white-space: nowrap;">
-                                                        <span class="dropdown-title">主钱包</span>
-                                                        <span style="display: flex; align-items: center; gap: 4px; font-size: 11px; margin-top: 2px;">(<span class="selected-val main-currency-label">${user.currency || 'RMB'}</span>) <i class="ph ph-caret-down"></i></span>
-                                                    </button>
-                                                    <div class="dropdown-menu" style="display: none; position: absolute; right: 0; top: 100%; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); z-index: 10; min-width: 80px; text-align: left;">
-                                                        ${['USDT', 'RMB', 'VND', 'PHP', 'MYR'].map(c => `<div class="dropdown-item" data-value="${c}" style="padding: 8px 12px; font-size: 13px; color: #1e293b; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">${c}${c === (user.currency || 'RMB') ? ' <span style="font-size: 10px; background: #eff6ff; color: #3b82f6; padding: 2px 4px; border-radius: 4px; border: 1px solid #bfdbfe;">主钱包</span>' : ''}</div>`).join('')}
-                                                    </div>
-                                                </div>
-                                                <span style="min-width: 90px; width: auto; text-align: right; white-space: nowrap; color: #6366f1; font-weight: 600; display: flex; flex-direction: column; align-items: flex-end;">
-                                                    <span style="font-size: 12px;">汇总</span>
-                                                    <span style="font-size: 11px; margin-top: 2px;">(USDT)</span>
-                                                </span>
-                                            </div>
-                                        </div>
+                                        <!-- Micro Header Removed -->
                                         
                                         <!-- Rows -->
                                         <div data-ds-row="ds_wdrFee" style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
                                             <span style="width: 100px; color: #64748b; font-weight: 500;">提款预扣金额</span>
                                             <div class="ds-val-grid" style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; justify-items: end;">
-                                                <div class="ds-field" data-ds-id="ds_wdrFee_main" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;"><span class="val" style="font-family: monospace; font-weight: 600; color: #334155;">${formatAmount(user.withdrawPre, user.currency)}</span></div>
+                                                <div class="ds-field" data-ds-id="ds_wdrFee_main" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;">${window.renderClickableAmount('提款预扣金额', user.withdrawPre, user.currency, 'font-family: monospace; font-weight: 600; color: #4f46e5;', dataMode === 'nodata')}</div>
                                                 <div class="ds-field" data-ds-id="ds_wdrFee_summary" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;"><span class="val" style="font-family: monospace; font-weight: 600; color: #4338ca; background: #f8fafc; padding: 2px 6px; border-radius: 4px;">${formatAmount(user.withdrawPre, 'USDT')}</span></div>
                                             </div>
                                         </div>
@@ -2037,7 +2067,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                         <div data-ds-row="ds_sysAdd" style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
                                             <span style="width: 100px; color: #64748b; font-weight: 500;">后台加款总额</span>
                                             <div class="ds-val-grid" style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; justify-items: end;">
-                                                <div class="ds-field" data-ds-id="ds_sysAdd_main" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;"><span class="val text-green" style="font-family: monospace; font-weight: 600;">${dataMode === 'nodata' ? '-' : formatAmount(1000000, user.currency)}</span></div>
+                                                <div class="ds-field" data-ds-id="ds_sysAdd_main" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;">${window.renderClickableAmount('后台加款总额', 1000000, user.currency, 'font-family: monospace; font-weight: 600; color: #10b981;', dataMode === 'nodata')}</div>
                                                 <div class="ds-field" data-ds-id="ds_sysAdd_summary" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;"><span class="val text-green" style="font-family: monospace; font-weight: 600; background: #f8fafc; padding: 2px 6px; border-radius: 4px;">${dataMode === 'nodata' ? '-' : formatAmount(1800, 'USDT')}</span></div>
                                             </div>
                                         </div>
@@ -2045,7 +2075,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                         <div data-ds-row="ds_sysSub" style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
                                             <span style="width: 100px; color: #64748b; font-weight: 500;">后台扣款总额</span>
                                             <div class="ds-val-grid" style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; justify-items: end;">
-                                                <div class="ds-field" data-ds-id="ds_sysSub_main" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;"><span class="val" style="font-family: monospace; font-weight: 600; color: #a1a1aa;">${dataMode === 'nodata' ? '-' : '0'}</span></div>
+                                                <div class="ds-field" data-ds-id="ds_sysSub_main" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;">${window.renderClickableAmount('后台扣款总额', 0, user.currency, 'font-family: monospace; font-weight: 600; color: #a1a1aa;', dataMode === 'nodata')}</div>
                                                 <div class="ds-field" data-ds-id="ds_sysSub_summary" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;"><span class="val text-red" style="font-family: monospace; font-weight: 600; background: #f8fafc; padding: 2px 6px; border-radius: 4px;">${dataMode === 'nodata' ? '-' : formatAmount(50, 'USDT')}</span></div>
                                             </div>
                                         </div>
@@ -2053,7 +2083,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </div>
                             </div>
                             <!-- 成长与积分 -->
-                            <div class="detail-card" data-category="成长与积分" style="flex: 0 0 auto; width: 240px; display: ${(dataSourceFieldVisibility['ds_growth'] !== false || dataSourceFieldVisibility['ds_vipGrowth'] !== false || dataSourceFieldVisibility['ds_points'] !== false) ? 'block' : 'none'};">
+                            <div class="detail-card dc-list" data-category="成长与积分" style="flex: 0 0 auto; display: ${(dataSourceFieldVisibility['ds_growth'] !== false || dataSourceFieldVisibility['ds_vipGrowth'] !== false || dataSourceFieldVisibility['ds_points'] !== false) ? 'block' : 'none'};">
                                 <div class="detail-card-header"><i class="ph ph-trend-up"></i> 成长与积分</div>
                                 <div class="detail-card-body flex-list-col">
                                     <div class="ds-field" data-ds-id="ds_growth" style="display:${dataSourceFieldVisibility['ds_growth'] !== false ? '' : 'none'}"><span class="lbl">成长值</span> <span class="val">${user.growth || '0'}</span></div>
@@ -2062,45 +2092,45 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </div>
                             </div>
                             <!-- 推荐关系 -->
-                            <div class="detail-card" data-category="推荐关系" style="flex: 0 0 auto; width: 240px; display: ${(dataSourceFieldVisibility['ds_inviter'] !== false || dataSourceFieldVisibility['ds_inviteCode'] !== false || dataSourceFieldVisibility['ds_team'] !== false || dataSourceFieldVisibility['ds_commBal'] !== false) ? 'block' : 'none'};">
+                            <div class="detail-card dc-list" data-category="推荐关系" style="flex: 0 0 auto; display: ${(dataSourceFieldVisibility['ds_inviter'] !== false || dataSourceFieldVisibility['ds_inviteCode'] !== false || dataSourceFieldVisibility['ds_team'] !== false || dataSourceFieldVisibility['ds_commBal'] !== false) ? 'block' : 'none'};">
                                 <div class="detail-card-header">
                                     <div style="display: flex; align-items: center; gap: 8px;"><i class="ph ph-share-network"></i> 推荐关系</div>
                                     ${renderDropdownUI(user.currency || 'RMB')}
                                 </div>
                                 <div class="detail-card-body flex-list-col">
-                                    <div class="ds-field" data-ds-id="ds_inviter" style="display:${dataSourceFieldVisibility['ds_inviter'] !== false ? '' : 'none'}"><span class="lbl">邀请人</span> <span class="val" style="line-height: 1.8; padding: 2px 0;">${user.inviter || '-'}</span></div>
+                                    <div class="ds-field" data-ds-id="ds_inviter" style="display:${dataSourceFieldVisibility['ds_inviter'] !== false ? '' : 'none'}"><span class="lbl">邀请人</span> <span class="val">${user.inviter || '-'}</span></div>
                                     <div class="ds-field" data-ds-id="ds_inviteCode" style="display:${dataSourceFieldVisibility['ds_inviteCode'] !== false ? '' : 'none'}"><span class="lbl">邀请码</span> <span class="val">${user.inviteCode || '-'}</span></div>
                                     <div class="ds-field" data-ds-id="ds_team" style="display:${dataSourceFieldVisibility['ds_team'] !== false ? '' : 'none'}"><span class="lbl">下级/团队</span> <a href="#" class="val subordinate-link text-blue" style="text-decoration: underline;" data-uid="${user.uid}">${user.directTeam || '0/0'}</a></div>
-                                    <div class="ds-field" data-ds-id="ds_commBal" style="display:${dataSourceFieldVisibility['ds_commBal'] !== false ? '' : 'none'}"><span class="lbl">佣金余额</span> <span class="val text-red">${formatAmount(user.commissionBal, user.currency)}</span></div>
+                                    <div class="ds-field" data-ds-id="ds_commBal" style="display:${dataSourceFieldVisibility['ds_commBal'] !== false ? '' : 'none'}"><span class="lbl">佣金余额</span> ${window.renderClickableAmount('佣金余额', user.commissionBal, user.currency, 'color: #ef4444;', dataMode === 'nodata')}</div>
                                 </div>
                             </div>
                             <!-- 余额宝 -->
-                            <div class="detail-card" data-category="余额宝" style="flex: 0 0 auto; width: 240px; display: ${(dataSourceFieldVisibility['ds_balTreas'] !== false || dataSourceFieldVisibility['ds_balInt'] !== false) ? 'block' : 'none'};">
+                            <div class="detail-card dc-list" data-category="余额宝" style="flex: 0 0 auto; display: ${(dataSourceFieldVisibility['ds_balTreas'] !== false || dataSourceFieldVisibility['ds_balInt'] !== false) ? 'block' : 'none'};">
                                 <div class="detail-card-header">
                                     <div style="display: flex; align-items: center; gap: 8px;"><i class="ph ph-wallet"></i> 余额宝</div>
                                     ${renderDropdownUI(user.currency || 'RMB')}
                                 </div>
                                 <div class="detail-card-body flex-list-col">
-                                    <div class="ds-field" data-ds-id="ds_balTreas" style="display:${dataSourceFieldVisibility['ds_balTreas'] !== false ? '' : 'none'}"><span class="lbl">余额</span> <span class="val">${dataMode === 'nodata' ? '-' : formatAmount(15000, user.currency)}</span></div>
-                                    <div class="ds-field" data-ds-id="ds_balInt" style="display:${dataSourceFieldVisibility['ds_balInt'] !== false ? '' : 'none'}"><span class="lbl">利息</span> <span class="val text-green">${dataMode === 'nodata' ? '-' : formatAmount(35, user.currency)}</span></div>
+                                    <div class="ds-field" data-ds-id="ds_balTreas" style="display:${dataSourceFieldVisibility['ds_balTreas'] !== false ? '' : 'none'}"><span class="lbl">余额</span> ${window.renderClickableAmount('余额', 15000, user.currency, '', dataMode === 'nodata')}</div>
+                                    <div class="ds-field" data-ds-id="ds_balInt" style="display:${dataSourceFieldVisibility['ds_balInt'] !== false ? '' : 'none'}"><span class="lbl">利息</span> ${window.renderClickableAmount('利息', 35, user.currency, 'color: #10b981;', dataMode === 'nodata')}</div>
                                 </div>
                             </div>
                             <!-- 用户标签 -->
-                            <div class="detail-card ds-field" data-category="用户标签" data-ds-id="ds_tags" style="flex: 1 1 auto; min-width: 240px; width: fit-content; max-width: 100%; display:${dataSourceFieldVisibility['ds_tags'] !== false ? '' : 'none'}">
+                            <div class="detail-card ds-field" data-category="用户标签" data-ds-id="ds_tags" style="flex: 0 0 auto; display:${dataSourceFieldVisibility['ds_tags'] !== false ? '' : 'none'}">
                                 <div class="detail-card-header"><i class="ph ph-tag"></i> 用户标签</div>
-                                <div class="detail-card-body" style="display:flex; flex-direction:row; flex-wrap:wrap; align-content:flex-start; gap:8px;">
-                                    ${(user.tags && user.tags.length > 0) ? user.tags.map(t => `<span class="user-custom-tag tag-blue" style="max-width: 100%; overflow: hidden; text-overflow: ellipsis;" title="${t}">${t}</span>`).join('') : '<span style="color:#94a3b8; font-size:13px;">无标签</span>'}
+                                <div class="detail-card-body tags-column-grid" style="--tag-rows: ${Math.min(4, Math.max(1, (user.tags || []).length))};">
+                                    ${(user.tags && user.tags.length > 0) ? user.tags.map(t => `<span class="user-custom-tag tag-blue" title="${t}">${t}</span>`).join('') : '<span style="color:#94a3b8; font-size:13px;">无标签</span>'}
                                 </div>
                             </div>
                             <!-- 信贷 -->
-                            <div class="detail-card" data-category="信贷" style="flex: 0 0 auto; width: 240px; display: ${(dataSourceFieldVisibility['ds_debt'] !== false || dataSourceFieldVisibility['ds_creditVal'] !== false) ? 'block' : 'none'};">
+                            <div class="detail-card dc-list" data-category="信贷" style="flex: 0 0 auto; display: ${(dataSourceFieldVisibility['ds_debt'] !== false || dataSourceFieldVisibility['ds_creditVal'] !== false) ? 'block' : 'none'};">
                                 <div class="detail-card-header">
                                     <div style="display: flex; align-items: center; gap: 8px;"><i class="ph ph-credit-card"></i> 信贷</div>
                                     ${renderDropdownUI(user.currency || 'RMB')}
                                 </div>
                                 <div class="detail-card-body flex-list-col">
-                                    <div class="ds-field" data-ds-id="ds_debt" style="display:${dataSourceFieldVisibility['ds_debt'] !== false ? '' : 'none'}"><span class="lbl">欠款</span> <span class="val text-red">${formatAmount(user.arrears, user.currency)}</span></div>
-                                    <div class="ds-field" data-ds-id="ds_creditVal" style="display:${dataSourceFieldVisibility['ds_creditVal'] !== false ? '' : 'none'}"><span class="lbl">信用值</span> <span class="val">${formatAmount(user.creditValue, 'RMB')}</span></div>
+                                    <div class="ds-field" data-ds-id="ds_debt" style="display:${dataSourceFieldVisibility['ds_debt'] !== false ? '' : 'none'}"><span class="lbl">欠款</span> ${window.renderClickableAmount('欠款', user.arrears, user.currency, 'color: #ef4444;', dataMode === 'nodata')}</div>
+                                    <div class="ds-field" data-ds-id="ds_creditVal" style="display:${dataSourceFieldVisibility['ds_creditVal'] !== false ? '' : 'none'}"><span class="lbl">信用值</span> ${window.renderClickableAmount('信用值', user.creditValue, 'RMB', '', dataMode === 'nodata')}</div>
                                 </div>
                             </div>
                         </div>
@@ -2129,7 +2159,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     if (currentTableMode === 'compact') {
                         if (customColumnDrawer) {
-                            const tableHeader = document.querySelector('#userTable thead th');
+                            const tableHeader = document.querySelector('#userTable thead tr:last-child th');
                             if (tableHeader) {
                                 const rect = tableHeader.getBoundingClientRect();
                                 const availableSpace = window.innerHeight - rect.bottom - 10;
@@ -3434,22 +3464,51 @@ document.addEventListener('DOMContentLoaded', () => {
     let compactFrozenColumns = [];
     let compactScrollColumns = [];
 
-    // Initialize compact drawer columns from the original config
-    compactColumnsConfig.forEach(col => {
-        col.isNative = true;
-        if (pinnedColumnIds.includes(col.id)) {
-            compactFrozenColumns.push(col);
-        } else {
-            compactScrollColumns.push(col);
-        }
-    });
-
     const getActiveLists = () => {
-        return {
-            frozen: currentTableMode === 'nested' ? nestedFrozenColumns : compactFrozenColumns,
-            scroll: currentTableMode === 'nested' ? nestedScrollColumns : compactScrollColumns
-        };
+        let f = [];
+        let s = [];
+        if (currentTableMode === 'nested') {
+            nestedColumnsConfig.forEach(col => {
+                if (nestedPinnedColumnIds && nestedPinnedColumnIds.includes(col.id) || ['memberInfo', 'levelTeam', 'checkbox', 'action'].includes(col.id)) {
+                    f.push(col);
+                } else {
+                    s.push(col);
+                }
+            });
+        } else {
+            compactColumnsConfig.forEach(col => {
+                if (pinnedColumnIds && pinnedColumnIds.includes(col.id) || ['checkbox', 'action'].includes(col.id)) {
+                    f.push(col);
+                } else {
+                    s.push(col);
+                }
+            });
+        }
+        return { frozen: f, scroll: s };
     };
+    // Snapshot of the initial column settings, restored by the 重置 button
+    const customColumnDefaults = {
+        nestedColumns: [...nestedColumnsConfig],
+        compactColumns: [...compactColumnsConfig],
+        nestedVisibility: { ...nestedColumnVisibility },
+        compactVisibility: { ...compactColumnVisibility },
+        categoryOrder: [...drawerCategoryOrder],
+        dataSourceVisibility: { ...dataSourceFieldVisibility }
+    };
+
+    // The 操作 column (which also hosts the 自订栏位 button) must always exist and stay last
+    const actionColumnDefs = {
+        nested: nestedColumnsConfig.find(c => c.id === 'action'),
+        compact: compactColumnsConfig.find(c => c.id === 'action')
+    };
+    function ensureActionColumnLast() {
+        [['nested', nestedColumnsConfig], ['compact', compactColumnsConfig]].forEach(([mode, list]) => {
+            const idx = list.findIndex(c => c.id === 'action');
+            const actionCol = idx !== -1 ? list.splice(idx, 1)[0] : actionColumnDefs[mode];
+            if (actionCol) list.push(actionCol);
+        });
+    }
+
     let availableDataSource = [
         { id: 'ds_realname', label: '真实姓名', category: '基本资料' },
         { id: 'ds_birthday', label: '生日', category: '基本资料' },
@@ -3459,6 +3518,9 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 'ds_regMode', label: '注册模式', category: '基本资料' },
         { id: 'ds_nickname', label: '暱称', category: '基本资料' },
         { id: 'ds_phone', label: '手机号', category: '基本资料' },
+        { id: 'currency', label: '主钱包币种', category: '额度' },
+        { id: 'availableCredit', label: '可用额度', category: '额度', sortable: true },
+        { id: 'thirdBal', label: '三方余额', category: '额度', sortable: true },
         { id: 'ds_depTotal_main', label: '存款总额', category: '存取款资料', group: '主钱包', tag: '主钱包', tagColor: 'blue', sortable: true },
         { id: 'ds_depCount_main', label: '存款次数', category: '存取款资料', group: '主钱包', tag: '主钱包', tagColor: 'blue' },
         { id: 'ds_wdrTotal_main', label: '取款总额', category: '存取款资料', group: '主钱包', tag: '主钱包', tagColor: 'blue', sortable: true },
@@ -3503,13 +3565,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 case 'ds_regMode': val = user.registerMode || '一般注册'; break;
                 case 'ds_nickname': val = renderDataState(user.nickname, 'na'); break;
                 case 'ds_phone': val = renderDataState(user.phone, 'phone'); break;
-                case 'ds_depTotal_main': val = formatAmount(user.deposit, user.currency); extraClass = 'cell-money text-blue'; break;
+                case 'currency': val = user.currency || 'RMB'; break;
+                case 'ds_depTotal_main': val = window.renderClickableAmount('存款总额', user.deposit, user.currency, 'color: #4f46e5;', false); extraClass = 'cell-money text-blue'; break;
                 case 'ds_depCount_main': val = user.depositCount || '0'; break;
-                case 'ds_wdrTotal_main': val = formatAmount(user.withdraw, user.currency); extraClass = 'cell-money text-blue'; break;
+                case 'ds_wdrTotal_main': val = window.renderClickableAmount('取款总额', user.withdraw, user.currency, 'color: #4f46e5;', false); extraClass = 'cell-money text-blue'; break;
                 case 'ds_wdrCount_main': val = user.withdrawCount || '0'; break;
-                case 'ds_wdrFee_main': val = formatAmount(user.withdrawPre, user.currency); extraClass = 'cell-money'; break;
-                case 'ds_sysAdd_main': val = window.dataMode === 'nodata' ? '-' : formatAmount(user.adminAdd || 200, user.currency); extraClass = 'cell-money text-green'; break;
-                case 'ds_sysSub_main': val = window.dataMode === 'nodata' ? '-' : formatAmount(user.adminDeduct || 0, user.currency); extraClass = 'cell-money text-red'; break;
+                case 'ds_wdrFee_main': val = window.renderClickableAmount('提款预扣金额', user.withdrawPre, user.currency, '', false); extraClass = 'cell-money'; break;
+                case 'ds_sysAdd_main': val = window.renderClickableAmount('后台加款总额', user.adminAdd || 200, user.currency, 'color: #10b981;', false); extraClass = 'cell-money text-green'; break;
+                case 'ds_sysSub_main': val = window.renderClickableAmount('后台扣款总额', user.adminDeduct || 0, user.currency, 'color: #ef4444;', false); extraClass = 'cell-money text-red'; break;
                 case 'ds_depTotal_summary': val = formatAmount(user.deposit, 'USDT'); extraClass = 'cell-money text-blue'; break;
                 case 'ds_depCount_summary': val = user.depositCount || '0'; break;
                 case 'ds_wdrTotal_summary': val = formatAmount(user.withdraw, 'USDT'); extraClass = 'cell-money text-blue'; break;
@@ -3523,10 +3586,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 case 'ds_inviter': val = user.inviter || '-'; break;
                 case 'ds_inviteCode': val = user.inviteCode || '-'; break;
                 case 'ds_team': val = `<a href="#" class="subordinate-link text-blue" style="text-decoration: underline;" data-uid="${user.uid}">${user.directTeam || '0/0'}</a>`; break;
-                case 'ds_commBal': val = formatAmount(user.commissionBal, user.currency); extraClass = 'cell-money text-red'; break;
-                case 'ds_balTreas': val = window.dataMode === 'nodata' ? '-' : formatAmount(user.balanceBuy || 15000, user.currency); extraClass = 'cell-money'; break;
-                case 'ds_balInt': val = window.dataMode === 'nodata' ? '-' : formatAmount(user.interest || 35, user.currency); extraClass = 'cell-money text-green'; break;
-                case 'ds_debt': val = formatAmount(user.arrears, user.currency); extraClass = 'cell-money text-red'; break;
+                case 'ds_commBal': val = window.renderClickableAmount('佣金余额', user.commissionBal, user.currency, 'color: #ef4444;', false); extraClass = 'cell-money text-red'; break;
+                case 'ds_balTreas': val = window.renderClickableAmount('余额', user.balanceBuy || 15000, user.currency, '', false); extraClass = 'cell-money'; break;
+                case 'ds_balInt': val = window.renderClickableAmount('利息', user.interest || 35, user.currency, 'color: #10b981;', false); extraClass = 'cell-money text-green'; break;
+                case 'ds_debt': val = window.renderClickableAmount('欠款', user.arrears, user.currency, 'color: #ef4444;', false); extraClass = 'cell-money text-red'; break;
                 case 'ds_creditVal': val = formatAmount(user.creditValue, 'RMB'); extraClass = 'cell-val'; break;
                 case 'ds_tags': val = (user.tags && user.tags.length > 0) ? user.tags.map(t => `<span class="user-custom-tag tag-blue" style="max-width: 100%; overflow: hidden; text-overflow: ellipsis;" title="${t}">${t}</span>`).join(' ') : '-'; break;
                 case 'ds_remark': val = window.dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : `<span title="${user.remark || ''}">${user.remark ? (user.remark.length > 20 ? user.remark.substring(0, 20) + '...' : user.remark) : '-'}</span>`; break;
@@ -3539,7 +3602,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Track which data source fields are visible in expanded cards (true=visible, false=hidden)
-    let dataSourceFieldVisibility = { 'ds_debt': false, 'ds_creditVal': false };
+    // (declared at top of scope to avoid TDZ issues)
 
     window.toggleDataSourceFieldVisibility = function (id) {
         dataSourceFieldVisibility[id] = dataSourceFieldVisibility[id] === false ? true : false;
@@ -3591,37 +3654,57 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.resetCustomColumns = function () {
-        if (!confirm('确定要重置所有自订栏位设定吗？')) return;
-        // Reset data source visibility
-        dataSourceFieldVisibility = { 'ds_debt': false, 'ds_creditVal': false };
+        nestedColumnsConfig.length = 0;
+        nestedColumnsConfig.push(...customColumnDefaults.nestedColumns);
+        compactColumnsConfig.length = 0;
+        compactColumnsConfig.push(...customColumnDefaults.compactColumns);
+        Object.keys(nestedColumnVisibility).forEach(k => delete nestedColumnVisibility[k]);
+        Object.assign(nestedColumnVisibility, customColumnDefaults.nestedVisibility);
+        Object.keys(compactColumnVisibility).forEach(k => delete compactColumnVisibility[k]);
+        Object.assign(compactColumnVisibility, customColumnDefaults.compactVisibility);
+        Object.keys(tableFieldVisibility).forEach(k => delete tableFieldVisibility[k]);
+        drawerCategoryOrder.length = 0;
+        drawerCategoryOrder.push(...customColumnDefaults.categoryOrder);
+        dataSourceFieldVisibility = { ...customColumnDefaults.dataSourceVisibility };
+
         renderDrawerStates();
-        
-        // Update all fields
-        document.querySelectorAll('.ds-field').forEach(el => {
-            const id = el.dataset.dsId || el.dataset.dsRow; // Handle basic fields and rows
-            if (!id) return;
-            const isVisible = dataSourceFieldVisibility[id] !== false;
-            el.style.display = isVisible ? '' : 'none';
-        });
-        
-        // Update parent card visibility
-        document.querySelectorAll('.detail-card').forEach(card => {
-            if (card.dataset.category === '存取款资料') {
-                const hasVisibleRow = Array.from(card.querySelectorAll('[data-ds-row]')).some(el => el.style.display !== 'none');
-                card.style.display = hasVisibleRow ? 'flex' : 'none';
-            } else if (card.dataset.category !== '其他' && card.dataset.category !== '用户标签') {
-                const hasVisibleField = Array.from(card.querySelectorAll('.ds-field')).some(el => el.style.display !== 'none');
-                card.style.display = hasVisibleField ? 'block' : 'none';
-            } else if (card.dataset.category === '其他' || card.dataset.category === '用户标签') {
-                const hasVisibleField = Array.from(card.querySelectorAll('.ds-field')).some(el => el.style.display !== 'none');
-                card.style.display = hasVisibleField ? (card.dataset.category === '其他' ? 'block' : '') : 'none';
-            }
-        });
+        updateTableFromDrawer();
+        window.applyDrawerOrderToTable();
+        showToast('已重置为预设栏位');
     };
+
+    // Two-step confirm on the 重置 button itself (native confirm() is blocked in some browsers/previews)
+    (function initResetConfirm() {
+        const btn = document.querySelector('#customColumnDrawer button[onclick*="resetCustomColumns"]');
+        if (!btn) return;
+        btn.removeAttribute('onclick');
+        const originalHtml = btn.innerHTML;
+        let armed = false;
+        let timer = null;
+        const disarm = () => {
+            armed = false;
+            clearTimeout(timer);
+            btn.innerHTML = originalHtml;
+            btn.classList.remove('is-confirming');
+        };
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (!armed) {
+                armed = true;
+                btn.innerHTML = '<i class="ph ph-warning-circle"></i> 确认重置？';
+                btn.classList.add('is-confirming');
+                timer = setTimeout(disarm, 3000);
+                return;
+            }
+            disarm();
+            window.resetCustomColumns();
+        });
+        document.addEventListener('click', (e) => { if (armed && !btn.contains(e.target)) disarm(); });
+    })();
 
     if (btnCustomColumns && customColumnDrawer) {
         btnCustomColumns.addEventListener('click', () => {
-            const tableHeader = document.querySelector('#userTable thead th');
+            const tableHeader = document.querySelector('#userTable thead tr:last-child th');
             if (tableHeader) {
                 const rect = tableHeader.getBoundingClientRect();
                 const availableSpace = window.innerHeight - rect.bottom - 10;
@@ -3674,7 +3757,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnToggleDrawerHeight.addEventListener('click', () => {
             if (!customColumnDrawer.classList.contains('expanded')) {
                 // Compute max available height below table header by targeting a sticky <th>
-                const tableHeader = document.querySelector('#userTable thead th');
+                const tableHeader = document.querySelector('#userTable thead tr:last-child th');
                 if (tableHeader) {
                     const rect = tableHeader.getBoundingClientRect();
                     // Leave a 10px margin below the header
@@ -3682,10 +3765,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     customColumnDrawer.style.setProperty('--max-drawer-height', `${availableSpace}px`);
                 }
                 customColumnDrawer.classList.add('expanded');
+                btnToggleDrawerHeight.setAttribute('title', '收回');
             } else {
                 customColumnDrawer.classList.remove('expanded');
+                btnToggleDrawerHeight.setAttribute('title', '向上展开');
             }
         });
+
+
     }
 
 
@@ -3707,26 +3794,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 const border = isChecked ? '#bfdbfe' : '#e2e8f0';
                 
                 html += `
-                <div data-id="${col.id}" class="draggable-pill" draggable="true" style="display: inline-flex; cursor: grab;">
+                <div data-id="${col.id}" class="${isLeftPanel ? 'draggable-pill' : ''}" draggable="${isLeftPanel ? 'true' : 'false'}" style="display: inline-flex; ${isLeftPanel ? 'cursor: grab;' : ''}">
                     <label style="border: 1px solid ${border}; border-radius: 4px; padding: 6px 12px; display: inline-flex; align-items: center; gap: 8px; color: ${color}; background: ${bg}; font-size: 13px; font-weight: 500; cursor: pointer; ${isMandatory ? 'opacity: 0.8;' : ''}">
-                        <input type="checkbox" ${isChecked ? 'checked' : ''} ${isMandatory ? 'disabled' : onChangeHtml} style="accent-color: #3b82f6; width: 14px; height: 14px; margin: 0; ${isMandatory ? 'cursor: not-allowed;' : 'cursor: pointer;'}">
+                        ${isLeftPanel ? '<i class="ph-bold ph-dots-six-vertical pill-drag-handle" style="color: #94a3b8; font-size: 18px; margin-right: -2px;"></i>' : ''}
+                        <input type="checkbox" ${isChecked ? 'checked' : ''} ${isMandatory ? 'disabled' : onChangeHtml} style="display: none;">
+                        <i class="ph-bold ${isChecked ? 'ph-eye' : 'ph-eye-slash'}" style="font-size: 16px; ${isMandatory ? 'cursor: not-allowed;' : 'cursor: pointer;'}"></i>
                         <span style="cursor: pointer; user-select: none;">${col.label || col.name || col.id} ${isMandatory ? '<i class="ph-fill ph-lock-key" style="color:#3b82f6; font-size:12px; margin-left:2px;"></i>' : ''}</span>
                         `;
                 
                 if (isLeftPanel) {
                     html += `
-                        <div style="display:flex; align-items:center; margin-left: 4px; gap: 2px; border-left: 1px solid ${border}; padding-left: 6px;">
-                            <button type="button" style="background:none; border:none; color:#94a3b8; cursor:pointer; padding: 0 4px; display:flex; align-items:center; justify-content:center;" onclick="window.moveColumnLeft('${col.id}')" title="向左移动"><i class="ph-bold ph-caret-left"></i></button>
-                            ${(!isMandatory && availableDataSource.some(c => c.id === col.id)) ? `<button type="button" style="background:none; border:none; color:#94a3b8; cursor:pointer; padding: 0 4px; display:flex; align-items:center; justify-content:center;" onclick="window.demoteColumnToCard('${col.id}')" title="移除"><i class="ph-bold ph-minus"></i></button>` : ''}
-                            <button type="button" style="background:none; border:none; color:#94a3b8; cursor:pointer; padding: 0 4px; display:flex; align-items:center; justify-content:center;" onclick="window.moveColumnRight('${col.id}')" title="向右移动"><i class="ph-bold ph-caret-right"></i></button>
+                        <div class="pill-actions-hover" style="display:flex; align-items:center; margin-left: 4px; gap: 4px; border-left: 1px solid ${border}; padding-left: 6px;">
+                            <button type="button" style="background:none; border:none; color:#94a3b8; cursor:pointer; padding: 0 2px; display:flex; align-items:center; justify-content:center;" onclick="window.moveColumnLeft('${col.id}')" title="向左移动"><i class="ph-bold ph-caret-left"></i></button>
+                            <button type="button" style="background:none; border:none; color:#94a3b8; cursor:pointer; padding: 0 2px; display:flex; align-items:center; justify-content:center;" onclick="window.moveColumnRight('${col.id}')" title="向右移动"><i class="ph-bold ph-caret-right"></i></button>
+                            ${(!isMandatory && availableDataSource.some(c => c.id === col.id)) ? `<button type="button" style="background:#fee2e2; border:none; color:#ef4444; border-radius:4px; padding:2px 4px; cursor:pointer; display:flex; align-items:center; justify-content:center; margin-left: 2px;" onclick="window.demoteColumnToCard('${col.id}')" title="从主表移除"><i class="ph-bold ph-x" style="font-size: 12px;"></i></button>` : ''}
                         </div>
                     `;
                 } else {
                     if (inMainTable) {
-                        html += `<div style="background: #eef2ff; color: #4f46e5; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-left: 4px; flex-shrink: 0;">已在主表</div>`;
+                        html += `<button type="button" onclick="window.demoteColumnToCard('${col.id}')" title="取消新增到主表" style="background: #eef2ff; border: none; color: #4f46e5; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-left: 4px; flex-shrink: 0; cursor: pointer; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">已在主表</button>`;
                     } else {
                         html += `
-                        <div style="display:flex; align-items:center; margin-left: 4px; border-left: 1px solid ${border}; padding-left: 6px;">
+                        <div class="pill-actions-hover" style="display:flex; align-items:center; margin-left: 4px; border-left: 1px solid ${border}; padding-left: 6px;">
                             <button type="button" style="background:none; border:none; color:#3b82f6; cursor:pointer; padding: 0 4px; display:flex; align-items:center; justify-content:center;" onclick="window.promoteColumnFromCard('${col.id}')" title="加入表格"><i class="ph-bold ph-plus"></i></button>
                         </div>
                         `;
@@ -3763,12 +3852,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const upFn = isLeftPanel ? `window.moveLeftCategoryUp('${groupName}')` : `window.moveRightCategoryUp('${groupName}')`;
         const downFn = isLeftPanel ? `window.moveLeftCategoryDown('${groupName}')` : `window.moveRightCategoryDown('${groupName}')`;
 
+        let list = currentTableMode === 'nested' ? nestedColumnsConfig : compactColumnsConfig;
+        const allInMainTable = cols.length > 0 && cols.every(c => list.some(colInList => colInList.id === c.id));
+        // Right-panel cards already fully in the main table stay draggable for reordering;
+        // dragging them into the main table is blocked in the dragover handler.
+        const canDrag = groupName !== '其他';
+        const dragAttr = canDrag ? 'true' : 'false';
+        const cursorStyle = canDrag ? 'grab' : 'default';
+        // Default main-table cards: none of their fields come from the expanded-card data source
+        const isDefaultCard = isLeftPanel && groupName !== '其他' && cols.length > 0 && cols.every(c => !availableDataSource.some(a => a.id === c.id));
+        const defaultLockHtml = isDefaultCard ? '<i class="ph-bold ph-lock-simple default-card-lock" data-tooltip="预设栏位，仅可在主表中调整顺序"></i>' : '';
+        const dragIconHtml = canDrag ? '<i class="ph-bold ph-dots-six-vertical" style="color: #94a3b8; font-size: 20px;"></i>' : '';
+
         let innerHtml = `
-            <div class="category-block-draggable" data-cat="${groupName}" draggable="${groupName !== '其他' ? 'true' : 'false'}" style="margin-bottom: 16px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; background: #fdfdfd;">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; cursor: ${groupName !== '其他' ? 'grab' : 'default'};">
+            <div class="category-block-draggable" data-cat="${groupName}" data-all-in-main="${!isLeftPanel && allInMainTable ? 'true' : 'false'}" data-default-card="${isDefaultCard ? 'true' : 'false'}" draggable="${dragAttr}" style="margin-bottom: 16px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; background: #fdfdfd;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; cursor: ${cursorStyle};">
                     <div style="display: flex; align-items: center; gap: 6px;">
-                        ${groupName !== '其他' ? '<i class="ph-bold ph-dots-six-vertical" style="color: #cbd5e1;"></i>' : ''}
+                        ${dragIconHtml}
                         <span style="font-size: 14px; font-weight: 600; color: #475569;">${groupName}</span>
+                        ${defaultLockHtml}
                     </div>
                     ${groupName === '其他' ? '' : `<div style="display:flex; align-items:center; border: 1px solid #e2e8f0; background: #fff; border-radius: 6px; overflow: hidden;" onclick="event.stopPropagation()">
                         <button type="button" style="background:none; border:none; color:#94a3b8; cursor:pointer; padding: 4px 8px; border-right: 1px solid #e2e8f0; display:flex; align-items:center; justify-content:center;" onclick="${upFn}" title="向上移动"><i class="ph-bold ph-caret-up"></i></button>
@@ -3802,12 +3904,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return innerHtml;
     }
 
-    function renderDrawerStates() {
+    function _renderDrawerStatesOriginal() {
         const col1 = document.getElementById('col1-table-fields');
         const col2 = document.getElementById('col2-card-fields');
 
         if (!col1 || !col2) return;
 
+        ensureActionColumnLast();
         col1.innerHTML = '';
         col2.innerHTML = '';
 
@@ -3838,11 +3941,20 @@ document.addEventListener('DOMContentLoaded', () => {
             rightGroups[grp].push(col);
         });
 
-        const catKeys = Object.keys(rightGroups).sort((a, b) => {
-            const idxA = drawerCategoryOrder.indexOf(a);
-            const idxB = drawerCategoryOrder.indexOf(b);
-            return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
-        });
+        // Match the expanded-card order in the list: cards currently shown come first (in list order),
+        // cards with nothing to show (all hidden or all moved to the main table) sink below, 其他 stays last.
+        const isShownInCard = (grp) => rightGroups[grp].some(c => dataSourceFieldVisibility[c.id] !== false && !list.some(x => x.id === c.id));
+        const orderIdx = (grp) => {
+            const i = drawerCategoryOrder.indexOf(grp);
+            return i === -1 ? 999 : i;
+        };
+        const sectionOf = (grp) => grp === '其他' ? 2 : (isShownInCard(grp) ? 0 : 1);
+        const catKeys = Object.keys(rightGroups).sort((a, b) => (sectionOf(a) - sectionOf(b)) || (orderIdx(a) - orderIdx(b)));
+
+        // Keep the shared order in sync so the list cards, up/down buttons and drag all follow what the drawer shows
+        const extraCats = drawerCategoryOrder.filter(c => !catKeys.includes(c));
+        drawerCategoryOrder.length = 0;
+        drawerCategoryOrder.push(...catKeys, ...extraCats);
 
         catKeys.forEach(grp => {
             col2.innerHTML += renderCategoryCard(grp, rightGroups[grp], false);
@@ -3852,6 +3964,103 @@ document.addEventListener('DOMContentLoaded', () => {
         const badge2 = document.getElementById('badge-col2');
         if (badge1) badge1.textContent = list.length - 1; // subtract action
         if (badge2) badge2.textContent = availableDataSource.length;
+    }
+
+    // --- Smooth FLIP animation shared by drawer re-render and drag reordering ---
+    const FLIP_SELECTOR = '[data-id], [data-cat], .drag-placeholder, .drag-placeholder-pill';
+    const FLIP_DURATION = 220;
+    const FLIP_EASING = 'cubic-bezier(0.2, 0, 0, 1)'; // ease-out, no overshoot
+
+    function flipKey(el, scope) {
+        if (el.hasAttribute('data-id')) return scope + '|id:' + el.getAttribute('data-id');
+        if (el.hasAttribute('data-cat')) return scope + '|cat:' + el.getAttribute('data-cat');
+        return scope + '|placeholder';
+    }
+
+    function drawerFlip(containers, mutate, options = {}) {
+        containers = containers.filter(Boolean);
+        if (containers.length === 0) { mutate(); return; }
+
+        // First: current on-screen positions (including any in-flight transforms)
+        const first = new Map();
+        containers.forEach((c, i) => {
+            c.querySelectorAll(FLIP_SELECTOR).forEach(el => {
+                const r = el.getBoundingClientRect();
+                if (r.width > 0 || r.height > 0) first.set(flipKey(el, i), r);
+            });
+        });
+        if (options.seeds) options.seeds.forEach((rect, key) => first.set(key, rect));
+
+        mutate();
+
+        // Reset in-flight animations so we measure the true layout position
+        const items = [];
+        containers.forEach((c, i) => {
+            c.querySelectorAll(FLIP_SELECTOR).forEach(el => {
+                if (el.style.display === 'none') return;
+                el.style.transition = 'none';
+                el.style.transform = '';
+                items.push({ el, key: flipKey(el, i), container: c });
+            });
+        });
+
+        // Last + Invert: deltas relative to the nearest animated ancestor, so nested items don't double-move
+        const raw = new Map();
+        items.forEach(it => {
+            const f = first.get(it.key);
+            if (!f) return;
+            const l = it.el.getBoundingClientRect();
+            raw.set(it.el, { dx: f.left - l.left, dy: f.top - l.top });
+        });
+
+        const moving = [];
+        const entering = [];
+        items.forEach(it => {
+            const d = raw.get(it.el);
+            if (!d) {
+                if (options.fadeIn !== false && !it.el.className.toString().includes('placeholder')) entering.push(it.el);
+                return;
+            }
+            let dx = d.dx, dy = d.dy;
+            let p = it.el.parentElement;
+            while (p && p !== it.container) {
+                if (raw.has(p)) { dx -= raw.get(p).dx; dy -= raw.get(p).dy; break; }
+                p = p.parentElement;
+            }
+            if (Math.abs(dx) >= 0.5 || Math.abs(dy) >= 0.5) {
+                it.el.style.transform = `translate(${dx}px, ${dy}px)`;
+                moving.push(it.el);
+            }
+        });
+        entering.forEach(el => { el.style.opacity = '0'; });
+
+        if (moving.length === 0 && entering.length === 0) return;
+        void containers[0].offsetHeight; // commit the inverted state before playing
+
+        // Play
+        moving.forEach(el => {
+            el.style.transition = `transform ${FLIP_DURATION}ms ${FLIP_EASING}`;
+            el.style.transform = '';
+        });
+        entering.forEach(el => {
+            el.style.transition = `opacity ${FLIP_DURATION}ms ease-out`;
+            el.style.opacity = '';
+        });
+        [...moving, ...entering].forEach(el => {
+            const token = (el._flipToken || 0) + 1;
+            el._flipToken = token;
+            setTimeout(() => {
+                if (el._flipToken === token) el.style.transition = '';
+            }, FLIP_DURATION + 20);
+        });
+    }
+    window.drawerFlip = drawerFlip;
+
+    function renderDrawerStates(seeds) {
+        const col1 = document.getElementById('col1-table-fields');
+        const col2 = document.getElementById('col2-card-fields');
+        if (!col1 || !col2) return;
+        drawerFlip([col1, col2], _renderDrawerStatesOriginal, { seeds });
     }
     window.moveColumnLeft = function (id) {
         let list = currentTableMode === 'nested' ? nestedColumnsConfig : compactColumnsConfig;
@@ -4032,6 +4241,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     function updateTableFromDrawer() {
+        ensureActionColumnLast();
         if (typeof renderTable === 'function') {
             renderTable(true);
         }
@@ -4138,36 +4348,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const walletDetailBody = document.getElementById('walletDetailBody');
     const btnWalletDetailClose = document.getElementById('btnWalletDetailClose');
 
+    // Nested-mode amount links share the same per-currency modal as the compact table / expanded cards
     window.openWalletDetailModal = function (title, wallet, mainAmount) {
-        if (!walletDetailModal) return;
-        walletDetailTitle.textContent = title;
-        walletDetailCurrency.textContent = wallet;
-
-        // Formatted amount if it's a number string
-        let formattedMain = mainAmount;
-        if (!isNaN(parseFloat(mainAmount)) && mainAmount.toString().indexOf(',') === -1 && mainAmount !== '-') {
-            formattedMain = parseFloat(mainAmount).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-        }
-
-        // Use mock data mimicking the screenshot
-        const mockCurrencies = [
-            { curr: 'RMB', val: wallet === 'RMB' ? formattedMain : '2,727' },
-            { curr: 'VND', val: '22,326,998' },
-            { curr: 'PHP', val: '11,039' },
-            { curr: 'MYR', val: '420.69' },
-            { curr: 'USDT', val: wallet === 'USDT' ? formattedMain : '51.62' }
-        ];
-
-        let html = '';
-        mockCurrencies.forEach(item => {
-            html += `<tr class="wallet-detail-table-row">
-                <td>${item.curr}</td>
-                <td>${item.val}</td>
-            </tr>`;
-        });
-        walletDetailBody.innerHTML = html;
-
-        walletDetailModal.classList.add('show');
+        if (!['RMB', 'VND', 'PHP', 'MYR', 'USDT'].includes(wallet)) return; // e.g. 会员积分 has no currency breakdown
+        const raw = mainAmount === undefined || mainAmount === null ? '' : String(mainAmount).replace(/,/g, '').trim();
+        const amount = raw === '' || raw === '-' || isNaN(Number(raw)) ? null : Number(raw);
+        window.openCurrencyModal(title, amount, wallet);
     };
 
     if (btnWalletDetailClose) {
@@ -4278,12 +4464,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 const targetRate = rates[newUnit] || 1;
                 const conversionFactor = targetRate / baseRate;
                 
+                const detailCard = dropdown.closest('.detail-card');
+                const cardBody = detailCard.querySelector('.detail-card-body');
+                
                 // Update micro-header currency labels
-                const labels = cardBody.querySelectorAll('.main-currency-label');
+                const labels = detailCard.querySelectorAll('.main-currency-label');
                 labels.forEach(l => l.textContent = newUnit);
 
                 // Synchronize all dropdown titles and checkmarks in this card
-                cardBody.querySelectorAll('.custom-unit-dropdown').forEach(dd => {
+                detailCard.querySelectorAll('.custom-unit-dropdown').forEach(dd => {
                     const titleSpan = dd.querySelector('.dropdown-title');
                     if (titleSpan) {
                         const mainCurrency = dd.getAttribute('data-main-currency');
@@ -4329,6 +4518,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         case 'ds_balTreas': rawVal = 15000; isAmount = true; break;
                         case 'ds_balInt': rawVal = 35; isAmount = true; break;
                         case 'ds_debt': rawVal = user.arrears; isAmount = true; break;
+                        case 'ds_creditVal': rawVal = user.creditValue; isAmount = true; break;
+                        case 'availableCredit': rawVal = user.availableCredit; isAmount = true; break;
+                        case 'thirdBal': rawVal = user.thirdBal; isAmount = true; break;
                     }
                     
                     if (isAmount) {
@@ -4363,134 +4555,436 @@ document.addEventListener('DOMContentLoaded', () => {
     }, true);
 
     // --- Drag and Drop Logic ---
+    window.doFlipAnimation = function(container, changeCallback) {
+        drawerFlip([container], changeCallback, { fadeIn: false });
+    };
+
     let draggedElement = null;
     let dragType = null; // 'pill' or 'category'
+    let placeholder = null;
+    let dragSize = null;
+    let lastReorderAt = 0;
 
     document.addEventListener('dragstart', (e) => {
         const pill = e.target.closest('.draggable-pill');
         const cat = e.target.closest('.category-block-draggable');
         
-        if (pill) {
+        if (pill && pill.getAttribute('draggable') === 'true') {
             draggedElement = pill;
             dragType = 'pill';
-            pill.style.opacity = '0.5';
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('text/plain', 'pill');
-        } else if (cat) {
+        } else if (cat && cat.getAttribute('draggable') === 'true') {
             draggedElement = cat;
             dragType = 'category';
-            cat.style.opacity = '0.5';
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('text/plain', 'category');
         }
+        
+        if (!draggedElement) return;
+        
+        // Placeholder takes the exact footprint of the dragged item so neighbours don't reflow/jump
+        const r = draggedElement.getBoundingClientRect();
+        dragSize = { width: r.width, height: r.height };
+        placeholder = document.createElement('div');
+        placeholder.className = dragType === 'pill' ? 'drag-placeholder-pill' : 'drag-placeholder';
+        if (dragType === 'pill') {
+            placeholder.style.width = r.width + 'px';
+            placeholder.style.height = r.height + 'px';
+        } else {
+            placeholder.style.height = r.height + 'px';
+        }
+        
+        setTimeout(() => {
+            if (!draggedElement) return;
+            draggedElement.style.display = 'none';
+            if (draggedElement.parentNode) {
+                draggedElement.parentNode.insertBefore(placeholder, draggedElement);
+            }
+        }, 0);
     });
 
-    document.addEventListener('dragend', (e) => {
+    // Floating hint shown when a card is dragged over a panel it cannot be dropped into
+    let dragBlockHint = null;
+    function showDragBlockHint(x, y, text, panel, muted) {
+        if (!dragBlockHint) {
+            dragBlockHint = document.createElement('div');
+            dragBlockHint.className = 'drag-block-hint';
+            document.body.appendChild(dragBlockHint);
+        }
+        dragBlockHint.innerHTML = `<i class="ph-bold ph-prohibit"></i> ${text}`;
+        dragBlockHint.style.left = (x + 14) + 'px';
+        dragBlockHint.style.top = (y + 14) + 'px';
+        dragBlockHint.style.display = 'flex';
+        dragBlockHint.classList.toggle('is-muted', !!muted);
+        if (panel) panel.classList.add(muted ? 'drop-blocked-muted' : 'drop-blocked');
+    }
+    function hideDragBlockHint() {
+        if (dragBlockHint) dragBlockHint.style.display = 'none';
+        document.querySelectorAll('.drop-blocked, .drop-blocked-muted').forEach(el => el.classList.remove('drop-blocked', 'drop-blocked-muted'));
+    }
+
+    function cleanUpDrag() {
+        hideDragBlockHint();
+        if (placeholder && placeholder.parentNode) {
+            placeholder.parentNode.removeChild(placeholder);
+        }
+        placeholder = null;
+        dragSize = null;
         if (draggedElement) {
-            draggedElement.style.opacity = '1';
+            draggedElement.style.display = '';
             draggedElement = null;
             dragType = null;
         }
-    });
+    }
+
+    document.addEventListener('dragend', cleanUpDrag);
+
+    // Layout rect = on-screen rect minus any in-flight FLIP transform, so hit-testing is stable while items animate
+    function layoutRect(el) {
+        const r = el.getBoundingClientRect();
+        let tx = 0, ty = 0;
+        if (el.style.transform) {
+            const m = new DOMMatrixReadOnly(getComputedStyle(el).transform);
+            tx = m.m41; ty = m.m42;
+        }
+        return { left: r.left - tx, right: r.right - tx, top: r.top - ty, bottom: r.bottom - ty, width: r.width, height: r.height };
+    }
+
+    function movePlaceholder(container, parent, refNode) {
+        if (refNode === placeholder) return;
+        if (placeholder.parentNode === parent && placeholder.nextSibling === refNode) return;
+        const now = performance.now();
+        if (now - lastReorderAt < 60) return; // tiny debounce against flicker on boundaries
+        lastReorderAt = now;
+        drawerFlip([container], () => parent.insertBefore(placeholder, refNode), { fadeIn: false });
+    }
 
     document.addEventListener('dragover', (e) => {
-        e.preventDefault(); // allow drop
+        e.preventDefault(); 
         e.dataTransfer.dropEffect = 'move';
+        
+        if (!draggedElement || !placeholder) return;
+        
+        const col1 = document.getElementById('col1-table-fields');
+        const col2 = document.getElementById('col2-card-fields');
+        const overCol1 = col1 && col1.contains(e.target);
+        const overCol2 = col2 && col2.contains(e.target);
+        const fromLeft = col1 && col1.contains(draggedElement);
+        const x = e.clientX, y = e.clientY;
+
+        if (dragType === 'pill') {
+            // Pills reorder only among siblings in their own group
+            const group = draggedElement.parentNode;
+            if (!group || !group.contains(e.target) && !group.contains(e.target.closest('.draggable-pill'))) return;
+            const pills = [...group.querySelectorAll(':scope > .draggable-pill')].filter(p => p !== draggedElement);
+            for (const p of pills) {
+                const r = layoutRect(p);
+                if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+                    const before = x < r.left + r.width / 2;
+                    movePlaceholder(col1, group, before ? p : p.nextSibling);
+                    return;
+                }
+            }
+            return;
+        }
+
+        // Category blocks
+        if (overCol1 && !fromLeft && draggedElement.getAttribute('data-all-in-main') === 'true') {
+            e.dataTransfer.dropEffect = 'none';
+            showDragBlockHint(x, y, `「${draggedElement.getAttribute('data-cat')}」已在主表，无法拖入`, col1, false);
+            return;
+        }
+        if (overCol2 && fromLeft) {
+            e.dataTransfer.dropEffect = 'none';
+            const cat = draggedElement.getAttribute('data-cat');
+            const text = draggedElement.getAttribute('data-default-card') === 'true'
+                ? `「${cat}」为预设栏位，无法放入展开卡片`
+                : `「${cat}」无法整组移出，请点栏位上的 ✕ 移回展开卡片`;
+            showDragBlockHint(x, y, text, col2, true);
+            return;
+        }
+        hideDragBlockHint();
+
+        let container = null;
+        if (overCol1) container = col1;
+        else if (overCol2 && !fromLeft) container = col2;
+        if (!container) return;
+
+        const qitaNode = container.querySelector(':scope > .category-block-draggable[data-cat="其他"]');
+        const blocks = [...container.querySelectorAll(':scope > .category-block-draggable')]
+            .filter(c => c !== draggedElement && c.getAttribute('data-cat') !== '其他' && c.style.display !== 'none');
+
+        if (placeholder.parentNode !== container) {
+            // Entering a different panel: use a compact placeholder there
+            placeholder.style.height = (container.contains(draggedElement) && dragSize) ? dragSize.height + 'px' : '56px';
+        }
+
+        for (const blk of blocks) {
+            const r = layoutRect(blk);
+            if (y >= r.top && y <= r.bottom) {
+                const before = y < r.top + r.height / 2;
+                movePlaceholder(container, container, before ? blk : blk.nextSibling);
+                return;
+            }
+        }
+
+        // Not over a block: snap to the end (but always before 其他), or ignore if inside the list gaps
+        const last = blocks[blocks.length - 1];
+        if (!last || y > layoutRect(last).bottom) {
+            movePlaceholder(container, container, qitaNode || null);
+        } else if (y < layoutRect(blocks[0]).top) {
+            movePlaceholder(container, container, blocks[0]);
+        }
     });
-    
-    document.addEventListener('dragenter', (e) => {
-        e.preventDefault();
-    });
+
+    document.addEventListener('dragenter', e => e.preventDefault());
 
     document.addEventListener('drop', (e) => {
         e.preventDefault();
-        if (!draggedElement) return;
+        if (!draggedElement || !placeholder) return;
+        
+        const isLeftPanel = draggedElement.closest('#col1-table-fields') !== null;
+        const targetIsLeftPanel = placeholder.closest('#col1-table-fields') !== null;
+
+        // Let the dropped item glide from where the placeholder sits instead of popping in
+        const dropSeeds = new Map();
+        const phRect = placeholder.getBoundingClientRect();
+        const targetScope = targetIsLeftPanel ? 0 : 1;
+        if (dragType === 'pill') {
+            dropSeeds.set(targetScope + '|id:' + draggedElement.getAttribute('data-id'), phRect);
+        } else {
+            dropSeeds.set(targetScope + '|cat:' + draggedElement.getAttribute('data-cat'), phRect);
+        }
+        
+        if (dragType === 'pill' && (!isLeftPanel || !targetIsLeftPanel)) {
+            cleanUpDrag();
+            return;
+        }
+        if (dragType === 'category' && isLeftPanel && !targetIsLeftPanel) {
+            cleanUpDrag();
+            return;
+        }
+        if (dragType === 'category' && !isLeftPanel && draggedElement.getAttribute('data-all-in-main') === 'true'
+            && (targetIsLeftPanel || e.target.closest('#col1-table-fields'))) {
+            cleanUpDrag();
+            return;
+        }
 
         if (dragType === 'pill') {
-            const dropTarget = e.target.closest('.draggable-pill');
-            if (dropTarget && dropTarget !== draggedElement) {
-                const idFrom = draggedElement.getAttribute('data-id');
-                const idTo = dropTarget.getAttribute('data-id');
-                
-                // Only allow swapping in the left panel (main table columns)
-                let list = currentTableMode === 'nested' ? nestedColumnsConfig : compactColumnsConfig;
-                
-                const idxFrom = list.findIndex(c => c.id === idFrom);
-                const idxTo = list.findIndex(c => c.id === idTo);
-                
-                if (idxFrom !== -1 && idxTo !== -1) {
-                    const temp = list[idxFrom];
-                    list[idxFrom] = list[idxTo];
-                    list[idxTo] = temp;
-                    renderDrawerStates();
-                    updateTableFromDrawer();
+            const idFrom = draggedElement.getAttribute('data-id');
+            let list = currentTableMode === 'nested' ? nestedColumnsConfig : compactColumnsConfig;
+            
+            // Find target element to insert before
+            let nextPill = placeholder.nextElementSibling;
+            while(nextPill && (nextPill === draggedElement || !nextPill.classList.contains('draggable-pill'))) {
+                nextPill = nextPill.nextElementSibling;
+            }
+            
+            const idxFrom = list.findIndex(c => c.id === idFrom);
+            if (idxFrom !== -1) {
+const item = list.splice(idxFrom, 1)[0];
+                let newIdxTo = -1;
+                if (nextPill) {
+                    newIdxTo = list.findIndex(c => c.id === nextPill.getAttribute('data-id'));
+                } else {
+                    let prevPill = placeholder.previousElementSibling;
+                    while (prevPill && (prevPill === draggedElement || !prevPill.classList.contains('draggable-pill'))) {
+                        prevPill = prevPill.previousElementSibling;
+                    }
+                    if (prevPill) {
+                        const prevIdx = list.findIndex(c => c.id === prevPill.getAttribute('data-id'));
+                        if (prevIdx !== -1) newIdxTo = prevIdx + 1;
+                    }
                 }
+                if (newIdxTo === -1) {
+                    const actionIdx = list.findIndex(c => c.id === 'action');
+                    newIdxTo = actionIdx !== -1 ? actionIdx : list.length;
+                }
+                list.splice(newIdxTo, 0, item);
+                renderDrawerStates(dropSeeds);
+                updateTableFromDrawer();
+                if(typeof window.applyDrawerOrderToTable === 'function') window.applyDrawerOrderToTable();
             }
         } else if (dragType === 'category') {
-            const dropTarget = e.target.closest('.category-block-draggable');
-            if (dropTarget && dropTarget !== draggedElement) {
-                const catFrom = draggedElement.getAttribute('data-cat');
-                const catTo = dropTarget.getAttribute('data-cat');
+            const catFrom = draggedElement.getAttribute('data-cat');
+            if (catFrom === '其他') {
+                cleanUpDrag();
+                return;
+            }
+            
+            let nextCat = placeholder.nextElementSibling;
+            while(nextCat && (nextCat === draggedElement || !nextCat.classList.contains('category-block-draggable'))) {
+                nextCat = nextCat.nextElementSibling;
+            }
+            const targetCat = nextCat ? nextCat.getAttribute('data-cat') : null;
+            
+            if (!isLeftPanel && targetIsLeftPanel) {
+                const colsInCat = availableDataSource.filter(c => (c.category || c.group || '其他') === catFrom);
+                let list = currentTableMode === 'nested' ? nestedColumnsConfig : compactColumnsConfig;
                 
-                if (catFrom === '其他' || catTo === '其他') return; // Do not move '其他'
+                const actionIdx = list.findIndex(c => c.id === 'action');
+                let targetIndex = actionIdx !== -1 ? actionIdx : list.length;
+                if (targetCat) {
+                    const firstIdx = list.findIndex(c => (c.category || c.group || '其他') === targetCat);
+                    if (firstIdx !== -1) targetIndex = firstIdx;
+                }
                 
-                const isLeftPanel = draggedElement.closest('#col1-table-fields') !== null;
-                const dropTargetIsLeftPanel = dropTarget.closest('#col1-table-fields') !== null;
+                const existingCols = [];
+                for (let i = list.length - 1; i >= 0; i--) {
+                    if ((list[i].category || list[i].group || '其他') === catFrom) {
+                        existingCols.unshift(list.splice(i, 1)[0]);
+                        if (i < targetIndex) targetIndex--;
+                    }
+                }
                 
-                // Prevent dragging between left and right panels
-                if (isLeftPanel !== dropTargetIsLeftPanel) return;
-
-                if (isLeftPanel) {
-                    let list = currentTableMode === 'nested' ? nestedColumnsConfig : compactColumnsConfig;
-                    const leftGroups = {};
-                    const leftGroupOrder = [];
-                    list.forEach(col => {
-                        if (['action'].includes(col.id)) return;
-                        const grp = col.category || col.group || '其他';
-                        if (!leftGroups[grp]) {
-                            leftGroups[grp] = [];
-                            leftGroupOrder.push(grp);
+                colsInCat.forEach(c => {
+                    if (c.id === 'action') return;
+                    const existing = existingCols.find(e => e.id === c.id);
+                    if (existing) {
+                        list.splice(targetIndex, 0, existing);
+                    } else {
+                        list.splice(targetIndex, 0, {...c});
+                        if (typeof tableFieldVisibility !== 'undefined') tableFieldVisibility[c.id] = true;
+                        if (currentTableMode === 'nested') {
+                            nestedColumnVisibility[c.id] = true;
+                        } else {
+                            compactColumnVisibility[c.id] = true;
                         }
-                        leftGroups[grp].push(col);
+                        if (typeof dataSourceFieldVisibility !== 'undefined') dataSourceFieldVisibility[c.id] = true;
+                    }
+                    targetIndex++;
+                });
+                renderDrawerStates(dropSeeds);
+                updateTableFromDrawer();
+                if(typeof window.applyDrawerOrderToTable === 'function') window.applyDrawerOrderToTable();
+            } else if (isLeftPanel && targetIsLeftPanel) {
+                let list = currentTableMode === 'nested' ? nestedColumnsConfig : compactColumnsConfig;
+                const leftGroups = {};
+                const leftGroupOrder = [];
+                list.forEach(col => {
+                    if (['action'].includes(col.id)) return;
+                    const grp = col.category || col.group || '其他';
+                    if (!leftGroups[grp]) {
+                        leftGroups[grp] = [];
+                        leftGroupOrder.push(grp);
+                    }
+                    leftGroups[grp].push(col);
+                });
+                
+                const idxFrom = leftGroupOrder.indexOf(catFrom);
+                if (idxFrom !== -1) {
+                    const item = leftGroupOrder.splice(idxFrom, 1)[0];
+                    let newIdxTo = leftGroupOrder.length;
+                    if (targetCat) {
+                        const foundIdx = leftGroupOrder.indexOf(targetCat);
+                        if (foundIdx !== -1) newIdxTo = foundIdx;
+                    }
+                    leftGroupOrder.splice(newIdxTo, 0, item);
+                    
+                    const newList = [];
+                    leftGroupOrder.forEach(grp => {
+                        newList.push(...leftGroups[grp]);
                     });
                     
-                    const idxFrom = leftGroupOrder.indexOf(catFrom);
-                    const idxTo = leftGroupOrder.indexOf(catTo);
-                    
-                    if (idxFrom !== -1 && idxTo !== -1) {
-                        const temp = leftGroupOrder[idxFrom];
-                        leftGroupOrder[idxFrom] = leftGroupOrder[idxTo];
-                        leftGroupOrder[idxTo] = temp;
-                        
-                        const newList = [];
-                        leftGroupOrder.forEach(grp => {
-                            newList.push(...leftGroups[grp]);
-                        });
-                        
-                        if (currentTableMode === 'nested') {
-                            nestedColumnsConfig.length = 0;
-                            nestedColumnsConfig.push(...newList);
-                        } else {
-                            compactColumnsConfig.length = 0;
-                            compactColumnsConfig.push(...newList);
-                        }
-                        renderDrawerStates();
-                        updateTableFromDrawer();
+                    if (currentTableMode === 'nested') {
+                        nestedColumnsConfig.length = 0;
+                        nestedColumnsConfig.push(...newList);
+                    } else {
+                        compactColumnsConfig.length = 0;
+                        compactColumnsConfig.push(...newList);
                     }
-                } else {
-                    const idxFrom = drawerCategoryOrder.indexOf(catFrom);
-                    const idxTo = drawerCategoryOrder.indexOf(catTo);
-                    
-                    if (idxFrom !== -1 && idxTo !== -1) {
-                        const temp = drawerCategoryOrder[idxFrom];
-                        drawerCategoryOrder[idxFrom] = drawerCategoryOrder[idxTo];
-                        drawerCategoryOrder[idxTo] = temp;
-                        renderDrawerStates();
-                        if(typeof window.applyDrawerOrderToTable === 'function') window.applyDrawerOrderToTable();
+                    renderDrawerStates(dropSeeds);
+                    updateTableFromDrawer();
+                    if(typeof window.applyDrawerOrderToTable === 'function') window.applyDrawerOrderToTable();
+                }
+            } else {
+                const idxFrom = drawerCategoryOrder.indexOf(catFrom);
+                if (idxFrom !== -1) {
+                    const item = drawerCategoryOrder.splice(idxFrom, 1)[0];
+                    let newIdxTo = drawerCategoryOrder.length;
+                    if (targetCat) {
+                        const foundIdx = drawerCategoryOrder.indexOf(targetCat);
+                        if (foundIdx !== -1) newIdxTo = foundIdx;
                     }
+                    drawerCategoryOrder.splice(newIdxTo, 0, item);
+                    renderDrawerStates(dropSeeds);
+                    if(typeof window.applyDrawerOrderToTable === 'function') window.applyDrawerOrderToTable();
                 }
             }
         }
+        cleanUpDrag();
     });
+
+    // Expanded-card values truncated by the card max-width show their full text on hover
+    document.addEventListener('mouseover', (e) => {
+        const el = e.target.closest('.detail-card .ds-field > :not(.lbl)');
+        if (!el || el.hasAttribute('title')) return;
+        if (el.scrollWidth > el.clientWidth + 1) el.setAttribute('title', el.innerText.trim());
+    });
+
+    // ── Global tooltip (appended to body, never clipped by overflow:hidden) ──
+    (function initGlobalTooltip() {
+        const tip = document.createElement('div');
+        tip.id = 'global-tooltip';
+        Object.assign(tip.style, {
+            position: 'fixed',
+            background: '#1e293b',
+            color: '#fff',
+            padding: '6px 10px',
+            borderRadius: '4px',
+            fontSize: '12px',
+            whiteSpace: 'nowrap',
+            pointerEvents: 'none',
+            zIndex: '999999',
+            boxShadow: '0 4px 6px -1px rgba(0,0,0,.15)',
+            opacity: '0',
+            transition: 'opacity 0.15s ease',
+            display: 'none'
+        });
+        document.body.appendChild(tip);
+
+        let hideTimer;
+
+        document.addEventListener('mouseover', (e) => {
+            const el = e.target.closest('[data-tooltip]');
+            if (!el) return;
+
+            clearTimeout(hideTimer);
+            tip.textContent = el.dataset.tooltip;
+            tip.style.display = 'block';
+
+            // Position: below element by default, auto-flip if near bottom
+            requestAnimationFrame(() => {
+                const rect = el.getBoundingClientRect();
+                const tipW = tip.offsetWidth;
+                const tipH = tip.offsetHeight;
+                const gap = 8;
+
+                let top = rect.bottom + gap;
+                let left = rect.left + rect.width / 2 - tipW / 2;
+
+                // Flip upward if overflows viewport bottom
+                if (top + tipH > window.innerHeight - 10) {
+                    top = rect.top - tipH - gap;
+                }
+                // Clamp horizontally
+                left = Math.max(8, Math.min(left, window.innerWidth - tipW - 8));
+
+                tip.style.top = top + 'px';
+                tip.style.left = left + 'px';
+                tip.style.opacity = '1';
+            });
+        });
+
+        document.addEventListener('mouseout', (e) => {
+            const el = e.target.closest('[data-tooltip]');
+            if (!el) return;
+            hideTimer = setTimeout(() => {
+                tip.style.opacity = '0';
+                tip.style.display = 'none';
+            }, 80);
+        });
+    })();
 
 });
