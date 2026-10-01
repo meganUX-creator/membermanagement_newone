@@ -14,6 +14,9 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     let drawerCategoryOrder = ['基本资料', '额度', '存取款资料', '成长与积分', '推荐关系', '余额宝', '信贷', '用户标签', '其他'];
     let drawerCategoryVisibility = { '信贷': false };
+    // Order of the 主钱包 / 汇总 columns inside the expanded 存取款资料 card (展开卡片)
+    const DEPOSIT_SUB_TAGS = ['主钱包', '汇总'];
+    const depositCardSubOrder = [...DEPOSIT_SUB_TAGS];
 
     window.moveCategoryUp = function (cat) {
         const idx = drawerCategoryOrder.indexOf(cat);
@@ -52,6 +55,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     return idxA - idxB;
                 });
                 cards.forEach(card => wrapper.appendChild(card));
+
+                // 存取款资料 card: 主钱包 / 汇总 value columns follow the 展开卡片 sub-block order
+                const summaryFirst = depositCardSubOrder[0] === '汇总';
+                wrapper.querySelectorAll('.detail-card[data-category="存取款资料"]').forEach(card => {
+                    card.querySelectorAll('.detail-card-header div[style*="grid-template-columns: 1fr 1fr"]').forEach(grid => {
+                        const [mainLbl, sumLbl] = grid.children;
+                        if (mainLbl) mainLbl.style.order = summaryFirst ? '2' : '';
+                        if (sumLbl) sumLbl.style.order = summaryFirst ? '1' : '';
+                    });
+                    card.querySelectorAll('.ds-val-grid > [data-ds-id$="_main"]').forEach(el => { el.style.order = summaryFirst ? '2' : ''; });
+                    card.querySelectorAll('.ds-val-grid > [data-ds-id$="_summary"]').forEach(el => { el.style.order = summaryFirst ? '1' : ''; });
+                });
 
                 const activeLists = typeof getActiveLists === 'function' ? getActiveLists() : { frozen: [], scroll: [] };
 
@@ -3570,10 +3585,14 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // 3. Expanded card area = visible width of the table viewport (it sticks there while scrolling sideways)
+        // 3. Expanded card area = visible width of the table viewport (it sticks there while scrolling sideways),
+        //    minus the right-pinned 操作 column so the cards never slide underneath it
         const wrapper = table.closest('.table-wrapper');
         if (wrapper) {
-            const visible = Math.min(wrapper.clientWidth, subRow.getBoundingClientRect().width) - 32; // td padding 16px × 2
+            const rightPinnedWidth = [...subRow.children]
+                .filter(th => th.classList.contains('sticky-col-right'))
+                .reduce((sum, th) => sum + th.getBoundingClientRect().width, 0);
+            const visible = Math.min(wrapper.clientWidth, subRow.getBoundingClientRect().width) - 32 - rightPinnedWidth; // td padding 16px × 2
             table.style.setProperty('--detail-visible-width', Math.max(0, Math.floor(visible)) + 'px');
         }
     }
@@ -3812,6 +3831,7 @@ document.addEventListener('DOMContentLoaded', () => {
         drawerCategoryOrder.length = 0;
         drawerCategoryOrder.push(...customColumnDefaults.categoryOrder);
         dataSourceFieldVisibility = { ...customColumnDefaults.dataSourceVisibility };
+        depositCardSubOrder.splice(0, depositCardSubOrder.length, ...DEPOSIT_SUB_TAGS);
 
         renderDrawerStates();
         updateTableFromDrawer();
@@ -4036,19 +4056,29 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         if (groupName === '存取款资料') {
-            const mainWalletCols = cols.filter(c => c.tag === '主钱包');
-            const summaryCols = cols.filter(c => c.tag === '汇总');
-            
-            innerHtml += `
-                <div style="border: 1px solid #eff6ff; border-radius: 6px; background: #f8fafc; padding: 12px; margin-bottom: 12px;">
-                    <div style="font-size: 13px; font-weight: 600; color: #1d4ed8; margin-bottom: 12px;">主钱包</div>
-                    ${renderPills(mainWalletCols, isLeftPanel)}
-                </div>
-                <div style="border: 1px solid #faf5ff; border-radius: 6px; background: #f8fafc; padding: 12px;">
-                    <div style="font-size: 13px; font-weight: 600; color: #7e22ce; margin-bottom: 12px;">汇总 (USDT)</div>
-                    ${renderPills(summaryCols, isLeftPanel)}
-                </div>
-            `;
+            // 主钱包 / 汇总 (USDT) sub-blocks, each movable up/down (主表: column order; 展开卡片: card column order)
+            const subDefs = {
+                '主钱包': { label: '主钱包', color: '#1d4ed8', border: '#eff6ff', cols: cols.filter(c => c.tag === '主钱包') },
+                '汇总': { label: '汇总 (USDT)', color: '#7e22ce', border: '#faf5ff', cols: cols.filter(c => c.tag === '汇总') }
+            };
+            const subOrder = isLeftPanel ? getDepositSubOrder(cols) : depositCardSubOrder;
+            const target = isLeftPanel ? 'table' : 'card';
+            subOrder.forEach((tag, i) => {
+                const def = subDefs[tag];
+                const canSubUp = i > 0;
+                const canSubDown = i < subOrder.length - 1;
+                innerHtml += `
+                <div class="deposit-subgroup" data-subgroup="${tag}" style="border: 1px solid ${def.border}; border-radius: 6px; background: #f8fafc; padding: 12px; ${i < subOrder.length - 1 ? 'margin-bottom: 12px;' : ''}">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                        <div style="font-size: 13px; font-weight: 600; color: ${def.color};">${def.label}</div>
+                        <div style="display:flex; align-items:center; border: 1px solid #e2e8f0; background: #fff; border-radius: 6px; overflow: hidden;" onclick="event.stopPropagation()">
+                            <button type="button" class="subgroup-move-btn" ${canSubUp ? '' : 'disabled aria-disabled="true"'} style="background:none; border:none; color:#94a3b8; cursor:pointer; padding: 2px 6px; border-right: 1px solid #e2e8f0; display:flex; align-items:center; justify-content:center; ${canSubUp ? '' : MOVE_BTN_DISABLED_STYLE}" onclick="window.moveDepositSubgroup('${target}', '${tag}', -1)" title="${canSubUp ? '向上移动' : '已在最上方'}"><i class="ph-bold ph-caret-up"></i></button>
+                            <button type="button" class="subgroup-move-btn" ${canSubDown ? '' : 'disabled aria-disabled="true"'} style="background:none; border:none; color:#94a3b8; cursor:pointer; padding: 2px 6px; display:flex; align-items:center; justify-content:center; ${canSubDown ? '' : MOVE_BTN_DISABLED_STYLE}" onclick="window.moveDepositSubgroup('${target}', '${tag}', 1)" title="${canSubDown ? '向下移动' : '已在最下方'}"><i class="ph-bold ph-caret-down"></i></button>
+                        </div>
+                    </div>
+                    ${renderPills(def.cols, isLeftPanel)}
+                </div>`;
+            });
         } else {
             innerHtml += `
                 <div style="padding-top: 4px;">
@@ -4252,6 +4282,41 @@ document.addEventListener('DOMContentLoaded', () => {
         renderDrawerStates();
         updateTableFromDrawer();
     }
+
+    // 存取款资料 sub-block order. 主表 follows the column order; 展开卡片 keeps its own order
+    function getDepositSubOrder(cols) {
+        const order = [];
+        cols.forEach(c => { if (DEPOSIT_SUB_TAGS.includes(c.tag) && !order.includes(c.tag)) order.push(c.tag); });
+        DEPOSIT_SUB_TAGS.forEach(t => { if (!order.includes(t)) order.push(t); });
+        return order;
+    }
+
+    window.moveDepositSubgroup = function (target, tag, dir) {
+        if (target === 'card') {
+            const idx = depositCardSubOrder.indexOf(tag);
+            const j = idx + dir;
+            if (idx < 0 || j < 0 || j >= depositCardSubOrder.length) return;
+            [depositCardSubOrder[idx], depositCardSubOrder[j]] = [depositCardSubOrder[j], depositCardSubOrder[idx]];
+            renderDrawerStates();
+            window.applyDrawerOrderToTable();
+            return;
+        }
+        const list = currentTableMode === 'nested' ? nestedColumnsConfig : compactColumnsConfig;
+        const positions = [];
+        list.forEach((c, i) => {
+            if ((c.category || c.group) === '存取款资料' && DEPOSIT_SUB_TAGS.includes(c.tag)) positions.push(i);
+        });
+        const cols = positions.map(i => list[i]);
+        const order = getDepositSubOrder(cols);
+        const idx = order.indexOf(tag);
+        const j = idx + dir;
+        if (idx < 0 || j < 0 || j >= order.length) return;
+        [order[idx], order[j]] = [order[j], order[idx]];
+        const sorted = cols.slice().sort((a, b) => order.indexOf(a.tag) - order.indexOf(b.tag)); // stable: keeps order inside each block
+        positions.forEach((pos, k) => { list[pos] = sorted[k]; });
+        renderDrawerStates();
+        updateTableFromDrawer();
+    };
 
     window.moveColumnLeft = function (id) { moveColumnWithinGroup(id, -1); };
     window.moveColumnRight = function (id) { moveColumnWithinGroup(id, 1); };
