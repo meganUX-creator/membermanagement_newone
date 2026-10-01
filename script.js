@@ -3859,8 +3859,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const canDrag = groupName !== '其他';
         const dragAttr = canDrag ? 'true' : 'false';
         const cursorStyle = canDrag ? 'grab' : 'default';
-        // Default main-table cards: none of their fields come from the expanded-card data source
-        const isDefaultCard = isLeftPanel && groupName !== '其他' && cols.length > 0 && cols.every(c => !availableDataSource.some(a => a.id === c.id));
+        // Default main-table cards (present in the main table out of the box) cannot move to the expanded cards;
+        // cards the user brought over from the expanded cards can be dragged back.
+        const defaultCols = currentTableMode === 'nested' ? customColumnDefaults.nestedColumns : customColumnDefaults.compactColumns;
+        const isDefaultCard = isLeftPanel && groupName !== '其他' && defaultCols.some(c => c.id !== 'action' && (c.category || c.group || '其他') === groupName);
         const defaultLockHtml = isDefaultCard ? '<i class="ph-bold ph-lock-simple default-card-lock" data-tooltip="预设栏位，仅可在主表中调整顺序"></i>' : '';
         const dragIconHtml = canDrag ? '<i class="ph-bold ph-dots-six-vertical" style="color: #94a3b8; font-size: 20px;"></i>' : '';
 
@@ -4563,6 +4565,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let dragType = null; // 'pill' or 'category'
     let placeholder = null;
     let dragSize = null;
+    let hiddenTwin = null; // right-panel copy of a main-table card being dragged back
     let lastReorderAt = 0;
 
     document.addEventListener('dragstart', (e) => {
@@ -4626,6 +4629,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function cleanUpDrag() {
         hideDragBlockHint();
+        if (hiddenTwin) {
+            hiddenTwin.style.display = '';
+            hiddenTwin = null;
+        }
         if (placeholder && placeholder.parentNode) {
             placeholder.parentNode.removeChild(placeholder);
         }
@@ -4695,20 +4702,21 @@ document.addEventListener('DOMContentLoaded', () => {
             showDragBlockHint(x, y, `「${draggedElement.getAttribute('data-cat')}」已在主表，无法拖入`, col1, false);
             return;
         }
-        if (overCol2 && fromLeft) {
+        if (overCol2 && fromLeft && draggedElement.getAttribute('data-default-card') === 'true') {
             e.dataTransfer.dropEffect = 'none';
-            const cat = draggedElement.getAttribute('data-cat');
-            const text = draggedElement.getAttribute('data-default-card') === 'true'
-                ? `「${cat}」为预设栏位，无法放入展开卡片`
-                : `「${cat}」无法整组移出，请点栏位上的 ✕ 移回展开卡片`;
-            showDragBlockHint(x, y, text, col2, true);
+            showDragBlockHint(x, y, `「${draggedElement.getAttribute('data-cat')}」为预设栏位，无法放入展开卡片`, col2, true);
             return;
         }
         hideDragBlockHint();
 
+        if (overCol2 && fromLeft && !hiddenTwin) {
+            hiddenTwin = col2.querySelector(`:scope > .category-block-draggable[data-cat="${draggedElement.getAttribute('data-cat')}"]`);
+            if (hiddenTwin) drawerFlip([col2], () => { hiddenTwin.style.display = 'none'; }, { fadeIn: false });
+        }
+
         let container = null;
         if (overCol1) container = col1;
-        else if (overCol2 && !fromLeft) container = col2;
+        else if (overCol2) container = col2;
         if (!container) return;
 
         const qitaNode = container.querySelector(':scope > .category-block-draggable[data-cat="其他"]');
@@ -4745,6 +4753,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!draggedElement || !placeholder) return;
         
         const isLeftPanel = draggedElement.closest('#col1-table-fields') !== null;
+        // Dropped on the expanded-card panel before the placeholder got there: append (before 其他)
+        const col2Panel = document.getElementById('col2-card-fields');
+        if (dragType === 'category' && isLeftPanel && col2Panel && col2Panel.contains(e.target) && !col2Panel.contains(placeholder)) {
+            col2Panel.insertBefore(placeholder, col2Panel.querySelector(':scope > .category-block-draggable[data-cat="其他"]'));
+        }
         const targetIsLeftPanel = placeholder.closest('#col1-table-fields') !== null;
 
         // Let the dropped item glide from where the placeholder sits instead of popping in
@@ -4762,6 +4775,36 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         if (dragType === 'category' && isLeftPanel && !targetIsLeftPanel) {
+            if (draggedElement.getAttribute('data-default-card') === 'true') {
+                cleanUpDrag();
+                return;
+            }
+            const catFrom = draggedElement.getAttribute('data-cat');
+            let nextCat = placeholder.nextElementSibling;
+            while (nextCat && (nextCat === hiddenTwin || nextCat.style.display === 'none' || !nextCat.classList.contains('category-block-draggable'))) {
+                nextCat = nextCat.nextElementSibling;
+            }
+            const targetCat = nextCat ? nextCat.getAttribute('data-cat') : '其他';
+
+            // Position in the expanded cards = where it was dropped
+            const fromIdx = drawerCategoryOrder.indexOf(catFrom);
+            if (fromIdx !== -1) drawerCategoryOrder.splice(fromIdx, 1);
+            const toIdx = drawerCategoryOrder.indexOf(targetCat);
+            drawerCategoryOrder.splice(toIdx === -1 ? drawerCategoryOrder.length : toIdx, 0, catFrom);
+
+            // Remove the card's data-source fields from the main table (default columns stay)
+            const list = currentTableMode === 'nested' ? nestedColumnsConfig : compactColumnsConfig;
+            const visibility = currentTableMode === 'nested' ? nestedColumnVisibility : compactColumnVisibility;
+            for (let i = list.length - 1; i >= 0; i--) {
+                const col = list[i];
+                if ((col.category || col.group || '其他') === catFrom && availableDataSource.some(a => a.id === col.id)) {
+                    list.splice(i, 1);
+                    visibility[col.id] = false;
+                }
+            }
+            renderDrawerStates(dropSeeds);
+            updateTableFromDrawer();
+            window.applyDrawerOrderToTable();
             cleanUpDrag();
             return;
         }
@@ -4915,6 +4958,61 @@ const item = list.splice(idxFrom, 1)[0];
         }
         cleanUpDrag();
     });
+
+    // ── Click outside closes the topmost open modal / drawer ──
+    // Ordered top-most first; each closes through its own close button so existing cleanup still runs.
+    (function initClickOutsideToClose() {
+        const panels = [
+            { id: 'walletDetailModal', openClass: 'show', closeBtn: 'btnWalletDetailClose', modal: true },
+            { id: 'subordinateModal', openClass: 'show', closeBtn: 'btnSubordinateModalClose', modal: true },
+            { id: 'customizeFilterModal', openClass: 'show', closeBtn: 'btnCustomizeFilterClose', modal: true },
+            { id: 'nestedDrilldownDrawer', openClass: 'active', closeBtn: 'btnNestedClose' },
+            { id: 'userEditDrawer', openClass: 'active', closeBtn: 'btnUserEditClose' },
+            { id: 'userDetailDrawer', openClass: 'active', closeBtn: 'btnUserDetailClose' },
+            { id: 'customColumnDrawer', openClass: 'show', closeBtn: 'btnCloseCustomColumnDrawer' },
+            { id: 'columnsDrawer', openClass: 'active', closeBtn: 'btnColumnsDrawerCloseX' },
+            { id: 'advancedDrawer', openClass: 'active', closeBtn: 'closeAdvancedFilter' }
+        ];
+        // Floating UI that belongs to whatever is open, and toggle buttons that close their own panel, never count as "outside"
+        const IGNORE = '#global-tooltip, .drag-block-hint, #globalCompactActionMenu, .btn-header-columns-toggle';
+
+        const isOpen = (p, el) => el.classList.contains(p.openClass) && el.style.display !== 'none';
+        const topmostOpen = () => {
+            for (const p of panels) {
+                const el = document.getElementById(p.id);
+                if (el && isOpen(p, el)) return { p, el };
+            }
+            return null;
+        };
+        const isInside = (hit, target) => {
+            if (!target || !target.isConnected) return true; // element removed by its own handler: treat as inside
+            if (target.closest(IGNORE)) return true;
+            const box = hit.p.modal ? (hit.el.querySelector('.modal-content') || hit.el.firstElementChild) : hit.el;
+            return box.contains(target);
+        };
+        const close = (hit) => {
+            const btn = document.getElementById(hit.p.closeBtn);
+            if (btn) btn.click();
+            else hit.el.classList.remove(hit.p.openClass);
+            // userDetailDrawer's close button may leave the shared overlay; make sure nothing stays dimmed
+            if (!topmostOpen()) document.getElementById('overlay')?.classList.remove('active');
+        };
+
+        // Require press and release both outside, so text selection that ends outside doesn't close anything
+        let downHit = null;
+        let downOutside = false;
+        document.addEventListener('pointerdown', (e) => {
+            downHit = topmostOpen();
+            downOutside = !!downHit && !isInside(downHit, e.target);
+        }, true);
+        document.addEventListener('click', (e) => {
+            const hit = topmostOpen();
+            if (!hit || !downOutside || !downHit || downHit.el !== hit.el) return;
+            downOutside = false;
+            if (isInside(hit, e.target)) return;
+            close(hit);
+        }, true);
+    })();
 
     // Expanded-card values truncated by the card max-width show their full text on hover
     document.addEventListener('mouseover', (e) => {
