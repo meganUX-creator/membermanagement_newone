@@ -137,13 +137,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-    // Drawer Elements
-    const openBtn = document.getElementById('openAdvancedFilter');
-    const closeBtn = document.getElementById('closeAdvancedFilter');
-    const drawer = document.getElementById('advancedDrawer');
+    // Shared drawer overlay
     const overlay = document.getElementById('overlay');
-    const btnApply = document.getElementById('btnApply');
-    const btnClearDrawer = document.getElementById('btnClearDrawer');
 
     // Filter Controls (Dynamic custom select instances)
     const dropdownStatus = document.getElementById('dropdownStatus');
@@ -348,18 +343,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 const btn = li.querySelector('button');
 
                 if (input) {
+                    // 精准搜寻：完整比对标签名称（忽略空白与大小写）；无符合时显示「无标签」
+                    const normalize = (s) => s.replace(/\s+/g, '').toLowerCase();
+                    const emptyLi = optionsList.querySelector('.search-empty-item');
                     const doSearch = () => {
-                        const keyword = input.value.trim().toLowerCase();
-                        optionsList.querySelectorAll('li:not(.search-box-item)').forEach(optLi => {
-                            const text = optLi.textContent.trim().toLowerCase();
-                            optLi.style.display = (keyword === '' || text === keyword) ? '' : 'none';
+                        const keyword = normalize(input.value);
+                        let matched = 0;
+                        optionsList.querySelectorAll('li:not(.search-box-item):not(.search-empty-item)').forEach(optLi => {
+                            const show = keyword === '' || normalize(optLi.textContent) === keyword;
+                            optLi.style.display = show ? '' : 'none';
+                            if (show) matched++;
                         });
+                        if (emptyLi) emptyLi.style.display = (keyword !== '' && matched === 0) ? '' : 'none';
                     };
                     input.addEventListener('keydown', (e) => {
-                        if (e.key === 'Enter') {
+                        // Ignore the Enter that confirms an IME composition (e.g. 中文输入法选字)
+                        if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) {
                             e.preventDefault();
                             doSearch();
                         }
+                    });
+                    // Clearing the box restores the full list
+                    input.addEventListener('input', () => {
+                        if (input.value.trim() === '') doSearch();
                     });
                     input.addEventListener('click', (e) => e.stopPropagation());
                     if (btn) {
@@ -460,27 +466,44 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Tag sets assigned to generated mock users (shared with the 用户标签 dropdown options)
+    const GENERATED_USER_TAG_SETS = [["新注册"], ["正常", "活跃"], ["大户", "VIP 客户"], ["异常风险", "VIP 客户"]];
     const dropdownUserTags = document.getElementById('dropdownUserTags');
     if (typeof dropdownUserTags !== 'undefined' && dropdownUserTags) {
+        populateUserTagOptions(dropdownUserTags);
         initMultiSelect(dropdownUserTags, () => {
         });
     }
 
-    // Advanced Filter Controls
-    const selectBirthday = document.getElementById('selectBirthday');
-    const inputDateStart = document.getElementById('inputDateStart');
-    const inputDateEnd = document.getElementById('inputDateEnd');
-    const inputQuickLogin = document.getElementById('inputQuickLogin') || { value: "" };
-    const inputUid = document.getElementById('inputUid') || { value: "" };
-    const inputInviteCode = document.getElementById('inputInviteCode') || { value: "" };
-    const inputNickname = document.getElementById('inputNickname') || { value: "" };
-    const inputRealName = document.getElementById('inputRealName') || { value: "" };
-    const inputBankCard = document.getElementById('inputBankCard') || { value: '' };
-    const inputOfflineDays = document.getElementById('inputOfflineDays') || { value: '' };
-    const inputIp = document.getElementById('inputIp') || { value: '' };
-    const inputDeposit = document.getElementById('inputDeposit') || { value: '' };
+    // 用户标签下拉选项 = 资料中实际存在的所有标签（原有的常用标签排在前面，其余依出现顺序附加），
+    // 让每个出现在会员身上的标签都能被勾选与精准搜寻
+    function populateUserTagOptions(dropdownEl) {
+        const optionsList = dropdownEl.querySelector('.select-options');
+        if (!optionsList) return;
+        const existing = [...optionsList.querySelectorAll('li[data-value]')];
+        const ordered = existing.map(li => li.getAttribute('data-value'));
+        const seen = new Set();
+        const allTags = [];
+        const add = (t) => { if (t && !seen.has(t)) { seen.add(t); allTags.push(t); } };
+        const dataTags = new Set();
+        (window.baseMockUsers || []).forEach(u => (u.tags || []).forEach(t => dataTags.add(t)));
+        GENERATED_USER_TAG_SETS.forEach(set => set.forEach(t => dataTags.add(t)));
+        ordered.filter(t => dataTags.has(t)).forEach(add);
+        dataTags.forEach(add);
+        if (allTags.length === 0) return; // no data (e.g. 无数据模式): keep the static markup
 
-    // Outer fields
+        const escapeHtml = (v) => String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        existing.forEach(li => li.remove());
+        const emptyLi = optionsList.querySelector('.search-empty-item');
+        allTags.forEach(tag => {
+            const li = document.createElement('li');
+            li.setAttribute('data-value', tag);
+            li.innerHTML = `<input type="checkbox"> <span>${escapeHtml(tag)}</span>`;
+            optionsList.insertBefore(li, emptyLi);
+        });
+    }
+
+    // Filter row fields
     const inputDateStartOuter = document.getElementById('inputDateStartOuter');
     const inputDateEndOuter = document.getElementById('inputDateEndOuter');
     const inputBankCardOuter = document.getElementById('inputBankCardOuter');
@@ -495,7 +518,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const filterTagsContainer = document.getElementById('filterTagsContainer');
     const userTableBody = document.getElementById('userTableBody');
     const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-    const advancedBadge = document.getElementById('advancedBadge');
 
     const urlParams = new URLSearchParams(window.location.search);
     const dataMode = urlParams.get('mock') || 'normal';
@@ -549,7 +571,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        const dateInputs = ['inputDateStartOuter', 'inputDateEndOuter', 'inputDateStart', 'inputDateEnd'];
+        const dateInputs = ['inputDateStartOuter', 'inputDateEndOuter'];
         const extremeDate = "9999-12-31T23:59";
         dateInputs.forEach(id => {
             const el = document.getElementById(id);
@@ -611,22 +633,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Drawer state toggle
-    function openDrawer() {
-        drawer.classList.add('active');
-        overlay.classList.add('active');
-    }
-
     function closeDrawer() {
-        drawer.classList.remove('active');
         const columnsDrawer = document.getElementById('columnsDrawer');
         if (columnsDrawer) columnsDrawer.classList.remove('active');
         const userEditDrawer = document.getElementById('userEditDrawer');
         if (userEditDrawer) userEditDrawer.classList.remove('active');
-        overlay.classList.remove('active');
+        if (overlay) overlay.classList.remove('active');
     }
 
-    if (openBtn) openBtn.addEventListener('click', openDrawer);
-    if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
     if (overlay) overlay.addEventListener('click', closeDrawer);
     document.getElementById('btnColumnsDrawerClose')?.addEventListener('click', closeDrawer);
     document.getElementById('btnColumnsDrawerCloseX')?.addEventListener('click', closeDrawer);
@@ -647,6 +661,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Sorting State
     let currentSortColumn = '';
+    // User-adjusted column widths (drag the header resizer), keyed by "<mode>|<data-col>"; kept across re-renders
+    const userColumnWidths = {};
     let currentSortDirection = ''; // 'asc' or 'desc'
 
     // Pinning State
@@ -774,7 +790,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return `<span class="text-truncate" title="${val}">${val}</span>`;
         }
         if (type === 'copyable') {
-            return `<span class="copyable-text" onclick="alert('已复制：' + '${val}')" title="点击复制">${val}<i class="ph-bold ph-copy copy-icon"></i></span>`;
+            const safeVal = String(val).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+            return `<span class="copyable-text" data-copy="${safeVal}" title="点击复制">${val}<i class="ph-bold ph-copy copy-icon"></i></span>`;
         }
         if (type === 'ip') {
             return `<a href="#" class="ip-link" data-ip="${val}" style="color: var(--primary-color); text-decoration: none;">${val}</a> <i class="ph ph-copy copy-ip-btn" data-ip="${val}" style="cursor: pointer; color: var(--text-muted);" title="复制IP"></i> <i class="ph ph-link ip-link-icon" data-ip="${val}" style="cursor: pointer; color: #3b82f6; margin-left: 4px;" title="前往IP统计页面"></i>`;
@@ -787,7 +804,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let compactColumnsConfig = [
         { id: 'online', group: '账号信息', label: '在线', checkboxIndex: 1, render: (user) => `<td data-col="online" style="text-align: center;">${dataMode === 'nodata' ? '-' : `<span class="status-dot-icon ${user.offlineDays === 0 ? 'online' : 'offline'}" title="${user.offlineDays === 0 ? '在线' : '离线'}"></span>`}</td>` },
         { id: 'uid', group: '账号信息', label: '用户ID', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="uid">${dataMode === 'nodata' ? '-' : renderDataState(user.uid, 'copyable')}</td>` },
-        { id: 'account', group: '账号信息', label: '会员名', checkboxIndex: 3, render: (user) => `<td data-col="account"><a href="#" class="cell-username user-detail-link" data-uid="${user.uid}">${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : renderDataState(user.account, 'copyable')}</a></td>` },
+        { id: 'account', group: '账号信息', label: '会员名', checkboxIndex: 3, render: (user) => `<td data-col="account"><span class="cell-username cell-username-static" data-uid="${user.uid}">${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : renderDataState(user.account, 'copyable')}</span></td>` },
         { id: 'agentId', group: '账号信息', label: '代理', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="agentId">${renderDataState(user.agentId)}</td>` },
         { id: 'status', group: '账号信息', label: '状态', checkboxIndex: 1, render: (user) => `<td data-col="status"><span class="user-custom-tag ${user.status === '正常' ? 'tag-green' : user.status === '冻结' ? 'tag-blue' : 'tag-red'}">${user.status}</span></td>` },
         { id: 'vipLevel', group: '等级', label: 'VIP等级', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="vipLevel">${user.vipLevel || 'VIP ' + (user.vipLevel || 1)}</td>` },
@@ -944,18 +961,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 dynamicTags = user.tags;
             } else {
                 if (r < 75) {
-                    dynamicTags = ["新注册"];
+                    dynamicTags = GENERATED_USER_TAG_SETS[0];
                 } else if (r < 90) {
-                    dynamicTags = ["正常", "活跃"];
+                    dynamicTags = GENERATED_USER_TAG_SETS[1];
                 } else if (r < 97) {
-                    dynamicTags = ["大户", "VIP 客户"];
+                    dynamicTags = GENERATED_USER_TAG_SETS[2];
                 } else {
-                    dynamicTags = ["异常风险", "VIP 客户"];
+                    dynamicTags = GENERATED_USER_TAG_SETS[3];
                 }
             }
 
+            // Deterministic birthday so the birthday-month filter has data to match against
+            const birthMonth = String(((num - 1) % 12) + 1).padStart(2, '0');
+            const birthDay = String(((num * 7 + Math.floor(num / 12)) % 28) + 1).padStart(2, '0');
+            const generatedBirthday = `${1985 + (num % 15)}-${birthMonth}-${birthDay}`;
+
             mockUsers.push({
                 ...user,
+                birthday: window.dataMode === 'nodata' ? '-' : (user.birthday || generatedBirthday),
                 uid: newUid,
                 account: newAccount,
                 tags: window.dataMode === 'nodata' ? [] : dynamicTags,
@@ -967,6 +990,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     window.mockUsers = mockUsers;
+
+    // Members sharing a login IP (used by 同IP人数 and its drill-down list)
+    function getUsersByIp(ip) {
+        if (!ip || ip === '-') return [];
+        return mockUsers.filter(u => u.ip === ip);
+    }
+
+    // Mock IP geolocation for display
+    function getIpGeo(ip) {
+        const IP_GEO = { '54.150.111.152': 'Japan, Tokyo' };
+        if (IP_GEO[ip]) return IP_GEO[ip];
+        if (/^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(ip || '')) return '内网 IP';
+        return '-';
+    }
 
     // Helper: Get active selections from multi-select
     function getMultiSelectValues(element) {
@@ -983,14 +1020,53 @@ document.addEventListener('DOMContentLoaded', () => {
         const selectedValSpan = element.querySelector('.selected-val');
         const optionsList = element.querySelector('.select-options');
 
+        let matchedText = '';
         optionsList.querySelectorAll('li').forEach(li => {
             if (li.getAttribute('data-value') === val) {
                 li.classList.add('active');
+                matchedText = li.textContent.trim();
             } else {
                 li.classList.remove('active');
             }
         });
-        selectedValSpan.textContent = text;
+        // Prefer the option's own label so the reset text always matches the initial render
+        selectedValSpan.textContent = matchedText || text;
+    }
+
+    // Snapshot initial multi-select choices (e.g. 排除条件 defaults to 测试账号) so 重置 restores them
+    const initialMultiSelections = new Map();
+    [dropdownOther, document.getElementById('dropdownUserTags')].forEach(el => {
+        if (el) initialMultiSelections.set(el, getMultiSelectValues(el));
+    });
+
+    function restoreMultiSelectInitial(element) {
+        if (!element) return;
+        clearMultiSelectValue(element);
+        const initial = initialMultiSelections.get(element) || [];
+        const optionsList = element.querySelector('.select-options');
+        initial.forEach(val => {
+            const li = [...optionsList.querySelectorAll('li')].find(l => l.getAttribute('data-value') === val);
+            if (!li) return;
+            li.classList.add('selected');
+            const cb = li.querySelector('input[type="checkbox"]');
+            if (cb) cb.checked = true;
+        });
+        if (initial.length > 0) {
+            element.querySelector('.selected-val').textContent = initial.join('、');
+        }
+    }
+
+    // Reset 账号搜寻类型 to its default (first option)
+    function resetAccountType() {
+        if (!accountTypeMenu) return;
+        const items = accountTypeMenu.querySelectorAll('li');
+        items.forEach(li => li.classList.remove('active'));
+        const first = items[0];
+        if (!first) return;
+        first.classList.add('active');
+        currentAccountType = first.getAttribute('data-value');
+        if (accountTypeText) accountTypeText.textContent = first.querySelector('span').textContent;
+        if (inputAccount) inputAccount.placeholder = '请输入精确账号';
     }
 
     // Helper: Clear multi select choices
@@ -999,7 +1075,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const optionsList = element.querySelector('.select-options');
 
         optionsList.querySelectorAll('li').forEach(li => {
+            if (li.classList.contains('search-box-item')) {
+                const searchInput = li.querySelector('.dropdown-search-input');
+                if (searchInput) searchInput.value = '';
+                return;
+            }
+            if (li.classList.contains('search-empty-item')) {
+                li.style.display = 'none';
+                return;
+            }
             li.classList.remove('selected');
+            li.style.display = '';
             const checkbox = li.querySelector('input[type="checkbox"]');
             if (checkbox) checkbox.checked = false;
         });
@@ -1014,7 +1100,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!tagsContainer) return;
 
         const tags = [];
-        let advancedCount = 0;
 
         // 1. 状态
         if (selectedStatusVal) {
@@ -1035,11 +1120,18 @@ document.addEventListener('DOMContentLoaded', () => {
         // 5. 排除条件
         const selectedOthers = getMultiSelectValues(dropdownOther);
         if (selectedOthers.length > 0) {
-            tags.push({ key: 'other', label: `其他: ${selectedOthers.join(', ')}`, type: 'multi-custom', element: dropdownOther });
+            tags.push({ key: 'other', label: `排除条件: ${selectedOthers.join(', ')}`, type: 'multi-custom', element: dropdownOther });
+        }
+        // 5-1. 用户标签
+        const selectedUserTags = getMultiSelectValues(dropdownUserTags);
+        if (selectedUserTags.length > 0) {
+            tags.push({ key: 'userTags', label: `用户标签: ${selectedUserTags.join(', ')}`, type: 'multi-custom', element: dropdownUserTags });
         }
         // 6. 账号搜寻
         if (inputAccount && inputAccount.value.trim()) {
-            let labelPrefix = '账号';
+            // Other search types use the dropdown option's own name (e.g. 用户ID / 邀请码) so tag and dropdown match
+            const activeTypeLi = accountTypeMenu ? accountTypeMenu.querySelector(`li[data-value="${currentAccountType}"] span`) : null;
+            let labelPrefix = activeTypeLi ? activeTypeLi.textContent.trim() : '账号';
             if (currentAccountType === 'exact') labelPrefix = '账号(精确)';
             if (currentAccountType === 'fuzzy') labelPrefix = '账号(模糊)';
             if (currentAccountType === 'multi') labelPrefix = '账号(多笔)';
@@ -1053,66 +1145,41 @@ document.addEventListener('DOMContentLoaded', () => {
         if (selectedBirthdayOuterVal) {
             tags.push({ key: 'birthdayOuter', label: `生日: ${selectedBirthdayOuterVal}月`, type: 'single-custom', element: dropdownBirthdayOuter, defaultValue: '', defaultText: '全部', valueVarSetter: (v) => selectedBirthdayOuterVal = v });
         }
-        if (selectBirthday && selectBirthday.value) {
-            tags.push({ key: 'birthday', label: `生日: ${selectBirthday.value}`, type: 'native-select', element: selectBirthday });
-            advancedCount++;
-        }
         // 9. 绑定银行卡
         if (inputBankCardOuter && inputBankCardOuter.value.trim()) {
             tags.push({ key: 'bankCardOuter', label: `绑定银行卡: ${inputBankCardOuter.value.trim()}`, type: 'input', element: inputBankCardOuter });
         }
-        if (inputBankCard && inputBankCard.value.trim()) {
-            tags.push({ key: 'bankCard', label: `银行卡末码: *${inputBankCard.value.trim()}`, type: 'input', element: inputBankCard });
-            advancedCount++;
-        }
         // 10. 未登入天数
         if (inputOfflineDaysOuter && inputOfflineDaysOuter.value.trim()) {
             tags.push({ key: 'offlineDaysOuter', label: `未登入天数 > ${inputOfflineDaysOuter.value.trim()}`, type: 'input', element: inputOfflineDaysOuter });
-        }
-        if (inputOfflineDays && inputOfflineDays.value.trim()) {
-            tags.push({ key: 'offlineDays', label: `未登入天数 > ${inputOfflineDays.value.trim()}`, type: 'input', element: inputOfflineDays });
-            advancedCount++;
         }
         // 11. 代理Id
         const inputAgentIdOuter = document.getElementById('inputAgentIdOuter');
         if (inputAgentIdOuter && inputAgentIdOuter.value.trim()) {
             tags.push({ key: 'agentIdOuter', label: `代理Id: ${inputAgentIdOuter.value.trim()}`, type: 'input', element: inputAgentIdOuter });
         }
-        const inputAgentId = document.getElementById('inputAgentId');
-        if (inputAgentId && inputAgentId.value.trim()) {
-            tags.push({ key: 'agentId', label: `代理Id: ${inputAgentId.value.trim()}`, type: 'input', element: inputAgentId });
-            advancedCount++;
-        }
         // 12. VIP会员等级
         const inputVipLevelOuter = document.getElementById('inputVipLevelOuter');
         if (inputVipLevelOuter && inputVipLevelOuter.value.trim()) {
             tags.push({ key: 'vipLevelOuter', label: `VIP等级: ${inputVipLevelOuter.value.trim()}`, type: 'input', element: inputVipLevelOuter });
         }
-        const inputVipLevel = document.getElementById('inputVipLevel');
-        if (inputVipLevel && inputVipLevel.value.trim()) {
-            tags.push({ key: 'vipLevel', label: `VIP等级: ${inputVipLevel.value.trim()}`, type: 'input', element: inputVipLevel });
-            advancedCount++;
-        }
         // 13. 登录IP
         if (inputIpOuter && inputIpOuter.value.trim()) {
             tags.push({ key: 'ipOuter', label: `登入 IP: ${inputIpOuter.value.trim()}`, type: 'input', element: inputIpOuter });
-        }
-        if (inputIp && inputIp.value.trim()) {
-            tags.push({ key: 'ip', label: `IP: ${inputIp.value.trim()}`, type: 'input', element: inputIp });
-            advancedCount++;
         }
         // 14. 存款金额大于
         if (inputDepositOuter && inputDepositOuter.value.trim()) {
             tags.push({ key: 'depositOuter', label: `存款大于 ${inputDepositOuter.value.trim()}`, type: 'input', element: inputDepositOuter });
         }
-        if (inputDeposit && inputDeposit.value.trim()) {
-            tags.push({ key: 'deposit', label: `存款 > ${inputDeposit.value.trim()}`, type: 'input', element: inputDeposit });
-            advancedCount++;
-        }
-        // 15. 新增时间
+        // 15. 新增时间（只填开始时，结束显示为当前时间，精确到秒）
+        const formatNowToSeconds = () => {
+            const now = new Date();
+            const pad = (n) => String(n).padStart(2, '0');
+            return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+        };
         if (inputDateStartOuter && inputDateEndOuter && (inputDateStartOuter.value || inputDateEndOuter.value)) {
             const startStr = inputDateStartOuter.value ? inputDateStartOuter.value.replace('T', ' ') : '??';
-            const endStr = inputDateEndOuter.value ? inputDateEndOuter.value.replace('T', ' ') : '??';
+            const endStr = inputDateEndOuter.value ? inputDateEndOuter.value.replace('T', ' ') : formatNowToSeconds();
             tags.push({
                 key: 'dateRangeOuter',
                 label: `新增时间: ${startStr} ~ ${endStr}`,
@@ -1120,39 +1187,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 elements: [inputDateStartOuter, inputDateEndOuter]
             });
         }
-        if (inputDateStart && inputDateEnd && (inputDateStart.value || inputDateEnd.value)) {
-            const startStr = inputDateStart.value ? inputDateStart.value.replace('T', ' ') : '??';
-            const endStr = inputDateEnd.value ? inputDateEnd.value.replace('T', ' ') : '??';
-            tags.push({
-                key: 'dateRange',
-                label: `时间: ${startStr} ~ ${endStr}`,
-                type: 'inputs',
-                elements: [inputDateStart, inputDateEnd]
-            });
-            advancedCount++;
-        }
-        // 16. 快速登入 / UID / 邀请码 / 暱称 / 姓名
-        if (inputQuickLogin && inputQuickLogin.value.trim()) {
-            tags.push({ key: 'quickLogin', label: `快速登入: ${inputQuickLogin.value.trim()}`, type: 'input', element: inputQuickLogin });
-            advancedCount++;
-        }
-        if (inputUid && inputUid.value.trim()) {
-            tags.push({ key: 'uid', label: `UID: ${inputUid.value.trim()}`, type: 'input', element: inputUid });
-            advancedCount++;
-        }
-        if (inputInviteCode && inputInviteCode.value.trim()) {
-            tags.push({ key: 'inviteCode', label: `邀请码: ${inputInviteCode.value.trim()}`, type: 'input', element: inputInviteCode });
-            advancedCount++;
-        }
-        if (inputNickname && inputNickname.value.trim()) {
-            tags.push({ key: 'nickname', label: `暱称: ${inputNickname.value.trim()}`, type: 'input', element: inputNickname });
-            advancedCount++;
-        }
-        if (inputRealName && inputRealName.value.trim()) {
-            tags.push({ key: 'realName', label: `姓名: ${inputRealName.value.trim()}`, type: 'input', element: inputRealName });
-            advancedCount++;
-        }
-        // 17. 动态筛选
+        // 16. 动态筛选
         const dynamicFilters = document.querySelectorAll('.dynamic-filter-tag');
         dynamicFilters.forEach((filter, index) => {
             const input = filter.querySelector('.dynamic-filter-input');
@@ -1173,8 +1208,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Render badge count
-        advancedBadge.textContent = advancedCount;
+        // Refresh date-range error state (values may have been cleared programmatically by reset / tag removal)
+        validateAllDateRanges();
 
         // Render tags
         filterTagsContainer.innerHTML = '';
@@ -1236,7 +1271,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Let the browser apply the CSS transition and class changes before blocking the main thread
                 setTimeout(() => {
-                    clearAllFilters();
+                    clearAllFilters({ restoreDefaults: false });
                 }, 10);
             });
             filterTagsContainer.appendChild(clearAllBtn);
@@ -1244,7 +1279,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Reset all filters
-    function clearAllFilters() {
+    // 重置 restores the initial state (incl. default 排除条件); 清除所有标签 passes restoreDefaults:false to clear everything
+    function clearAllFilters(opts) {
+        const restoreDefaults = !(opts && opts.restoreDefaults === false);
         setSingleSelectValue(dropdownStatus, '', '所有');
         selectedStatusVal = '';
 
@@ -1258,28 +1295,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setSingleSelectValue(dropdownCurrency, '', '全部币种');
         selectedCurrencyVal = '';
-        clearMultiSelectValue(dropdownOther);
+        if (restoreDefaults) {
+            restoreMultiSelectInitial(dropdownOther);
+            restoreMultiSelectInitial(dropdownUserTags);
+        } else {
+            clearMultiSelectValue(dropdownOther);
+            if (dropdownUserTags) clearMultiSelectValue(dropdownUserTags);
+        }
 
+        resetAccountType();
         const inputAccount = document.getElementById('inputAccount');
         if (inputAccount) inputAccount.value = '';
-        // Reset advanced
-        const inputAgentId = document.getElementById('inputAgentId');
-        if (inputAgentId) inputAgentId.value = '';
-        const inputVipLevel = document.getElementById('inputVipLevel');
-        if (inputVipLevel) inputVipLevel.value = '';
-        selectBirthday.value = '';
-        inputDateStart.value = '';
-        inputDateEnd.value = '';
-        inputQuickLogin.value = '';
-        inputUid.value = '';
-        inputInviteCode.value = '';
-        inputNickname.value = '';
-        inputRealName.value = '';
-        inputBankCard.value = '';
-        inputOfflineDays.value = '';
-        inputIp.value = '';
-        inputDeposit.value = '';
-
         // Reset outer fields
         const inputAgentIdOuter = document.getElementById('inputAgentIdOuter');
         if (inputAgentIdOuter) inputAgentIdOuter.value = '';
@@ -1304,25 +1330,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnClearAll) btnClearAll.addEventListener('click', clearAllFilters);
     if (btnReset) btnReset.addEventListener('click', clearAllFilters);
-    if (btnClearDrawer) btnClearDrawer.addEventListener('click', () => {
-        // Only clear advanced fields
-        selectBirthday.value = '';
-        inputDateStart.value = '';
-        inputDateEnd.value = '';
-        inputQuickLogin.value = '';
-        inputUid.value = '';
-        inputInviteCode.value = '';
-        inputNickname.value = '';
-        inputRealName.value = '';
-        inputBankCard.value = '';
-        inputOfflineDays.value = '';
-        inputIp.value = '';
-        inputDeposit.value = '';
-
-        currentPage = 1;
-        updateFilters();
-        renderTable();
-    });
 
     function renderTable(skipDelay = false) {
         const previouslyExpanded = [];
@@ -1337,33 +1344,26 @@ document.addEventListener('DOMContentLoaded', () => {
         const inputAccount = document.getElementById('inputAccount');
         const accountVal = inputAccount ? inputAccount.value.trim().toLowerCase() : '';
 
-        // Advanced filter values
-        const selectBirthdayOuter = document.getElementById('selectBirthdayOuter');
+        // Filter row values
         const inputDateStartOuter = document.getElementById('inputDateStartOuter');
         const inputDateEndOuter = document.getElementById('inputDateEndOuter');
         const inputBankCardOuter = document.getElementById('inputBankCardOuter');
         const inputOfflineDaysOuter = document.getElementById('inputOfflineDaysOuter');
         const inputIpOuter = document.getElementById('inputIpOuter');
         const inputDepositOuter = document.getElementById('inputDepositOuter');
-
-        const birthdayVal = (selectBirthday ? selectBirthday.value : '') || (selectBirthdayOuter ? selectBirthdayOuter.value : '');
-        const dateStartVal = (inputDateStart ? inputDateStart.value : '') || (inputDateStartOuter ? inputDateStartOuter.value : '');
-        const dateEndVal = (inputDateEnd ? inputDateEnd.value : '') || (inputDateEndOuter ? inputDateEndOuter.value : '');
-        const quickLoginVal = inputQuickLogin ? inputQuickLogin.value.trim() : '';
-        const uidVal = inputUid ? inputUid.value.trim() : '';
-        const inviteCodeVal = inputInviteCode ? inputInviteCode.value.trim() : '';
-        const nicknameVal = inputNickname ? inputNickname.value.trim().toLowerCase() : '';
-        const realNameVal = inputRealName ? inputRealName.value.trim() : '';
         const inputAgentIdOuter = document.getElementById('inputAgentIdOuter');
-        const inputAgentId = document.getElementById('inputAgentId');
-        const agentIdVal = (inputAgentId ? inputAgentId.value.trim() : '') || (inputAgentIdOuter ? inputAgentIdOuter.value.trim() : '');
         const inputVipLevelOuter = document.getElementById('inputVipLevelOuter');
-        const inputVipLevel = document.getElementById('inputVipLevel');
-        const vipLevelVal = (inputVipLevel ? inputVipLevel.value.trim() : '') || (inputVipLevelOuter ? inputVipLevelOuter.value.trim() : '');
-        const bankCardVal = inputBankCard.value.trim();
-        const offlineDaysVal = parseInt(inputOfflineDays.value.trim(), 10);
-        const ipVal = inputIp.value.trim();
-        const depositVal = parseFloat(inputDeposit.value.trim());
+
+        const birthdayMonthVal = parseInt(selectedBirthdayOuterVal, 10);
+        const dateStartVal = inputDateStartOuter ? inputDateStartOuter.value : '';
+        const dateEndVal = inputDateEndOuter ? inputDateEndOuter.value : '';
+        const agentIdVal = inputAgentIdOuter ? inputAgentIdOuter.value.trim() : '';
+        const vipLevelVal = inputVipLevelOuter ? inputVipLevelOuter.value.trim() : '';
+        const bankCardVal = inputBankCardOuter ? inputBankCardOuter.value.trim() : '';
+        const offlineDaysVal = parseInt(inputOfflineDaysOuter ? inputOfflineDaysOuter.value.trim() : '', 10);
+        const ipVal = inputIpOuter ? inputIpOuter.value.trim() : '';
+        const depositVal = parseFloat(inputDepositOuter ? inputDepositOuter.value.trim() : '');
+        const selectedUserTags = getMultiSelectValues(dropdownUserTags);
 
         // Perform Filtering
         let filtered = mockUsers;
@@ -1372,7 +1372,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (selectedStatusVal && user.status !== selectedStatusVal) return false;
                 if (selectedLevelVal && user.level !== selectedLevelVal) return false;
                 if (selectedVipVal && user.vip !== selectedVipVal) return false;
-                if (selectedOthers.length > 0 && !selectedOthers.includes(user.other)) return false;
+                // 排除条件: hide users matching any selected exclusion
+                if (selectedOthers.length > 0 && selectedOthers.includes(user.other)) return false;
+                // 用户标签: keep users having any of the selected tags
+                if (selectedUserTags.length > 0 && !(user.tags || []).some(t => selectedUserTags.includes(t))) return false;
 
                 // Account filter
                 if (accountVal) {
@@ -1394,7 +1397,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else if (currentAccountType === 'realName') {
                         if (!user.realName || !user.realName.toLowerCase().includes(accountVal)) return false;
                     } else {
-                        if (user[currentAccountType] && !user[currentAccountType].toLowerCase().includes(accountVal)) return false;
+                        const fieldVal = user[currentAccountType];
+                        if (fieldVal === undefined || fieldVal === null || !String(fieldVal).toLowerCase().includes(accountVal)) return false;
                     }
                 }
 
@@ -1403,19 +1407,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const formattedDateStart = dateStartVal ? dateStartVal.replace('T', ' ') : '';
                 const formattedDateEnd = dateEndVal ? dateEndVal.replace('T', ' ') : '';
-                if (birthdayVal && user.birthday !== birthdayVal) return false;
+                if (!isNaN(birthdayMonthVal)) {
+                    const userMonth = user.birthday ? parseInt(String(user.birthday).split('-')[1], 10) : NaN;
+                    if (userMonth !== birthdayMonthVal) return false;
+                }
                 if (formattedDateStart && user.date < formattedDateStart) return false;
                 if (formattedDateEnd && user.date > formattedDateEnd) return false;
-                if (quickLoginVal && user.quickLogin !== quickLoginVal) return false;
-                if (uidVal && user.uid !== uidVal) return false;
-                if (inviteCodeVal && user.inviteCode !== inviteCodeVal) return false;
-                if (nicknameVal && !user.nickname.toLowerCase().includes(nicknameVal)) return false;
-                if (realNameVal && !user.realName.includes(realNameVal)) return false;
                 if (agentIdVal && user.agentId !== agentIdVal) return false;
                 if (vipLevelVal && user.vipLevel !== undefined && user.vipLevel.toString() !== vipLevelVal) return false;
-                if (bankCardVal && !user.bankCard.includes(bankCardVal)) return false;
+                if (bankCardVal && !String(user.bankCard || '').includes(bankCardVal)) return false;
                 if (!isNaN(offlineDaysVal) && user.offlineDays <= offlineDaysVal) return false;
-                if (ipVal && !user.ip.includes(ipVal)) return false;
+                if (ipVal && !String(user.ip || '').includes(ipVal)) return false;
                 if (!isNaN(depositVal) && user.deposit <= depositVal) return false;
 
                 return true;
@@ -1464,9 +1466,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     valA = valA === '-' ? 0 : parseFloat(valA) || 0;
                     valB = valB === '-' ? 0 : parseFloat(valB) || 0;
                 } else if (typeof valA === 'string' && typeof valB === 'string') {
-                    // Try to parse as numbers if possible
-                    const numA = parseFloat(valA);
-                    const numB = parseFloat(valB);
+                    // Try to parse as numbers only if the whole string is numeric
+                    // (parseFloat would turn "2023-01-01 12:00:00" into 2023, making all dates equal)
+                    const numA = valA.trim() === '' ? NaN : Number(valA);
+                    const numB = valB.trim() === '' ? NaN : Number(valB);
                     if (!isNaN(numA) && !isNaN(numB)) {
                         valA = numA;
                         valB = numB;
@@ -1767,7 +1770,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         } else if (col.id === 'memberInfo') {
                             nestedRowHtml += `<td class="nested-cell-info ${stickyClass}">
                             <div><span class="info-label">用户ID :</span> ${dataMode === 'nodata' ? '-' : renderDataState(user.uid, 'copyable')}</div>
-                            <div><span class="info-label">会员名 :</span> <a href="#" class="user-detail-link" data-uid="${user.uid}">${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : renderDataState(user.account, 'copyable')}</a></div>
+                            <div><span class="info-label">会员名 :</span> <span class="cell-username-static" data-uid="${user.uid}">${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : renderDataState(user.account, 'copyable')}</span></div>
                             <div><span class="info-label">真实姓名 :</span> ${renderDataState(user.realName, 'na')}</div>
                             <div><span class="info-label">用户暱称 :</span> ${renderDataState(user.nickname, 'na')}</div>
                             <div><span class="info-label">代理 :</span> ${renderDataState(user.agentId)}</div>
@@ -1971,7 +1974,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <div class="detail-card-header"><i class="ph ph-user"></i> 基本资料</div>
                                 <div class="detail-card-body grid-2-col">
                                     <div class="ds-field" data-ds-id="ds_realname" style="display:${dataSourceFieldVisibility['ds_realname'] !== false ? '' : 'none'}"><span class="lbl">真实姓名</span> <span class="val" title="${dataMode === 'nodata' ? '' : user.realName}">${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : (user.realName || '-')}</span></div>
-                                    <div class="ds-field" data-ds-id="ds_birthday" style="display:${dataSourceFieldVisibility['ds_birthday'] !== false ? '' : 'none'}"><span class="lbl">生日</span> <span class="val">${dataMode === 'nodata' ? '-' : '1991-02-11'}</span></div>
+                                    <div class="ds-field" data-ds-id="ds_birthday" style="display:${dataSourceFieldVisibility['ds_birthday'] !== false ? '' : 'none'}"><span class="lbl">生日</span> <span class="val">${dataMode === 'nodata' ? '-' : (user.birthday || '-')}</span></div>
                                     <div class="ds-field" data-ds-id="ds_accountType" style="display:${dataSourceFieldVisibility['ds_accountType'] !== false ? '' : 'none'}"><span class="lbl">账号类型</span> <span class="val">${user.accountType || '普通账号'}</span></div>
                                     <div class="ds-field" data-ds-id="ds_memberType" style="display:${dataSourceFieldVisibility['ds_memberType'] !== false ? '' : 'none'}"><span class="lbl">会员类型</span> <span class="val">${user.userType || '代理会员'}</span></div>
                                     <div class="ds-field" data-ds-id="ds_level" style="display:${dataSourceFieldVisibility['ds_level'] !== false ? '' : 'none'}"><span class="lbl">等级</span> <span class="val">${dataMode === 'nodata' ? '-' : (user.vipLevel ? 'VIP ' + user.vipLevel : 'VIP 1')}</span></div>
@@ -2212,7 +2215,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const text = li.textContent.trim();
                     const tr = li.closest('tr');
                     // find user account/id if needed
-                    const userCell = tr ? tr.querySelector('.user-detail-link') : null;
+                    const userCell = tr ? tr.querySelector('[data-uid]') : null;
                     const uid = userCell ? userCell.getAttribute('data-uid') : null;
 
                     if (text === '编辑用户' || text === '编辑用户') {
@@ -2331,6 +2334,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (btn) btn.click();
                 });
             }
+
+            // Re-apply user column widths, then fix sticky offsets / expanded-card width from the real layout
+            syncCompactTableLayout();
         };
 
         if (skipDelay) {
@@ -2602,18 +2608,53 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // 新增时间范围校验：开始时间不可晚于结束时间
+    const DATE_RANGE_ERROR_MSG = '开始时间不可晚于结束时间';
+    function getDateRangePairs() {
+        return [
+            ['inputDateStartOuter', 'inputDateEndOuter']
+        ].map(([s, e]) => [document.getElementById(s), document.getElementById(e)]).filter(([s, e]) => s && e);
+    }
+
+    function validateDateRange(startEl, endEl) {
+        const container = startEl.closest('.date-range-container, .date-range-input') || startEl.parentElement;
+        const invalid = !!(startEl.value && endEl.value && startEl.value > endEl.value);
+        container.classList.toggle('date-range-error', invalid);
+        let tip = container.querySelector('.date-range-error-tip');
+        if (invalid && !tip) {
+            tip = document.createElement('span');
+            tip.className = 'date-range-error-tip';
+            tip.textContent = DATE_RANGE_ERROR_MSG;
+            container.appendChild(tip);
+        } else if (!invalid && tip) {
+            tip.remove();
+        }
+        // Constrain the native pickers so the invalid side can't be picked in the first place
+        endEl.min = startEl.value || '';
+        startEl.max = endEl.value || '';
+        return !invalid;
+    }
+
+    function validateAllDateRanges() {
+        return getDateRangePairs().map(([s, e]) => validateDateRange(s, e)).every(Boolean);
+    }
+
+    getDateRangePairs().forEach(([s, e]) => {
+        [s, e].forEach(el => {
+            el.addEventListener('change', () => validateDateRange(s, e));
+            el.addEventListener('input', () => validateDateRange(s, e));
+        });
+    });
+
     // Search events
     if (btnSearch) {
         btnSearch.addEventListener('click', () => {
+            if (!validateAllDateRanges()) {
+                showToast(`新增时间：${DATE_RANGE_ERROR_MSG}`);
+                return;
+            }
             updateFilters();
             renderTable();
-        });
-    }
-    if (btnApply) {
-        btnApply.addEventListener('click', () => {
-            updateFilters();
-            renderTable();
-            closeDrawer();
         });
     }
 
@@ -2684,8 +2725,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCustomizeFilterConfirm = document.getElementById('btnCustomizeFilterConfirm');
 
     if (btnCustomizeFilter && customizeFilterModal) {
-        const openModal = () => customizeFilterModal.classList.add('show');
-        const closeModal = () => customizeFilterModal.classList.remove('show');
+        const filterCheckboxes = () => customizeFilterModal.querySelectorAll('.checkbox-item input[type="checkbox"]');
+        // Currently applied (生效中) settings; updated only on 确认
+        const appliedFilterState = new Map();
+        filterCheckboxes().forEach(cb => appliedFilterState.set(cb.value, cb.checked));
+        const restoreAppliedState = () => {
+            filterCheckboxes().forEach(cb => {
+                if (appliedFilterState.has(cb.value)) cb.checked = appliedFilterState.get(cb.value);
+            });
+        };
+
+        const openModal = () => {
+            restoreAppliedState();
+            customizeFilterModal.classList.add('show');
+        };
+        // 取消 / 关闭 / 点击外部：丢弃未确认的勾选，还原为目前生效的设定
+        const closeModal = () => {
+            restoreAppliedState();
+            customizeFilterModal.classList.remove('show');
+        };
 
         btnCustomizeFilter.addEventListener('click', openModal);
         btnCustomizeFilterClose.addEventListener('click', closeModal);
@@ -2694,14 +2752,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Handle Confirm
         btnCustomizeFilterConfirm.addEventListener('click', () => {
             const checkboxes = customizeFilterModal.querySelectorAll('.checkbox-item input[type="checkbox"]');
-            let allChecked = true;
             checkboxes.forEach(cb => {
                 const filterId = cb.value;
                 const isChecked = cb.checked;
-
-                if (!isChecked) {
-                    allChecked = false;
-                }
+                appliedFilterState.set(filterId, isChecked);
 
                 // Find all form groups and headers associated with this filter ID
                 const elements = document.querySelectorAll(`[data-filter-id="${filterId}"]`);
@@ -2713,11 +2767,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
             });
-
-            const btnAdvanced = document.getElementById('openAdvancedFilter');
-            if (btnAdvanced) {
-                btnAdvanced.style.display = allChecked ? 'none' : '';
-            }
 
             closeModal();
         });
@@ -2754,6 +2803,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Header tags (会员类型 / 会员等级) follow the user's data; hidden when there is no data
+    function updateDrawerHeaderTags(drawerEl, user) {
+        if (!drawerEl) return;
+        const isEmpty = (v) => window.dataMode === 'nodata' || !v || v === '-';
+        const setTag = (el, val) => {
+            if (!el) return;
+            el.textContent = isEmpty(val) ? '' : val;
+            el.style.display = isEmpty(val) ? 'none' : '';
+        };
+        setTag(drawerEl.querySelector('.ued-tag-agent'), user.userType);
+        setTag(drawerEl.querySelector('.ued-tag-vip'), user.level);
+    }
+
     function openUserEditModal(uid) {
         if (!userEditDrawer) return;
         const user = (mockUsers || []).find(u => u.uid === uid) || (mockUsers && mockUsers[0]);
@@ -2762,6 +2824,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update title
         const titleEl = document.getElementById('userEditDrawerTitle');
         if (titleEl) titleEl.textContent = `修改用户详情 · ${user.account}`;
+        updateDrawerHeaderTags(userEditDrawer, user);
 
         // Update status badge
         const badge = document.getElementById('ued-status-badge');
@@ -2801,6 +2864,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Inputs
         const realNameIn = document.getElementById('editFormRealName');
         if (realNameIn) realNameIn.value = (window.dataMode === 'nodata' || user.realName === '-') ? '-' : user.realName;
+
+        const birthdayIn = document.getElementById('editFormBirthday');
+        if (birthdayIn) birthdayIn.value = (window.dataMode === 'nodata' || !user.birthday || user.birthday === '-') ? '' : user.birthday;
 
         const nicknameIn = document.getElementById('editFormNickname');
         if (nicknameIn) nicknameIn.value = (window.dataMode === 'nodata' || user.nickname === '-') ? '-' : user.nickname;
@@ -2872,6 +2938,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update Title
         const titleEl = document.getElementById('userDetailDrawerTitle');
         if (titleEl) titleEl.textContent = `查看详情 · ${user.account}`;
+        updateDrawerHeaderTags(userDetailDrawer, user);
 
         // Update Status Badge
         const badge = document.getElementById('ued-detail-status-badge');
@@ -2887,6 +2954,25 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 badge.classList.add('ued-status-disabled');
                 badge.innerHTML = '<span class="ued-status-dot"></span>目前状态：停用';
+            }
+        }
+
+        // 最新登入纪录：IP / 时间 / 同IP人数 follow the user's own data (so the IP shown can be found via the 登录IP filter)
+        if (window.dataMode !== 'nodata') {
+            const loginIpEl = document.getElementById('dtlLoginIp');
+            const loginGeoEl = document.getElementById('dtlLoginIpGeo');
+            const loginTimeEl = document.getElementById('dtlLoginTime');
+            const sameIpEl = document.getElementById('dtlLoginSameIp');
+            const ip = user.ip && user.ip !== '-' ? user.ip : '-';
+            if (loginIpEl) loginIpEl.textContent = ip;
+            if (loginGeoEl) loginGeoEl.textContent = `(${getIpGeo(ip)})`;
+            if (loginTimeEl) {
+                const [d, t] = String(user.lastLogin || '-').split(' ');
+                loginTimeEl.innerHTML = t ? `${d}<br>${t}` : d;
+            }
+            if (sameIpEl) {
+                sameIpEl.dataset.val = ip;
+                sameIpEl.textContent = ip === '-' ? '-' : getUsersByIp(ip).length.toLocaleString();
             }
         }
 
@@ -2980,16 +3066,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let data = [];
         if (type === 'ip') {
-            data = [
-                { user: 'megan002', timeHtml: '2026-07-28<br>16:30:42', timeStr: '2026-07-28 16:30:42', col3: '<div style="display:flex; align-items:center; gap:6px;">54.150.111.152 <button class="ued-copy-btn" title="复制" style="color:#94a3b8;"><i class="ph ph-copy"></i></button></div>', col4: '<div style="display:flex; gap:6px;"><i class="ph-fill ph-map-pin" style="color:#94a3b8; margin-top:2px; font-size:16px;"></i> Japan, Tokyo,<br>Tokyo</div>' },
-                { user: 'player_888', timeHtml: '2026-07-28<br>15:28:45', timeStr: '2026-07-28 15:28:45', col3: '<div style="display:flex; align-items:center; gap:6px;">54.150.111.152 <button class="ued-copy-btn" title="复制" style="color:#94a3b8;"><i class="ph ph-copy"></i></button></div>', col4: '<div style="display:flex; gap:6px;"><i class="ph-fill ph-map-pin" style="color:#94a3b8; margin-top:2px; font-size:16px;"></i> Japan, Tokyo,<br>Tokyo</div>' },
-                { user: 'vip_king99', timeHtml: '2026-07-28<br>14:26:48', timeStr: '2026-07-28 14:26:48', col3: '<div style="display:flex; align-items:center; gap:6px;">54.150.111.152 <button class="ued-copy-btn" title="复制" style="color:#94a3b8;"><i class="ph ph-copy"></i></button></div>', col4: '<div style="display:flex; gap:6px;"><i class="ph-fill ph-map-pin" style="color:#94a3b8; margin-top:2px; font-size:16px;"></i> Japan, Tokyo,<br>Tokyo</div>' }
-            ];
+            // 同IP人数：built from members whose login IP matches
+            const geo = getIpGeo(val);
+            data = getUsersByIp(val).map(u => {
+                const [d, t] = String(u.lastLogin || '-').split(' ');
+                return {
+                    user: u.account,
+                    timeHtml: t ? `${d}<br>${t}` : d,
+                    timeStr: u.lastLogin || '',
+                    col3: `<div style="display:flex; align-items:center; gap:6px;">${u.ip} <button class="ued-copy-btn" title="复制" data-copy="${u.ip}" style="color:#94a3b8;"><i class="ph ph-copy"></i></button></div>`,
+                    col4: `<div style="display:flex; gap:6px;"><i class="ph-fill ph-map-pin" style="color:#94a3b8; margin-top:2px; font-size:16px;"></i> ${geo}</div>`
+                };
+            });
         } else {
             data = [
-                { user: 'megan002', timeHtml: '2026-05-10<br>10:12:00', timeStr: '2026-05-10 10:12:00', col3: '<div style="display:flex; align-items:center; gap:6px;">ee5868d85af7f68cf088a... <button class="ued-copy-btn" title="复制" style="color:#94a3b8;"><i class="ph ph-copy"></i></button></div>', col4: '<div style="display:flex; gap:6px;"><i class="ph-fill ph-map-pin" style="color:#94a3b8; margin-top:2px; font-size:16px;"></i> Japan, Tokyo,<br>Tokyo</div>' },
-                { user: 'sub_acc_01', timeHtml: '2026-06-12<br>09:15:30', timeStr: '2026-06-12 09:15:30', col3: '<div style="display:flex; align-items:center; gap:6px;">ee5868d85af7f68cf088a... <button class="ued-copy-btn" title="复制" style="color:#94a3b8;"><i class="ph ph-copy"></i></button></div>', col4: '<div style="display:flex; gap:6px;"><i class="ph-fill ph-map-pin" style="color:#94a3b8; margin-top:2px; font-size:16px;"></i> Japan, Osaka</div>' },
-                { user: 'sub_acc_02', timeHtml: '2026-06-18<br>11:04:12', timeStr: '2026-06-18 11:04:12', col3: '<div style="display:flex; align-items:center; gap:6px;">ee5868d85af7f68cf088a... <button class="ued-copy-btn" title="复制" style="color:#94a3b8;"><i class="ph ph-copy"></i></button></div>', col4: '<div style="display:flex; gap:6px;"><i class="ph-fill ph-map-pin" style="color:#94a3b8; margin-top:2px; font-size:16px;"></i> Japan, Tokyo</div>' }
+                { user: 'megan002', timeHtml: '2026-05-10<br>10:12:00', timeStr: '2026-05-10 10:12:00', col3: '<div style="display:flex; align-items:center; gap:6px;">ee5868d85af7f68cf088a... <button class="ued-copy-btn" title="复制" data-copy="ee5868d85af7f68cf088a6780ff8882a" style="color:#94a3b8;"><i class="ph ph-copy"></i></button></div>', col4: '<div style="display:flex; gap:6px;"><i class="ph-fill ph-map-pin" style="color:#94a3b8; margin-top:2px; font-size:16px;"></i> Japan, Tokyo,<br>Tokyo</div>' },
+                { user: 'sub_acc_01', timeHtml: '2026-06-12<br>09:15:30', timeStr: '2026-06-12 09:15:30', col3: '<div style="display:flex; align-items:center; gap:6px;">ee5868d85af7f68cf088a... <button class="ued-copy-btn" title="复制" data-copy="ee5868d85af7f68cf088a6780ff8882a" style="color:#94a3b8;"><i class="ph ph-copy"></i></button></div>', col4: '<div style="display:flex; gap:6px;"><i class="ph-fill ph-map-pin" style="color:#94a3b8; margin-top:2px; font-size:16px;"></i> Japan, Osaka</div>' },
+                { user: 'sub_acc_02', timeHtml: '2026-06-18<br>11:04:12', timeStr: '2026-06-18 11:04:12', col3: '<div style="display:flex; align-items:center; gap:6px;">ee5868d85af7f68cf088a... <button class="ued-copy-btn" title="复制" data-copy="ee5868d85af7f68cf088a6780ff8882a" style="color:#94a3b8;"><i class="ph ph-copy"></i></button></div>', col4: '<div style="display:flex; gap:6px;"><i class="ph-fill ph-map-pin" style="color:#94a3b8; margin-top:2px; font-size:16px;"></i> Japan, Tokyo</div>' }
             ];
         }
 
@@ -3076,15 +3169,75 @@ document.addEventListener('DOMContentLoaded', () => {
     // Expose to global scope for inline onclick
     window._openUserEditModalGlobal = openUserEditModal;
 
+    // Copy helper: Clipboard API with execCommand fallback (e.g. non-secure context / iframe without permission)
+    function copyToClipboard(text) {
+        const fallback = () => new Promise((resolve, reject) => {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.setAttribute('readonly', '');
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            const ok = document.execCommand('copy');
+            ta.remove();
+            ok ? resolve() : reject(new Error('execCommand copy failed'));
+        });
+        if (navigator.clipboard && window.isSecureContext) {
+            return navigator.clipboard.writeText(text).catch(fallback);
+        }
+        return fallback();
+    }
+
+    function copyWithToast(text, label = '') {
+        if (!text) {
+            showToast('无可复制的内容');
+            return;
+        }
+        copyToClipboard(text)
+            .then(() => showToast(`已复制${label ? ' ' + label : ''}：${text}`))
+            .catch(() => showToast('复制失败'));
+    }
+
+    // Text next to a copy button (button siblings stripped; whitespace/<br> line breaks removed)
+    function getCopyTextForButton(btn) {
+        if (btn.dataset.copy) return btn.dataset.copy;
+        const holder = btn.parentElement;
+        if (!holder) return '';
+        const clone = holder.cloneNode(true);
+        clone.querySelectorAll('button, i').forEach(el => el.remove());
+        return clone.textContent.replace(/\s+/g, '');
+    }
+
     // Delegated click listener for user links
 
     document.addEventListener('click', (e) => {
         // Ignored if it's nested trigger, handled above
         if (e.target.closest('.nested-trigger')) return;
 
+        // 复制：表格内可复制文字（用户ID / 会员名等）
+        const copyable = e.target.closest('.copyable-text[data-copy]');
+        if (copyable) {
+            e.preventDefault();
+            e.stopPropagation();
+            copyWithToast(copyable.dataset.copy);
+            return;
+        }
+
+        // 复制：抽屉内 IP / 设备号等复制按钮
+        const copyBtn = e.target.closest('.ued-copy-btn[title="复制"]');
+        if (copyBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            copyWithToast(getCopyTextForButton(copyBtn));
+            return;
+        }
+
         const link = e.target.closest('.user-detail-link');
         if (link) {
             e.preventDefault();
+            // 无数据（N/A）时不开启任何抽屉
+            if (window.dataMode === 'nodata' || link.querySelector('.data-na, .data-empty')) return;
             const uid = link.getAttribute('data-uid');
             const text = link.textContent.trim();
 
@@ -3164,27 +3317,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (e.target.closest('.copy-ip-btn')) {
             const ip = e.target.closest('.copy-ip-btn').dataset.ip;
-            navigator.clipboard.writeText(ip).then(() => {
-                showToast('已复制 IP: ' + ip);
-            }).catch(err => {
-                showToast('复制失败');
-            });
+            copyWithToast(ip, 'IP');
         }
 
-        // Refresh third party balance in compact mode
-        if (e.target.closest('.refresh-icon-compact')) {
-            const icon = e.target.closest('.refresh-icon-compact');
-            if (icon.classList.contains('icon-spin')) return; // Already refreshing
-
-            icon.classList.add('icon-spin');
-
-            // Simulate API call
-            setTimeout(() => {
-                icon.classList.remove('icon-spin');
-                showToast('三方余额刷新成功');
-            }, 1000);
+        // Refresh third party balance (compact icon / expanded-row icon / nested「刷新」link)
+        const refreshTrigger = e.target.closest('.refresh-icon-compact, .refresh-link');
+        if (refreshTrigger) {
+            e.preventDefault();
+            refreshThirdBalance(refreshTrigger);
         }
     });
+
+    // 三方余额刷新：金额替换为骨架占位符（loading），完成后还原
+    function refreshThirdBalance(trigger) {
+        if (trigger.dataset.loading === 'true') return; // Already refreshing
+        const holder = trigger.parentElement;
+        const amountEl = holder ? holder.querySelector('a.val, a.wallet-detail-link') : null;
+
+        trigger.dataset.loading = 'true';
+        trigger.classList.add('is-loading');
+        if (trigger.classList.contains('refresh-icon-compact')) trigger.classList.add('icon-spin');
+
+        let placeholder = null;
+        if (amountEl) {
+            placeholder = document.createElement('span');
+            placeholder.className = 'skeleton-box amount-loading-placeholder';
+            placeholder.setAttribute('aria-label', '载入中');
+            placeholder.title = '载入中';
+            // Keep roughly the amount's width so the layout doesn't shift
+            placeholder.style.width = Math.max(40, Math.round(amountEl.getBoundingClientRect().width)) + 'px';
+            amountEl.style.display = 'none';
+            amountEl.insertAdjacentElement('afterend', placeholder);
+        }
+
+        // Simulate API call
+        setTimeout(() => {
+            if (placeholder) placeholder.remove();
+            if (amountEl) amountEl.style.display = '';
+            trigger.classList.remove('icon-spin', 'is-loading');
+            delete trigger.dataset.loading;
+            showToast('三方余额刷新成功');
+        }, 1000);
+    }
 
     const drawerContent = document.getElementById('columnsDrawerContent');
     if (drawerContent) {
@@ -3258,70 +3432,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderTable();
         closeDrawer();
     });
-
-    // Global Action Menu for Compact Mode
-    let globalActionMenu = document.getElementById('globalCompactActionMenu');
-    if (!globalActionMenu) {
-        globalActionMenu = document.createElement('div');
-        globalActionMenu.id = 'globalCompactActionMenu';
-        globalActionMenu.style.cssText = 'display:none;position:fixed;background:#fff;border:1px solid #e5e7eb;box-shadow:0 4px 12px rgba(0,0,0,0.15);border-radius:6px;z-index:999999;padding:8px 0;min-width:160px;white-space:nowrap;max-height:300px;overflow-y:auto;text-align:left;';
-
-        const compactActionItems = [
-            "编辑用户", "查看详情", "额度修改", "资金明细", "注单明细", "修改密码", "下级会员", "下级报表", "下级注单",
-            "---",
-            "交易设定", "赔率设置", "积分修改", "代理变更", "第三方游戏", "稽核记录", "代理变更记录", "回访备注",
-            "隐藏资金明细", "快速登录变更", "校验用户任务", "谷歌验证码", "链上地址", "额度修改(链上充值)", "编辑标签", "用户标签编辑记录"
-        ];
-        globalActionMenu.innerHTML = compactActionItems.map(item => {
-            if (item === '---') return `<div class="divider" style="height:1px;background-color:#e5e7eb;margin:4px 0;"></div>`;
-            const actionClassMap = {
-                '编辑用户': 'action-edit-user', '查看详情': 'action-view-details', '额度修改': 'action-edit-balance',
-                '资金明细': 'action-fund-detail', '注单明细': 'action-bet-detail', '修改密码': 'action-edit-password',
-                '下级会员': 'action-sub-member', '下级报表': 'action-sub-report', '下级注单': 'action-sub-bet',
-                '交易设定': 'action-trade-setting', '代理变更': 'action-edit-proxy',
-                '第三方游戏': 'action-third-game', '积分修改': 'action-edit-point',
-                '稽核记录': 'action-audit-record', '代理变更记录': 'action-proxy-record',
-                '隐藏资金明细': 'action-hide-fund', '快速登录变更': 'action-fast-login',
-                '谷歌验证码': 'action-google-auth',
-                '赔率设置': 'action-odds-setting', '校验用户任务': 'action-verify-task',
-                '链上地址': 'action-chain-address', '额度修改(链上充值)': 'action-edit-balance-chain',
-                '编辑标签': 'action-edit-tag', '用户标签编辑纪录': 'action-tag-record', '用户标签编辑记录': 'action-tag-record',
-                '回访备注': 'action-follow-remark'
-            };
-            const actionClass = actionClassMap[item] || '';
-            return `<a href="#" class="${actionClass}" style="display:block;padding:8px 16px;color:#374151;text-decoration:none;font-size:13px;text-align:center;" onmouseover="this.style.backgroundColor='#f3f4f6';this.style.color='#3b82f6'" onmouseout="this.style.backgroundColor='transparent';this.style.color='#374151'">${item}</a>`;
-        }).join('');
-
-        document.body.appendChild(globalActionMenu);
-
-        let hideTimeout;
-        const hideMenu = () => {
-            hideTimeout = setTimeout(() => {
-                globalActionMenu.style.display = 'none';
-            }, 150);
-        };
-        const showMenu = (iconEl) => {
-            clearTimeout(hideTimeout);
-            const rect = iconEl.getBoundingClientRect();
-            globalActionMenu.style.display = 'block';
-            globalActionMenu.style.top = (rect.bottom + 4) + 'px';
-            globalActionMenu.style.left = (rect.right - globalActionMenu.offsetWidth) + 'px';
-        };
-
-
-        document.addEventListener('mouseover', (e) => {
-            const icon = e.target.closest('.compact-action-icon');
-            if (icon) {
-                showMenu(icon);
-            } else if (e.target.closest('#globalCompactActionMenu')) {
-                clearTimeout(hideTimeout);
-            } else {
-                if (globalActionMenu.style.display === 'block') {
-                    hideMenu();
-                }
-            }
-        });
-    }
 
     // Bottom Stats Bar Toggle Logic
     const btnToggleStats = document.getElementById('btnToggleStats');
@@ -3397,13 +3507,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const diff = e.pageX - startX;
         let newWidth = startWidth + diff;
         if (newWidth < 60) newWidth = 60;
-        currentTh.style.minWidth = newWidth + 'px';
-        currentTh.style.width = newWidth + 'px';
-        currentTh.style.maxWidth = newWidth + 'px';
-
-        if (currentTh.classList.contains('sticky-col')) {
-            updateStickyPositions();
-        }
+        setThWidth(currentTh, newWidth);
+        syncCompactTableLayout();
     });
 
     document.addEventListener('mouseup', function (e) {
@@ -3411,32 +3516,73 @@ document.addEventListener('DOMContentLoaded', () => {
             isResizing = false;
             document.body.style.cursor = '';
             document.querySelectorAll('.resizing').forEach(r => r.classList.remove('resizing'));
+            // Remember the user's width so it survives re-renders (换页 / 排序 / 筛选)
+            const colId = currentTh && currentTh.dataset.col;
+            if (colId) userColumnWidths[`${currentTableMode}|${colId}`] = currentTh.offsetWidth;
             currentTh = null;
         }
     });
 
-    function updateStickyPositions() {
+    function setThWidth(th, width) {
+        th.style.minWidth = width + 'px';
+        th.style.width = width + 'px';
+        th.style.maxWidth = width + 'px';
+    }
+
+    // Left-pinned cells are the sticky cells carrying an inline `left` (right-pinned 操作 has none)
+    function isLeftPinned(cell) {
+        return cell.classList.contains('sticky-col') && cell.style.left !== '';
+    }
+
+    function syncCompactTableLayout() {
         const table = document.getElementById('userTable');
-        if (!table) return;
-        const headers = Array.from(table.querySelectorAll('thead th.sticky-col'));
-        let currentLeft = 0;
-        const leftOffsets = [];
-        headers.forEach(th => {
-            leftOffsets.push(currentLeft);
-            th.style.left = currentLeft + 'px';
-            currentLeft += th.offsetWidth;
+        if (!table || currentTableMode !== 'compact') return;
+        const headRows = table.querySelectorAll('thead tr');
+        if (headRows.length === 0) return;
+        const subRow = headRows[headRows.length - 1];
+
+        // 1. Restore user-adjusted widths
+        subRow.querySelectorAll('th[data-col]').forEach(th => {
+            const w = userColumnWidths[`${currentTableMode}|${th.dataset.col}`];
+            if (w) setThWidth(th, w);
         });
 
-        const rows = table.querySelectorAll('tbody tr');
-        rows.forEach(row => {
-            const tds = row.querySelectorAll('td.sticky-col');
-            tds.forEach((td, i) => {
-                if (leftOffsets[i] !== undefined) {
-                    td.style.left = leftOffsets[i] + 'px';
-                }
+        // 2. Pinned offsets from the real rendered widths, so pinned columns never overlap
+        const pinnedThs = [...subRow.children].filter(isLeftPinned);
+        const offsets = [];
+        let left = 0;
+        pinnedThs.forEach(th => {
+            offsets.push(left);
+            th.style.left = left + 'px';
+            left += th.getBoundingClientRect().width;
+        });
+        if (headRows.length > 1) {
+            let ptr = 0;
+            [...headRows[0].children].forEach(th => {
+                const span = th.colSpan || 1;
+                if (isLeftPinned(th) && offsets[ptr] !== undefined) th.style.left = offsets[ptr] + 'px';
+                if (isLeftPinned(th) || th.classList.contains('sticky-col')) ptr += span;
+            });
+        }
+        table.querySelectorAll('tbody tr:not(.expanded-detail-row)').forEach(row => {
+            [...row.children].filter(isLeftPinned).forEach((td, i) => {
+                if (offsets[i] !== undefined) td.style.left = offsets[i] + 'px';
             });
         });
+
+        // 3. Expanded card area = visible width of the table viewport (it sticks there while scrolling sideways)
+        const wrapper = table.closest('.table-wrapper');
+        if (wrapper) {
+            const visible = Math.min(wrapper.clientWidth, subRow.getBoundingClientRect().width) - 32; // td padding 16px × 2
+            table.style.setProperty('--detail-visible-width', Math.max(0, Math.floor(visible)) + 'px');
+        }
     }
+
+    let syncLayoutRaf = null;
+    window.addEventListener('resize', () => {
+        cancelAnimationFrame(syncLayoutRaf);
+        syncLayoutRaf = requestAnimationFrame(syncCompactTableLayout);
+    });
 
     window.setupTableResizing = initTableResizing;
 
@@ -3777,9 +3923,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+    // Disabled look for drawer move buttons at a group / list boundary
+    const MOVE_BTN_DISABLED_STYLE = 'opacity: 0.3; cursor: not-allowed;';
+
     function renderPills(cols, isLeftPanel) {
         let html = '<div style="display: flex; flex-wrap: wrap; gap: 8px;">';
-        cols.forEach(col => {
+        cols.forEach((col, colIdx) => {
+            // ◀▶ only move within this group: disable at the group's first / last pill
+            const canMoveLeft = colIdx > 0;
+            const canMoveRight = colIdx < cols.length - 1;
             const isMandatory = ['uid', 'account', 'action', 'memberInfo'].includes(col.id);
             const inMainTable = currentTableMode === 'nested' ? 
                 nestedColumnsConfig.some(c => c.id === col.id) : 
@@ -3805,8 +3957,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (isLeftPanel) {
                     html += `
                         <div class="pill-actions-hover" style="display:flex; align-items:center; margin-left: 4px; gap: 4px; border-left: 1px solid ${border}; padding-left: 6px;">
-                            <button type="button" style="background:none; border:none; color:#94a3b8; cursor:pointer; padding: 0 2px; display:flex; align-items:center; justify-content:center;" onclick="window.moveColumnLeft('${col.id}')" title="向左移动"><i class="ph-bold ph-caret-left"></i></button>
-                            <button type="button" style="background:none; border:none; color:#94a3b8; cursor:pointer; padding: 0 2px; display:flex; align-items:center; justify-content:center;" onclick="window.moveColumnRight('${col.id}')" title="向右移动"><i class="ph-bold ph-caret-right"></i></button>
+                            <button type="button" class="pill-move-btn" ${canMoveLeft ? '' : 'disabled aria-disabled="true"'} style="background:none; border:none; color:#94a3b8; cursor:pointer; padding: 0 2px; display:flex; align-items:center; justify-content:center; ${canMoveLeft ? '' : MOVE_BTN_DISABLED_STYLE}" onclick="event.preventDefault(); event.stopPropagation(); window.moveColumnLeft('${col.id}')" title="${canMoveLeft ? '向左移动' : '已是本组第一个'}"><i class="ph-bold ph-caret-left"></i></button>
+                            <button type="button" class="pill-move-btn" ${canMoveRight ? '' : 'disabled aria-disabled="true"'} style="background:none; border:none; color:#94a3b8; cursor:pointer; padding: 0 2px; display:flex; align-items:center; justify-content:center; ${canMoveRight ? '' : MOVE_BTN_DISABLED_STYLE}" onclick="event.preventDefault(); event.stopPropagation(); window.moveColumnRight('${col.id}')" title="${canMoveRight ? '向右移动' : '已是本组最后一个'}"><i class="ph-bold ph-caret-right"></i></button>
                             ${(!isMandatory && availableDataSource.some(c => c.id === col.id)) ? `<button type="button" style="background:#fee2e2; border:none; color:#ef4444; border-radius:4px; padding:2px 4px; cursor:pointer; display:flex; align-items:center; justify-content:center; margin-left: 2px;" onclick="window.demoteColumnToCard('${col.id}')" title="从主表移除"><i class="ph-bold ph-x" style="font-size: 12px;"></i></button>` : ''}
                         </div>
                     `;
@@ -3830,7 +3982,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return html;
     }
 
-    function renderCategoryCard(groupName, cols, isLeftPanel) {
+    function renderCategoryCard(groupName, cols, isLeftPanel, moveOpts = {}) {
+        const canUp = moveOpts.canUp !== false;
+        const canDown = moveOpts.canDown !== false;
         const catIcons = {
             '存取款资料': 'ph-bold ph-wallet',
             '推荐关系': 'ph-bold ph-share-network',
@@ -3875,8 +4029,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         ${defaultLockHtml}
                     </div>
                     ${groupName === '其他' ? '' : `<div style="display:flex; align-items:center; border: 1px solid #e2e8f0; background: #fff; border-radius: 6px; overflow: hidden;" onclick="event.stopPropagation()">
-                        <button type="button" style="background:none; border:none; color:#94a3b8; cursor:pointer; padding: 4px 8px; border-right: 1px solid #e2e8f0; display:flex; align-items:center; justify-content:center;" onclick="${upFn}" title="向上移动"><i class="ph-bold ph-caret-up"></i></button>
-                        <button type="button" style="background:none; border:none; color:#94a3b8; cursor:pointer; padding: 4px 8px; display:flex; align-items:center; justify-content:center;" onclick="${downFn}" title="向下移动"><i class="ph-bold ph-caret-down"></i></button>
+                        <button type="button" class="cat-move-btn" ${canUp ? '' : 'disabled aria-disabled="true"'} style="background:none; border:none; color:#94a3b8; cursor:pointer; padding: 4px 8px; border-right: 1px solid #e2e8f0; display:flex; align-items:center; justify-content:center; ${canUp ? '' : MOVE_BTN_DISABLED_STYLE}" onclick="${upFn}" title="${canUp ? '向上移动' : '已在最上方'}"><i class="ph-bold ph-caret-up"></i></button>
+                        <button type="button" class="cat-move-btn" ${canDown ? '' : 'disabled aria-disabled="true"'} style="background:none; border:none; color:#94a3b8; cursor:pointer; padding: 4px 8px; display:flex; align-items:center; justify-content:center; ${canDown ? '' : MOVE_BTN_DISABLED_STYLE}" onclick="${downFn}" title="${canDown ? '向下移动' : '已在最下方'}"><i class="ph-bold ph-caret-down"></i></button>
                     </div>`}
                 </div>
         `;
@@ -3906,6 +4060,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return innerHtml;
     }
 
+    // Section of each right-panel card from the last render (shown / empty / 其他), used to guard ↑↓
+    const rightCategorySection = new Map();
+
     function _renderDrawerStatesOriginal() {
         const col1 = document.getElementById('col1-table-fields');
         const col2 = document.getElementById('col2-card-fields');
@@ -3931,8 +4088,11 @@ document.addEventListener('DOMContentLoaded', () => {
             leftGroups[grp].push(col);
         });
 
-        leftGroupOrder.forEach(grp => {
-            col1.innerHTML += renderCategoryCard(grp, leftGroups[grp], true);
+        leftGroupOrder.forEach((grp, i) => {
+            col1.innerHTML += renderCategoryCard(grp, leftGroups[grp], true, {
+                canUp: i > 0,
+                canDown: i < leftGroupOrder.length - 1
+            });
         });
 
         // --- Right Panel ---
@@ -3958,8 +4118,15 @@ document.addEventListener('DOMContentLoaded', () => {
         drawerCategoryOrder.length = 0;
         drawerCategoryOrder.push(...catKeys, ...extraCats);
 
-        catKeys.forEach(grp => {
-            col2.innerHTML += renderCategoryCard(grp, rightGroups[grp], false);
+        // ↑↓ only swap within the same section (cards are re-sorted by section, so crossing it has no effect) and never with 其他
+        rightCategorySection.clear();
+        catKeys.forEach(grp => rightCategorySection.set(grp, sectionOf(grp)));
+        const canSwapRight = (a, b) => !!b && a !== '其他' && b !== '其他' && sectionOf(a) === sectionOf(b);
+        catKeys.forEach((grp, i) => {
+            col2.innerHTML += renderCategoryCard(grp, rightGroups[grp], false, {
+                canUp: canSwapRight(grp, catKeys[i - 1]),
+                canDown: canSwapRight(grp, catKeys[i + 1])
+            });
         });
 
         const badge1 = document.getElementById('badge-col1');
@@ -4064,29 +4231,30 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!col1 || !col2) return;
         drawerFlip([col1, col2], _renderDrawerStatesOriginal, { seeds });
     }
-    window.moveColumnLeft = function (id) {
-        let list = currentTableMode === 'nested' ? nestedColumnsConfig : compactColumnsConfig;
-        const idx = list.findIndex(c => c.id === id);
-        if (idx > 0) {
-            const temp = list[idx - 1];
-            list[idx - 1] = list[idx];
-            list[idx] = temp;
-            renderDrawerStates();
-            updateTableFromDrawer();
-        }
-    };
+    // Group a pill belongs to in the drawer (存取款资料 is split into 主钱包 / 汇总 sub-groups)
+    function columnMoveGroupKey(col) {
+        const grp = col.category || col.group || '其他';
+        return grp === '存取款资料' ? `${grp}|${col.tag || ''}` : grp;
+    }
 
-    window.moveColumnRight = function (id) {
-        let list = currentTableMode === 'nested' ? nestedColumnsConfig : compactColumnsConfig;
+    // ◀▶: swap with the nearest column of the same group; no-op at the group boundary
+    function moveColumnWithinGroup(id, dir) {
+        const list = currentTableMode === 'nested' ? nestedColumnsConfig : compactColumnsConfig;
         const idx = list.findIndex(c => c.id === id);
-        if (idx > -1 && idx < list.length - 1) {
-            const temp = list[idx + 1];
-            list[idx + 1] = list[idx];
-            list[idx] = temp;
-            renderDrawerStates();
-            updateTableFromDrawer();
-        }
-    };
+        if (idx < 0) return;
+        const key = columnMoveGroupKey(list[idx]);
+        let j = idx + dir;
+        while (j >= 0 && j < list.length && (list[j].id === 'action' || columnMoveGroupKey(list[j]) !== key)) j += dir;
+        if (j < 0 || j >= list.length) return;
+        const temp = list[j];
+        list[j] = list[idx];
+        list[idx] = temp;
+        renderDrawerStates();
+        updateTableFromDrawer();
+    }
+
+    window.moveColumnLeft = function (id) { moveColumnWithinGroup(id, -1); };
+    window.moveColumnRight = function (id) { moveColumnWithinGroup(id, 1); };
 
     window.moveLeftCategoryUp = function(groupName) {
         let list = currentTableMode === 'nested' ? nestedColumnsConfig : compactColumnsConfig;
@@ -4163,6 +4331,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const idx = drawerCategoryOrder.indexOf(catName);
         if (idx > 0) {
             if (drawerCategoryOrder[idx - 1] === '其他') return; // Cannot swap with 其他
+            if (rightCategorySection.get(drawerCategoryOrder[idx - 1]) !== rightCategorySection.get(catName)) return; // Boundary of its section
             const temp = drawerCategoryOrder[idx - 1];
             drawerCategoryOrder[idx - 1] = drawerCategoryOrder[idx];
             drawerCategoryOrder[idx] = temp;
@@ -4176,6 +4345,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const idx = drawerCategoryOrder.indexOf(catName);
         if (idx > -1 && idx < drawerCategoryOrder.length - 1) {
             if (drawerCategoryOrder[idx + 1] === '其他') return; // Cannot swap with 其他
+            if (rightCategorySection.get(drawerCategoryOrder[idx + 1]) !== rightCategorySection.get(catName)) return; // Boundary of its section
             const temp = drawerCategoryOrder[idx + 1];
             drawerCategoryOrder[idx + 1] = drawerCategoryOrder[idx];
             drawerCategoryOrder[idx] = temp;
@@ -4970,11 +5140,10 @@ const item = list.splice(idxFrom, 1)[0];
             { id: 'userEditDrawer', openClass: 'active', closeBtn: 'btnUserEditClose' },
             { id: 'userDetailDrawer', openClass: 'active', closeBtn: 'btnUserDetailClose' },
             { id: 'customColumnDrawer', openClass: 'show', closeBtn: 'btnCloseCustomColumnDrawer' },
-            { id: 'columnsDrawer', openClass: 'active', closeBtn: 'btnColumnsDrawerCloseX' },
-            { id: 'advancedDrawer', openClass: 'active', closeBtn: 'closeAdvancedFilter' }
+            { id: 'columnsDrawer', openClass: 'active', closeBtn: 'btnColumnsDrawerCloseX' }
         ];
         // Floating UI that belongs to whatever is open, and toggle buttons that close their own panel, never count as "outside"
-        const IGNORE = '#global-tooltip, .drag-block-hint, #globalCompactActionMenu, .btn-header-columns-toggle';
+        const IGNORE = '#global-tooltip, .drag-block-hint, .btn-header-columns-toggle';
 
         const isOpen = (p, el) => el.classList.contains(p.openClass) && el.style.display !== 'none';
         const topmostOpen = () => {

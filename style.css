@@ -2091,6 +2091,35 @@ body.hide-contact-info #viewContactCard {
     cursor: pointer;
 }
 
+/* 新增时间：开始晚于结束 */
+.date-range-container,
+.date-range-input {
+    position: relative;
+}
+
+.date-range-container.date-range-error,
+.date-range-input.date-range-error {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.12);
+}
+
+.form-group:has(> .date-range-error),
+.form-group:has(> .date-range-input.date-range-error) {
+    margin-bottom: 16px;
+}
+
+.date-range-error-tip {
+    position: absolute;
+    left: 12px;
+    top: calc(100% + 2px);
+    font-size: 12px;
+    line-height: 1.4;
+    color: #ef4444;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 5;
+}
+
 .date-range-container .date-text {
     flex: 1;
     color: var(--text-light);
@@ -2374,6 +2403,19 @@ body.hide-contact-info #viewContactCard {
 
 .compact-mode-table .cell-username:hover {
     text-decoration: underline;
+}
+
+/* 会员名：纯文字，不可点击 */
+.cell-username-static,
+.compact-mode-table .cell-username.cell-username-static {
+    color: var(--text-main);
+    font-weight: 600;
+    cursor: default;
+}
+
+.cell-username-static:hover,
+.compact-mode-table .cell-username.cell-username-static:hover {
+    text-decoration: none;
 }
 
 /* 操作按钮选单 (Compact Mode Action Dropdown) */
@@ -5448,4 +5490,42 @@ input.ued-input-sm {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+/* 展开列：明细卡片区固定在表格可视范围内（横向卷动表格时不跟着卷走），宽度＝可视宽度，
+   不参与表格栏宽计算（展开／收合不改变栏宽）；卡片过多时在卡片区内横向卷动 */
+.expanded-detail-row > td > .detail-cards-wrapper {
+    position: sticky;
+    left: 16px;
+    width: var(--detail-visible-width, 0px);
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+/* 三方余额刷新中：金额改为骨架占位符 */
+.amount-loading-placeholder {
+    height: 14px;
+    vertical-align: middle;
+}
+
+.refresh-link.is-loading,
+.refresh-icon-compact.is-loading {
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+/* 用户标签精准搜寻：无符合结果 */
+.custom-select-multi .select-options li.search-empty-item {
+    justify-content: center;
+    color: #94a3b8;
+    cursor: default;
+    pointer-events: none;
+}
+
+/* 筛选列与工具列的下拉选单置于页面最上层：高于表格固定栏位(40)与底部统计列(95)，低于遮罩(100)及抽屉／弹窗 */
+.filter-card .select-options,
+.filter-card .dropdown-menu,
+#batchOperationsMenu,
+#exportDataMenu {
+    z-index: 99 !important;
 }
