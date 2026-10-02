@@ -3174,6 +3174,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 sameIpEl.dataset.val = ip;
                 sameIpEl.textContent = ip === '-' ? '-' : getUsersByIp(ip).length.toLocaleString();
             }
+
+            // 注册纪录：mock 资料无独立注册 IP，沿用用户 IP；同IP人数与下钻列表同源
+            const regIp = user.regIp && user.regIp !== '-' ? user.regIp : ip;
+            const regIpEl = document.getElementById('dtlRegIp');
+            const regGeoEl = document.getElementById('dtlRegIpGeo');
+            const regSameIpEl = document.getElementById('dtlRegSameIp');
+            if (regIpEl) regIpEl.textContent = regIp;
+            if (regGeoEl) regGeoEl.textContent = `(${getIpGeo(regIp)})`;
+            if (regSameIpEl) {
+                regSameIpEl.dataset.val = regIp;
+                regSameIpEl.textContent = regIp === '-' ? '-' : getUsersByIp(regIp).length.toLocaleString();
+            }
         }
 
         // Apply nodata mock overrides to hardcoded view modal elements
