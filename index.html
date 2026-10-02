@@ -537,7 +537,8 @@
             function setMockMode(mode) {
                 // Update iframe source
                 if (mainContentIframe) {
-                    mainContentIframe.src = 'content.html?mock=' + mode;
+                    // Timestamp keeps the browser from reusing a cached (outdated) content.html
+                    mainContentIframe.src = 'content.html?mock=' + mode + '&_=' + Date.now();
                 }
 
                 // Update top nav stats

@@ -5529,3 +5529,235 @@ input.ued-input-sm {
 #exportDataMenu {
     z-index: 99 !important;
 }
+
+/* 展开列的大头照：沿用 detail-card 的排序／显示控制，但不套用卡片外框 */
+.detail-card.detail-card-avatar {
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+    overflow: visible;
+    margin-bottom: 0;
+    min-width: 0;
+}
+
+/* 大头照加入主表时的栏位：与展开列大头照同样式的小尺寸版本 */
+.table-avatar-initial {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: #6366f1;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+td[data-col="ds_avatar"],
+th[data-col="ds_avatar"] {
+    text-align: center;
+}
+
+/* 展开模式表头不断行（自展开卡片加入主表的短标签，如「大头照」「真实姓名」不再逐字换行） */
+#userTable:not(.compact-mode-table) thead th {
+    white-space: nowrap;
+}
+
+/* ==========================================
+   底部统计栏：一般情况维持单行（标签与金额并排、48px）；
+   放不下单行时（极限金额／窄画面）由 script.js 加上 .stats-wrap：
+   改为「标签在上、金额在下」，金额可在千分位后换行，统计栏整体增高
+   ========================================== */
+.bottom-stats-bar:not(.stats-wrap) .stat-item {
+    white-space: nowrap; /* 单行模式：不让标签逐字断行，放不下时改用 .stats-wrap */
+}
+
+.bottom-stats-bar.stats-wrap {
+    height: auto;
+    min-height: 48px;
+    padding: 8px 24px;
+    box-sizing: border-box;
+}
+
+.bottom-stats-bar.stats-wrap .bottom-stats-left {
+    flex: 1 1 auto;
+    min-width: 0;
+    align-items: stretch;
+}
+
+.bottom-stats-bar.stats-wrap .stat-item {
+    flex: 0 1 auto;
+    min-width: min-content;    /* 最窄只缩到标签宽度，由金额换行吸收空间 */
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 2px;
+}
+
+.bottom-stats-bar.stats-wrap .stat-label {
+    font-size: 12px;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.bottom-stats-bar.stats-wrap .stat-value {
+    line-height: 1.35;
+    overflow-wrap: break-word; /* 优先在千分位逗号后换行（script.js 插入 <wbr>），仍放不下才断字 */
+    word-break: normal;
+}
+
+.bottom-stats-bar.stats-wrap .stat-unit {
+    white-space: nowrap;
+}
+
+.bottom-stats-bar.stats-wrap .stat-divider {
+    align-self: stretch;
+    height: auto;
+    min-height: 16px;
+}
+
+/* 表格底部预留空间 = 统计栏实际高度（由 script.js 量测写入 --stats-bar-height） */
+.table-wrapper {
+    padding-bottom: calc(var(--stats-bar-height, 48px) + 8px);
+}
+
+/* 极窄宽度（标签本身已放不下一列）：统计项改为多列排列 */
+@media (max-width: 700px) {
+    .bottom-stats-bar.stats-wrap .bottom-stats-left {
+        flex-wrap: wrap;
+        row-gap: 6px;
+    }
+
+    .bottom-stats-bar.stats-wrap .bottom-stats-left .stat-divider {
+        display: none;
+    }
+}
+
+/* ==========================================
+   筛选标签区：限高与收合（标签过多时不再挤掉下方列表）
+   ========================================== */
+.current-filters .filter-tags {
+    flex: 1 1 0;          /* 与「展开筛选」、分页同一列，标签区吃剩余宽度 */
+    min-width: 0;
+    align-items: center;
+}
+
+/* 单一标签最多一行，超出以省略号显示（完整内容见滑过提示） */
+.filter-tag {
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.filter-tag-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.filter-tag i {
+    flex-shrink: 0;
+}
+
+/* 展开全部标签：最高 30% 视窗，于标签区内卷动 */
+.filter-tags.is-expanded {
+    max-height: 30vh;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.filter-tags-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border: 1px dashed #c7d2fe;
+    border-radius: 16px;
+    background: #ffffff;
+    color: #4f46e5;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.filter-tags-toggle:hover {
+    background: #eef2ff;
+}
+
+/* 筛选条件被收起时的「展开筛选」 */
+.btn-show-filters {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;          /* 与「条/页」下拉、分页按钮同高 */
+    padding: 0;
+    border: 1px solid #d0d5dd;
+    border-radius: 4px;
+    background: #ffffff;
+    color: #475467;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.btn-show-filters:hover {
+    background: #f9fafb;
+    color: #4f46e5;
+}
+
+/* 保底：视窗过矮时整页可卷动（列表区最小高度由 script.js 写入 .app-container 的 min-height） */
+.main-content {
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+/* ==========================================
+   筛选标签列间距：展开／收起筛选列时一致，并尽量压缩让列表显示更多
+   标签列上下皆为 8px（展开时筛选卡片不再另留下边距）
+   ========================================== */
+.filter-card {
+    margin-bottom: 0;
+}
+
+.current-filters {
+    padding: 8px 24px;
+    gap: 12px;
+    align-items: flex-start;   /* 多行标签时，分页对齐第一行 */
+}
+
+/* 收起筛选列时，上方工具列有 -1px 下边距：补回 1px，让标签上方同为 8px */
+.filter-card.collapsed + .table-card .current-filters {
+    padding-top: 9px;
+}
+
+.current-filters .pagination-container {
+    margin-top: 1px;           /* 24px 高的分页与 26px 高的标签垂直置中 */
+}
+
+.current-filters .filter-tags {
+    gap: 6px;
+}
+
+.filter-tag {
+    padding: 2px 10px;
+    line-height: 20px;
+    font-size: 13px;
+}
+
+.filter-tags-toggle {
+    padding: 2px 10px;
+    line-height: 20px;
+}
+
+.current-filters .btn-clear-all-tags {
+    padding: 0 4px !important;
+    height: 26px;              /* 与标签同高，避免撑高整列 */
+    min-height: 26px;
+    display: inline-flex;
+    align-items: center;
+}

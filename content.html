@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>会员管理 Prototype</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=10">
+    <link rel="stylesheet" href="style.css?v=28">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 
@@ -296,6 +296,10 @@
                         </button>
                         <!-- 分页区块 (极简版) -->
                         <div class="pagination-container" style="gap: 8px; margin-left: auto;">
+                            <!-- 筛选条件被收起（卷动或空间不足）时显示 -->
+                            <button type="button" class="btn-show-filters" id="btnShowFilters" data-tooltip="展开筛选列" aria-label="展开筛选列" style="display: none;">
+                                <i class="ph ph-caret-double-down"></i>
+                            </button>
                             <div class="pagination-size-wrapper">
                                 <select id="selectPageSize" class="page-size-select"
                                     style="padding: 2px 6px; font-size: 12px; height: 24px;">
@@ -1207,7 +1211,7 @@
             document.write('<script src="mock_data_' + dataMode + '.js?v=3"><\/script>');
         })();
     </script>
-    <script src="script.js?v=17"></script>
+    <script src="script.js?v=38"></script>
 
         <!-- Custom Columns Drawer (Compact Mode) -->
         <div class="advanced-filter-drawer" id="columnsDrawer">

@@ -15,6 +15,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let drawerCategoryOrder = ['基本资料', '额度', '存取款资料', '成长与积分', '推荐关系', '余额宝', '信贷', '用户标签', '其他'];
     let drawerCategoryVisibility = { '信贷': false };
     // Order of the 主钱包 / 汇总 columns inside the expanded 存取款资料 card (展开卡片)
+    // Filter-tag area / table space state (see layoutFilterTags & ensureTableSpace)
+    let filterTagsExpanded = false;   // user opened the full tag list
+    let filterAutoCollapsed = false;  // filter card hidden automatically to give the table room
+    let filterUserExpanded = false;   // user re-opened the filter card on purpose (don't auto-hide again)
+    let filterUserCollapsed = false;  // user hid the filter card on purpose (don't auto-show again)
+    let lastFilterCardHeight = 0;     // filter card height (incl. margins) while visible
     const DEPOSIT_SUB_TAGS = ['主钱包', '汇总'];
     const depositCardSubOrder = [...DEPOSIT_SUB_TAGS];
 
@@ -76,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const dsId = card.getAttribute('data-ds-id');
                         const isCol1 = activeLists.frozen.some(c => c.id === dsId) || activeLists.scroll.some(c => c.id === dsId);
                         const isVisible = dataSourceFieldVisibility[dsId] !== false && !isCol1;
-                        card.style.display = isVisible ? '' : 'none';
+                        card.style.display = isVisible ? (card.classList.contains('detail-card-avatar') ? 'flex' : '') : 'none';
                     } else {
                         const body = card.querySelector('.detail-card-body');
                         if (body && !body.hasAttribute('data-no-sort')) {
@@ -539,59 +545,67 @@ document.addEventListener('DOMContentLoaded', () => {
     window.dataMode = dataMode; // export globally if needed
 
     // Filter Row Extreme Mock
+    // 极限模式：筛选列预填「所有极限资料都符合」的极限值（长字串／大数字），标签与列表结果一致；
+    // 各笔资料不同的栏位（币种、层级、生日、未登入天数…）维持「全部」，不预填与资料矛盾的条件
     if (dataMode === 'extreme') {
-        const filterDropdowns = [
-            'dropdownStatus', 'dropdownLevel', 'dropdownVip', 'dropdownCurrency', 'dropdownUserTags',
-            'dropdownOther', 'dropdownBirthdayOuter', 'accountTypeDropdown'
-        ];
-        filterDropdowns.forEach(id => {
+        const base = window.baseMockUsers || [];
+        const common = (key) => {
+            const vals = [...new Set(base.map(u => u[key]))];
+            return vals.length === 1 && vals[0] !== undefined && vals[0] !== null && vals[0] !== '-' ? vals[0] : null;
+        };
+        const pickSingle = (id, value) => {
             const el = document.getElementById(id);
-            if (el) {
-                if (el.classList.contains('custom-select-multi')) {
-                    el.querySelectorAll('li').forEach(li => {
-                        if (!li.classList.contains('search-box-item')) {
-                            const cb = li.querySelector('input[type="checkbox"]');
-                            if (cb && !cb.checked) {
-                                li.click();
-                            }
-                        }
-                    });
-                } else {
-                    const options = Array.from(el.querySelectorAll('li')).filter(li => li.getAttribute('data-value') !== '');
-                    if (options.length > 0) {
-                        if (id === 'accountTypeDropdown') {
-                            options[0].click(); // Select the first option for account type (账号精确匹配)
-                        } else {
-                            options[options.length - 1].click();
-                        }
-                    }
-                }
-            }
-        });
-
-        const extremeInputValues = {
-            'inputBankCardOuter': '4512 3456 7890 1234',
-            'inputOfflineDaysOuter': '999999999',
-            'inputAgentIdOuter': 'super_agent_extreme_long_id_99999999999999',
-            'inputVipLevelOuter': '999999999',
-            'inputIpOuter': '192.168.1.1',
-            'inputDepositOuter': '99999999999999999',
-            'inputAccount': 'test_user_123'
+            const li = el && value !== null ? [...el.querySelectorAll('.select-options li')].find(l => l.getAttribute('data-value') === String(value)) : null;
+            if (li) li.click();
         };
 
+        // 状态：所有资料相同时才预填
+        pickSingle('dropdownStatus', common('status'));
+
+        // 用户标签：全选（任一符合即显示，每笔资料都有标签）；排除条件：不预填（任一排除都会滤掉一半资料）
+        const tagsDropdown = document.getElementById('dropdownUserTags');
+        if (tagsDropdown) {
+            tagsDropdown.querySelectorAll('.select-options li[data-value]').forEach(li => {
+                const cb = li.querySelector('input[type="checkbox"]');
+                if (cb && !cb.checked) li.click();
+            });
+        }
+        if (dropdownOther) clearMultiSelectValue(dropdownOther);
+
+        // 账号：模糊匹配所有极限账号的共同前缀
+        const accounts = base.map(u => String(u.account || ''));
+        let prefix = accounts[0] || '';
+        accounts.forEach(a => { while (prefix && !a.startsWith(prefix)) prefix = prefix.slice(0, -1); });
+        const fuzzyLi = document.querySelector('#accountTypeMenu li[data-value="fuzzy"]');
+        if (fuzzyLi && prefix) fuzzyLi.click(); // also clears the input, so set the value afterwards
+
+        const deposits = base.map(u => parseFloat(u.deposit)).filter(n => !isNaN(n));
+        const extremeInputValues = {
+            'inputAccount': prefix,
+            'inputAgentIdOuter': common('agentId'),
+            'inputVipLevelOuter': common('vipLevel'),
+            'inputIpOuter': common('ip'),
+            // 「存款大于」取略低于最小存款的整数（所有资料都 > 此值）
+            'inputDepositOuter': deposits.length ? String(Number.isInteger(Math.min(...deposits)) ? Math.min(...deposits) - 1 : Math.floor(Math.min(...deposits))) : null
+        };
         Object.keys(extremeInputValues).forEach(id => {
             const el = document.getElementById(id);
-            if (el) {
-                el.value = extremeInputValues[id];
-            }
+            if (el && extremeInputValues[id] !== null && extremeInputValues[id] !== '') el.value = extremeInputValues[id];
         });
 
-        const dateInputs = ['inputDateStartOuter', 'inputDateEndOuter'];
-        const extremeDate = "9999-12-31T23:59";
-        dateInputs.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.value = extremeDate;
-        });
+        // 新增时间：涵盖所有资料的起讫（起、讫不同，避免出现重复日期）
+        const dates = base.map(u => String(u.date || '')).filter(Boolean).sort();
+        if (dates.length) {
+            const startDay = dates[0].slice(0, 10);
+            const endDate = new Date(dates[dates.length - 1].slice(0, 10) + 'T00:00:00');
+            endDate.setDate(endDate.getDate() + 1);
+            const pad = (n) => String(n).padStart(2, '0');
+            const endDay = `${endDate.getFullYear()}-${pad(endDate.getMonth() + 1)}-${pad(endDate.getDate())}`;
+            const startEl = document.getElementById('inputDateStartOuter');
+            const endEl = document.getElementById('inputDateEndOuter');
+            if (startEl) startEl.value = `${startDay}T00:00`;
+            if (endEl) endEl.value = `${endDay}T00:00`;
+        }
 
         // Extreme Mock for top statistics
         const statYuEBao = document.getElementById('statYuEBao');
@@ -723,6 +737,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     window.formatAmount = formatAmount;
 
+    // 主钱包币种 display text: no currency in 无数据 mode → "-"
+    function mainCurrencyText(user) {
+        return window.dataMode === 'nodata' ? '-' : (user.currency || 'RMB');
+    }
+
     window.openCurrencyModal = function(title, baseAmount, mainCurrency) {
         const modal = document.getElementById('walletDetailModal');
         if (!modal) return;
@@ -824,7 +843,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 'status', group: '账号信息', label: '状态', checkboxIndex: 1, render: (user) => `<td data-col="status"><span class="user-custom-tag ${user.status === '正常' ? 'tag-green' : user.status === '冻结' ? 'tag-blue' : 'tag-red'}">${user.status}</span></td>` },
         { id: 'vipLevel', group: '等级', label: 'VIP等级', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="vipLevel">${user.vipLevel || 'VIP ' + (user.vipLevel || 1)}</td>` },
         { id: 'payLevel', group: '等级', label: '支付层级', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="payLevel">${user.payLevel}</td>` },
-        { id: 'currency', group: '额度', label: '主钱包币种', checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="currency">${user.currency || 'RMB'}</td>` },
+        { id: 'currency', group: '额度', label: '主钱包币种', checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="currency">${mainCurrencyText(user)}</td>` },
         { id: 'availableCredit', group: '额度', label: '可用额度', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-money" data-col="availableCredit">${window.renderClickableAmount('可用额度', user.availableCredit, user.currency, '', dataMode === 'nodata')}</td>` },
         { id: 'thirdBal', group: '额度', label: '三方余额', sortable: true, checkboxIndex: 5, render: (user) => `<td data-col="thirdBal"><div style="display:flex;align-items:center;justify-content:flex-start;">${window.renderClickableAmount('三方余额', user.thirdBal, user.currency, '', dataMode === 'nodata')} <i class="ph ph-arrows-clockwise refresh-icon-compact" data-uid="${user.uid}" style="margin-left:4px;cursor:pointer;color:#2563eb;" title="刷新余额"></i></div></td>` },
         { id: 'ds_depTotal_main', category: '存取款资料', group: '主钱包', label: '存款总额', tag: '主钱包', tagColor: 'blue', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money ${user.deposit > 0 ? 'highlight' : ''}" data-col="ds_depTotal_main">${window.renderClickableAmount('存款总额', user.deposit, user.currency, 'color: #4f46e5;', dataMode === 'nodata')}</td>` },
@@ -1135,12 +1154,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // 5. 排除条件
         const selectedOthers = getMultiSelectValues(dropdownOther);
         if (selectedOthers.length > 0) {
-            tags.push({ key: 'other', label: `排除条件: ${selectedOthers.join(', ')}`, type: 'multi-custom', element: dropdownOther });
+            selectedOthers.forEach(v => tags.push({ key: `other:${v}`, label: `排除条件: ${v}`, type: 'multi-value', element: dropdownOther, value: v }));
         }
         // 5-1. 用户标签
         const selectedUserTags = getMultiSelectValues(dropdownUserTags);
         if (selectedUserTags.length > 0) {
-            tags.push({ key: 'userTags', label: `用户标签: ${selectedUserTags.join(', ')}`, type: 'multi-custom', element: dropdownUserTags });
+            selectedUserTags.forEach(v => tags.push({ key: `userTags:${v}`, label: `用户标签: ${v}`, type: 'multi-value', element: dropdownUserTags, value: v }));
         }
         // 6. 账号搜寻
         if (inputAccount && inputAccount.value.trim()) {
@@ -1231,17 +1250,23 @@ document.addEventListener('DOMContentLoaded', () => {
         tags.forEach(tag => {
             const div = document.createElement('div');
             div.className = 'filter-tag';
-            div.textContent = tag.label + ' ';
+            div.title = tag.label;
+            // Text sits in its own span so a long tag stays on one line (ellipsis); full text on hover
+            const text = document.createElement('span');
+            text.className = 'filter-tag-text';
+            text.textContent = tag.label;
+            div.appendChild(text);
 
             const closeIcon = document.createElement('i');
             closeIcon.className = 'ph ph-x';
+            closeIcon.title = '移除';
             closeIcon.addEventListener('click', () => {
                 // Clear the target fields
                 if (tag.type === 'single-custom') {
                     setSingleSelectValue(tag.element, tag.defaultValue, tag.defaultText);
                     tag.valueVarSetter(tag.defaultValue);
-                } else if (tag.type === 'multi-custom') {
-                    clearMultiSelectValue(tag.element);
+                } else if (tag.type === 'multi-value') {
+                    removeMultiSelectValue(tag.element, tag.value);
                 } else if (tag.type === 'inputs') {
                     tag.elements.forEach(el => el.value = '');
                 } else if (tag.type === 'native-select') {
@@ -1291,7 +1316,133 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             filterTagsContainer.appendChild(clearAllBtn);
         }
+
+        layoutFilterTags();
+        ensureTableSpace();
     }
+
+    // ── 筛选标签区：最多显示 2 行，超过以「+N 个条件」收合；展开时最高 30vh，于标签区内卷动 ──
+    const FILTER_TAG_MAX_ROWS = 2;
+    function layoutFilterTags() {
+        const c = document.getElementById('filterTagsContainer');
+        if (!c) return;
+        c.querySelectorAll('.filter-tags-toggle').forEach(el => el.remove());
+        c.classList.remove('is-collapsed', 'is-expanded');
+        const tagEls = [...c.querySelectorAll('.filter-tag')];
+        tagEls.forEach(el => { el.style.display = ''; });
+        if (tagEls.length === 0 || c.offsetParent === null) return;
+
+        // Row limit by height: a grouped tag may itself span several lines
+        const firstTop = tagEls[0].getBoundingClientRect().top;
+        const rowH = Math.min(...tagEls.map(el => el.getBoundingClientRect().height));
+        const gap = parseFloat(getComputedStyle(c).rowGap) || 8;
+        const limitBottom = firstTop + FILTER_TAG_MAX_ROWS * rowH + (FILTER_TAG_MAX_ROWS - 1) * gap + 2;
+        const fits = () => [...c.children]
+            .filter(el => el.style.display !== 'none')
+            .every(el => el.getBoundingClientRect().bottom <= limitBottom);
+        if (fits()) {
+            filterTagsExpanded = false;
+            return;
+        }
+
+        const toggle = document.createElement('button');
+        toggle.type = 'button';
+        toggle.className = 'filter-tags-toggle';
+        toggle.addEventListener('click', () => {
+            filterTagsExpanded = !filterTagsExpanded;
+            layoutFilterTags();
+            ensureTableSpace();
+        });
+        const clearBtn = c.querySelector('.btn-clear-all-tags');
+        c.insertBefore(toggle, clearBtn);
+
+        if (filterTagsExpanded) {
+            c.classList.add('is-expanded');
+            toggle.innerHTML = '收起 <i class="ph ph-caret-up"></i>';
+            return;
+        }
+        c.classList.add('is-collapsed');
+        let hidden = 0;
+        const setLabel = () => { toggle.innerHTML = `+${hidden} 个条件 <i class="ph ph-caret-down"></i>`; };
+        setLabel();
+        for (let i = tagEls.length - 1; i > 0 && !fits(); i--) {
+            tagEls[i].style.display = 'none';
+            hidden++;
+            setLabel();
+        }
+    }
+
+    // ── 保证列表最小可视高度：空间不足时先自动收起筛选条件；仍不足（或使用者手动展开筛选）则整页可卷动 ──
+    const MIN_VISIBLE_ROWS_PX = 200;
+    function ensureTableSpace() {
+        const filterCard = document.querySelector('.filter-card');
+        const app = filterCard ? filterCard.closest('.app-container') : null;
+        const main = app ? app.parentElement : null;
+        const currentFilters = document.querySelector('.current-filters');
+        const thead = document.querySelector('#userTable thead');
+        if (!filterCard || !app || !main || !currentFilters) return;
+
+        const isCollapsed = filterCard.classList.contains('collapsed');
+        if (!isCollapsed) {
+            const cs = getComputedStyle(filterCard);
+            lastFilterCardHeight = filterCard.getBoundingClientRect().height + parseFloat(cs.marginTop) + parseFloat(cs.marginBottom);
+        }
+        const bar = document.getElementById('bottomStatsBar');
+        const barH = bar && getComputedStyle(bar).display !== 'none' && !bar.classList.contains('collapsed') ? bar.getBoundingClientRect().height : 0;
+        const appCs = getComputedStyle(app);
+        const appChrome = parseFloat(appCs.marginTop) + parseFloat(appCs.marginBottom) + parseFloat(appCs.borderTopWidth) + parseFloat(appCs.borderBottomWidth);
+        // Everything else stacked in the container (toolbar row etc.), excluding the filter card and the table card
+        const tableCard = currentFilters.closest('.table-card');
+        const blockH = (el) => { const c = getComputedStyle(el); return el.getBoundingClientRect().height + parseFloat(c.marginTop) + parseFloat(c.marginBottom); };
+        const otherH = [...app.children]
+            .filter(el => el !== filterCard && el !== tableCard && getComputedStyle(el).display !== 'none' && getComputedStyle(el).position !== 'fixed')
+            .reduce((sum, el) => sum + blockH(el), 0);
+        const tableNeed = otherH + currentFilters.getBoundingClientRect().height + (thead ? thead.getBoundingClientRect().height : 0) + MIN_VISIBLE_ROWS_PX + barH;
+        const available = main.clientHeight - appChrome;
+
+        // C. auto-collapse / restore the filter card (hysteresis 40px avoids flip-flopping)
+        if (!isCollapsed && !filterUserExpanded && lastFilterCardHeight + tableNeed > available) {
+            filterCard.classList.add('collapsed');
+            filterAutoCollapsed = true;
+        } else if (isCollapsed && filterAutoCollapsed && !filterUserCollapsed && lastFilterCardHeight + tableNeed <= available - 40) {
+            filterCard.classList.remove('collapsed');
+            filterAutoCollapsed = false;
+        }
+
+        // The 「展开筛选」 button changes the tag row width → re-layout tags before measuring the final need
+        syncFilterRestoreBtn();
+
+        // D. never let the table area shrink below the minimum: the page itself scrolls instead
+        const filterNow = filterCard.classList.contains('collapsed') ? 0 : lastFilterCardHeight;
+        const finalTableNeed = otherH + currentFilters.getBoundingClientRect().height + (thead ? thead.getBoundingClientRect().height : 0) + MIN_VISIBLE_ROWS_PX + barH;
+        app.style.minHeight = Math.ceil(filterNow + finalTableNeed) + 'px';
+    }
+
+    // 筛选列展开／收起按钮：筛选列显示中 → ⌃⌃「收起筛选列」；已收起 → ⌄⌄「展开筛选列」
+    function syncFilterRestoreBtn() {
+        const btn = document.getElementById('btnShowFilters');
+        const filterCard = document.querySelector('.filter-card');
+        if (!btn || !filterCard) return;
+        const collapsed = filterCard.classList.contains('collapsed');
+        const tooltip = collapsed ? '展开筛选列' : '收起筛选列';
+        btn.dataset.tooltip = tooltip;
+        btn.setAttribute('aria-label', tooltip);
+        btn.setAttribute('aria-expanded', String(!collapsed));
+        const icon = btn.querySelector('i');
+        if (icon) icon.className = `ph ${collapsed ? 'ph-caret-double-down' : 'ph-caret-double-up'}`;
+        if (btn.style.display === 'none') {
+            btn.style.display = '';
+            layoutFilterTags(); // first show changes the tag row width
+        }
+    }
+
+    // Uncheck one value of a multi-select dropdown (keeps its display text in sync)
+    function removeMultiSelectValue(element, val) {
+        if (!element) return;
+        const li = [...element.querySelectorAll('.select-options li[data-value]')].find(l => l.getAttribute('data-value') === val);
+        if (li && li.classList.contains('selected')) li.click();
+    }
+
 
     // Reset all filters
     // 重置 restores the initial state (incl. default 排除条件); 清除所有标签 passes restoreDefaults:false to clear everything
@@ -1381,63 +1532,60 @@ document.addEventListener('DOMContentLoaded', () => {
         const selectedUserTags = getMultiSelectValues(dropdownUserTags);
 
         // Perform Filtering
-        let filtered = mockUsers;
-        if (window.dataMode !== 'extreme') {
-            filtered = mockUsers.filter(user => {
-                if (selectedStatusVal && user.status !== selectedStatusVal) return false;
-                if (selectedLevelVal && user.level !== selectedLevelVal) return false;
-                if (selectedVipVal && user.vip !== selectedVipVal) return false;
-                // 排除条件: hide users matching any selected exclusion
-                if (selectedOthers.length > 0 && selectedOthers.includes(user.other)) return false;
-                // 用户标签: keep users having any of the selected tags
-                if (selectedUserTags.length > 0 && !(user.tags || []).some(t => selectedUserTags.includes(t))) return false;
+        const filtered = mockUsers.filter(user => {
+            if (selectedStatusVal && user.status !== selectedStatusVal) return false;
+            if (selectedLevelVal && user.level !== selectedLevelVal) return false;
+            if (selectedVipVal && user.vip !== selectedVipVal) return false;
+            // 排除条件: hide users matching any selected exclusion
+            if (selectedOthers.length > 0 && selectedOthers.includes(user.other)) return false;
+            // 用户标签: keep users having any of the selected tags
+            if (selectedUserTags.length > 0 && !(user.tags || []).some(t => selectedUserTags.includes(t))) return false;
 
-                // Account filter
-                if (accountVal) {
-                    if (currentAccountType === 'exact') {
-                        if (user.account.toLowerCase() !== accountVal) return false;
-                    } else if (currentAccountType === 'fuzzy') {
-                        if (!user.account.toLowerCase().includes(accountVal)) return false;
-                    } else if (currentAccountType === 'multi') {
-                        const accounts = accountVal.split(';').map(a => a.trim()).filter(Boolean);
-                        if (accounts.length > 0 && !accounts.some(acc => user.account.toLowerCase() === acc)) return false;
-                    } else if (currentAccountType === 'quickLogin') {
-                        if (!user.quickLogin || !user.quickLogin.toLowerCase().includes(accountVal)) return false;
-                    } else if (currentAccountType === 'uid') {
-                        if (!user.uid || !user.uid.toLowerCase().includes(accountVal)) return false;
-                    } else if (currentAccountType === 'inviteCode') {
-                        if (!user.inviteCode || !user.inviteCode.toLowerCase().includes(accountVal)) return false;
-                    } else if (currentAccountType === 'nickname') {
-                        if (!user.nickname || !user.nickname.toLowerCase().includes(accountVal)) return false;
-                    } else if (currentAccountType === 'realName') {
-                        if (!user.realName || !user.realName.toLowerCase().includes(accountVal)) return false;
-                    } else {
-                        const fieldVal = user[currentAccountType];
-                        if (fieldVal === undefined || fieldVal === null || !String(fieldVal).toLowerCase().includes(accountVal)) return false;
-                    }
+            // Account filter
+            if (accountVal) {
+                if (currentAccountType === 'exact') {
+                    if (user.account.toLowerCase() !== accountVal) return false;
+                } else if (currentAccountType === 'fuzzy') {
+                    if (!user.account.toLowerCase().includes(accountVal)) return false;
+                } else if (currentAccountType === 'multi') {
+                    const accounts = accountVal.split(';').map(a => a.trim()).filter(Boolean);
+                    if (accounts.length > 0 && !accounts.some(acc => user.account.toLowerCase() === acc)) return false;
+                } else if (currentAccountType === 'quickLogin') {
+                    if (!user.quickLogin || !user.quickLogin.toLowerCase().includes(accountVal)) return false;
+                } else if (currentAccountType === 'uid') {
+                    if (!user.uid || !user.uid.toLowerCase().includes(accountVal)) return false;
+                } else if (currentAccountType === 'inviteCode') {
+                    if (!user.inviteCode || !user.inviteCode.toLowerCase().includes(accountVal)) return false;
+                } else if (currentAccountType === 'nickname') {
+                    if (!user.nickname || !user.nickname.toLowerCase().includes(accountVal)) return false;
+                } else if (currentAccountType === 'realName') {
+                    if (!user.realName || !user.realName.toLowerCase().includes(accountVal)) return false;
+                } else {
+                    const fieldVal = user[currentAccountType];
+                    if (fieldVal === undefined || fieldVal === null || !String(fieldVal).toLowerCase().includes(accountVal)) return false;
                 }
+            }
 
-                // Advanced Filters
-                if (selectedCurrencyVal && (user.currency || 'RMB') !== selectedCurrencyVal) return false;
+            // Advanced Filters
+            if (selectedCurrencyVal && (user.currency || 'RMB') !== selectedCurrencyVal) return false;
 
-                const formattedDateStart = dateStartVal ? dateStartVal.replace('T', ' ') : '';
-                const formattedDateEnd = dateEndVal ? dateEndVal.replace('T', ' ') : '';
-                if (!isNaN(birthdayMonthVal)) {
-                    const userMonth = user.birthday ? parseInt(String(user.birthday).split('-')[1], 10) : NaN;
-                    if (userMonth !== birthdayMonthVal) return false;
-                }
-                if (formattedDateStart && user.date < formattedDateStart) return false;
-                if (formattedDateEnd && user.date > formattedDateEnd) return false;
-                if (agentIdVal && user.agentId !== agentIdVal) return false;
-                if (vipLevelVal && user.vipLevel !== undefined && user.vipLevel.toString() !== vipLevelVal) return false;
-                if (bankCardVal && !String(user.bankCard || '').includes(bankCardVal)) return false;
-                if (!isNaN(offlineDaysVal) && user.offlineDays <= offlineDaysVal) return false;
-                if (ipVal && !String(user.ip || '').includes(ipVal)) return false;
-                if (!isNaN(depositVal) && user.deposit <= depositVal) return false;
+            const formattedDateStart = dateStartVal ? dateStartVal.replace('T', ' ') : '';
+            const formattedDateEnd = dateEndVal ? dateEndVal.replace('T', ' ') : '';
+            if (!isNaN(birthdayMonthVal)) {
+                const userMonth = user.birthday ? parseInt(String(user.birthday).split('-')[1], 10) : NaN;
+                if (userMonth !== birthdayMonthVal) return false;
+            }
+            if (formattedDateStart && user.date < formattedDateStart) return false;
+            if (formattedDateEnd && user.date > formattedDateEnd) return false;
+            if (agentIdVal && user.agentId !== agentIdVal) return false;
+            if (vipLevelVal && user.vipLevel !== undefined && user.vipLevel.toString() !== vipLevelVal) return false;
+            if (bankCardVal && !String(user.bankCard || '').includes(bankCardVal)) return false;
+            if (!isNaN(offlineDaysVal) && user.offlineDays <= offlineDaysVal) return false;
+            if (ipVal && !String(user.ip || '').includes(ipVal)) return false;
+            if (!isNaN(depositVal) && user.deposit <= depositVal) return false;
 
-                return true;
-            });
-        }
+            return true;
+        });
 
         // Sorting Logic
         if (currentSortColumn) {
@@ -1808,21 +1956,21 @@ document.addEventListener('DOMContentLoaded', () => {
                         } else if (col.id === 'creditLimit') {
                             nestedRowHtml += `<td class="nested-cell-info ${stickyClass}">
                             <div><span class="info-label">信用值 :</span> <a class="wallet-detail-link" data-title="信用值" data-wallet="${user.currency || 'RMB'}" data-amount="${user.creditValue}">${formatAmount(user.creditValue, 'RMB')}</a></div>
-                            <div><span class="info-label">可用额度 :</span> <a class="wallet-detail-link" data-title="可用额度" data-wallet="${user.currency || 'RMB'}" data-amount="${user.availableCredit}">${formatAmount(user.availableCredit, user.currency)}</a> ${user.currency || 'RMB'}</div>
-                            <div><span class="info-label">佣金余额 :</span> <a class="wallet-detail-link" data-title="佣金余额" data-wallet="${user.currency || 'RMB'}" data-amount="${user.commissionBal}">${formatAmount(user.commissionBal, user.currency)}</a> ${user.currency || 'RMB'}</div>
-                            <div><span class="info-label">余额宝 :</span> <a class="wallet-detail-link" data-title="余额宝" data-wallet="${user.currency || 'RMB'}" data-amount="${user.balanceBuy || 0}">${formatAmount(user.balanceBuy || 0, user.currency)}</a> ${user.currency || 'RMB'}</div>
-                            <div><span class="info-label">欠款 :</span> <a class="wallet-detail-link" data-title="欠款" data-wallet="${user.currency || 'RMB'}" data-amount="${user.arrears || 0}">${formatAmount(user.arrears || 0, user.currency)}</a> ${user.currency || 'RMB'}</div>
-                            <div><span class="info-label">余额宝利息 :</span> <a class="wallet-detail-link" data-title="余额宝利息" data-wallet="${user.currency || 'RMB'}" data-amount="${user.interest || 0}">${formatAmount(user.interest || 0, user.currency)}</a> ${user.currency || 'RMB'}</div>
-                            <div><span class="info-label">三方余额 :</span> <a class="wallet-detail-link" data-title="三方余额" data-wallet="${user.currency || 'RMB'}" data-amount="${user.thirdBal || 0}">${formatAmount(user.thirdBal || 0, user.currency)}</a> ${user.currency || 'RMB'} <a href="#" class="refresh-link" style="color:#2563eb;font-size:12px;margin-left:4px;text-decoration:none;">刷新</a></div>
+                            <div><span class="info-label">可用额度 :</span> <a class="wallet-detail-link" data-title="可用额度" data-wallet="${user.currency || 'RMB'}" data-amount="${user.availableCredit}">${formatAmount(user.availableCredit, user.currency)}</a> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
+                            <div><span class="info-label">佣金余额 :</span> <a class="wallet-detail-link" data-title="佣金余额" data-wallet="${user.currency || 'RMB'}" data-amount="${user.commissionBal}">${formatAmount(user.commissionBal, user.currency)}</a> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
+                            <div><span class="info-label">余额宝 :</span> <a class="wallet-detail-link" data-title="余额宝" data-wallet="${user.currency || 'RMB'}" data-amount="${user.balanceBuy || 0}">${formatAmount(user.balanceBuy || 0, user.currency)}</a> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
+                            <div><span class="info-label">欠款 :</span> <a class="wallet-detail-link" data-title="欠款" data-wallet="${user.currency || 'RMB'}" data-amount="${user.arrears || 0}">${formatAmount(user.arrears || 0, user.currency)}</a> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
+                            <div><span class="info-label">余额宝利息 :</span> <a class="wallet-detail-link" data-title="余额宝利息" data-wallet="${user.currency || 'RMB'}" data-amount="${user.interest || 0}">${formatAmount(user.interest || 0, user.currency)}</a> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
+                            <div><span class="info-label">三方余额 :</span> <a class="wallet-detail-link" data-title="三方余额" data-wallet="${user.currency || 'RMB'}" data-amount="${user.thirdBal || 0}">${formatAmount(user.thirdBal || 0, user.currency)}</a> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')} <a href="#" class="refresh-link" style="color:#2563eb;font-size:12px;margin-left:4px;text-decoration:none;">刷新</a></div>
                             <div><span class="info-label">会员积分 :</span> <a class="wallet-detail-link" data-title="会员积分" data-wallet="积分" data-amount="${user.points || 0}">${user.points || 0}</a></div>
                         </td>`;
                         } else if (col.id === 'depositWithdraw') {
                             nestedRowHtml += `<td class="nested-cell-info ${stickyClass}">
-                            <div><span class="info-label">存款总额 :</span> <a class="wallet-detail-link" data-title="存款总额" data-wallet="${user.currency || 'RMB'}" data-amount="${user.deposit}">${formatAmount(user.deposit, user.currency)}</a> ${user.currency || 'RMB'}</div>
-                            <div><span class="info-label">取款总额 :</span> <a class="wallet-detail-link" data-title="取款总额" data-wallet="${user.currency || 'RMB'}" data-amount="${user.withdraw}">${formatAmount(user.withdraw, user.currency)}</a> ${user.currency || 'RMB'}</div>
-                            <div><span class="info-label">提款预扣金额 :</span> <a class="wallet-detail-link" data-title="提款预扣金额" data-wallet="${user.currency || 'RMB'}" data-amount="${user.withdrawPre}">${formatAmount(user.withdrawPre, user.currency)}</a> ${user.currency || 'RMB'}</div>
-                            <div><span class="info-label">后台加款总额 :</span> <a class="wallet-detail-link" data-title="后台加款总额" data-wallet="${user.currency || 'RMB'}" data-amount="${user.adminAdd || 0}">${formatAmount(user.adminAdd || 0, user.currency)}</a> ${user.currency || 'RMB'}</div>
-                            <div><span class="info-label">后台扣款总额 :</span> <a class="wallet-detail-link" data-title="后台扣款总额" data-wallet="${user.currency || 'RMB'}" data-amount="${user.adminDeduct}">${formatAmount(user.adminDeduct, user.currency)}</a> ${user.currency || 'RMB'}</div>
+                            <div><span class="info-label">存款总额 :</span> <a class="wallet-detail-link" data-title="存款总额" data-wallet="${user.currency || 'RMB'}" data-amount="${user.deposit}">${formatAmount(user.deposit, user.currency)}</a> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
+                            <div><span class="info-label">取款总额 :</span> <a class="wallet-detail-link" data-title="取款总额" data-wallet="${user.currency || 'RMB'}" data-amount="${user.withdraw}">${formatAmount(user.withdraw, user.currency)}</a> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
+                            <div><span class="info-label">提款预扣金额 :</span> <a class="wallet-detail-link" data-title="提款预扣金额" data-wallet="${user.currency || 'RMB'}" data-amount="${user.withdrawPre}">${formatAmount(user.withdrawPre, user.currency)}</a> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
+                            <div><span class="info-label">后台加款总额 :</span> <a class="wallet-detail-link" data-title="后台加款总额" data-wallet="${user.currency || 'RMB'}" data-amount="${user.adminAdd || 0}">${formatAmount(user.adminAdd || 0, user.currency)}</a> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
+                            <div><span class="info-label">后台扣款总额 :</span> <a class="wallet-detail-link" data-title="后台扣款总额" data-wallet="${user.currency || 'RMB'}" data-amount="${user.adminDeduct}">${formatAmount(user.adminDeduct, user.currency)}</a> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
                             <div><span class="info-label">存款次数 :</span> <a class="wallet-detail-link" data-title="存款次数" data-wallet="${user.currency || 'RMB'}" data-amount="${user.depositCount || 0}">${user.depositCount || 0}</a></div>
                             <div><span class="info-label">取款次数 :</span> <a class="wallet-detail-link" data-title="取款次数" data-wallet="${user.currency || 'RMB'}" data-amount="${user.withdrawCount || 0}">${user.withdrawCount || 0}</a></div>
                         </td>`;
@@ -1874,6 +2022,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div><span class="info-label">回访备注 :</span> ${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : renderDataState(user.followRemark, 'longText')}</div>
                             <div><span class="info-label">注 :</span> ${renderDataState(user.note, 'longText')}</div>
                         </td>`;
+                        } else if (typeof col.render === 'function') {
+                            // Fields promoted from 展开卡片 (e.g. 大头照 / 真实姓名) use their own cell renderer
+                            let cellHtml = col.render(user);
+                            if (stickyClass) cellHtml = cellHtml.replace(/^<td class="/, `<td class="${stickyClass} `);
+                            nestedRowHtml += cellHtml;
                         }
                     });
 
@@ -1980,8 +2133,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     expandTr.innerHTML = `
                     <td colspan="${colCount}" style="padding: 16px; background: #f8fafc; border-bottom: 1px solid var(--border-color);">
                         <div class="detail-cards-wrapper" style="display:flex; gap:16px; flex-wrap:nowrap; overflow-x:auto; padding: 0 40px; padding-bottom: 8px;">
-                            <!-- 大头照 -->
-                            <div style="flex: 0 0 60px; display:flex; justify-content:center; align-items:flex-start; margin-top: 8px;">
+                            <!-- 大头照 (自订栏位 > 展开卡片 > 基本资料 > 大头照 controls visibility; moves together with 基本资料) -->
+                            <div class="detail-card detail-card-avatar ds-field" data-category="基本资料" data-ds-id="ds_avatar" style="flex: 0 0 60px; justify-content:center; align-items:flex-start; margin-top: 8px; display:${dataSourceFieldVisibility['ds_avatar'] !== false ? 'flex' : 'none'};">
                                 <div style="width:60px; height:60px; background:#6366f1; color:white; border-radius:8px; display:flex; justify-content:center; align-items:center; font-size:24px; font-weight:bold;">${user.account.charAt(0).toUpperCase()}</div>
                             </div>
                             <!-- 基本资料 -->
@@ -2002,7 +2155,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="detail-card dc-list" data-category="额度" style="flex: 0 0 auto; display: ${(dataSourceFieldVisibility['currency'] !== false || dataSourceFieldVisibility['availableCredit'] !== false || dataSourceFieldVisibility['thirdBal'] !== false) ? 'block' : 'none'};">
                                 <div class="detail-card-header">
                                     <div style="display: flex; align-items: center; gap: 8px;"><i class="ph ph-wallet"></i> 额度</div>
-                                    ${renderDropdownUI(user.currency || 'USDT')}
+                                    ${renderDropdownUI(mainCurrencyText(user))}
                                 </div>
                                 <div class="detail-card-body flex-list-col" data-no-sort="true">
                                     <div class="ds-field" data-ds-id="currency" style="display:${dataSourceFieldVisibility['currency'] !== false ? '' : 'none'}"><span class="lbl">主钱包币种</span> <span class="val">${dataMode === 'nodata' ? '-' : (user.currency || 'RMB')}</span></div>
@@ -2018,14 +2171,14 @@ document.addEventListener('DOMContentLoaded', () => {
                                             <i class="ph ph-bank"></i> 存取款资料
                                         </span>
                                         <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; justify-items: end;">
-                                            <div style="min-width: 90px; display: flex; align-items: center; justify-content: flex-end; gap: 4px; font-weight: 600; font-size: 12px;">主钱包 <span class="ued-tooltip tooltip-bottom" data-tooltip="当前币种: ${user.currency || 'RMB'}"><i class="ph ph-question" style="color: #94a3b8; font-size: 14px;"></i></span></div>
+                                            <div style="min-width: 90px; display: flex; align-items: center; justify-content: flex-end; gap: 4px; font-weight: 600; font-size: 12px;">主钱包 <span class="ued-tooltip tooltip-bottom" data-tooltip="当前币种: ${mainCurrencyText(user)}"><i class="ph ph-question" style="color: #94a3b8; font-size: 14px;"></i></span></div>
                                             <div style="min-width: 90px; display: flex; align-items: center; justify-content: flex-end; gap: 4px; color: #6366f1; font-weight: 600; font-size: 12px;">汇总 <span class="ued-tooltip tooltip-bottom" data-tooltip="当前币种: USDT"><i class="ph ph-question" style="color: #94a3b8; font-size: 14px;"></i></span></div>
                                         </div>
                                     </div>
                                     <div style="display: flex; align-items: center; padding-left: 24px;">
                                         <span style="width: 100px;"></span>
                                         <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; justify-items: end;">
-                                            <div style="min-width: 90px; display: flex; align-items: center; justify-content: flex-end; gap: 4px; font-weight: 600; font-size: 12px;">主钱包 <span class="ued-tooltip tooltip-bottom" data-tooltip="当前币种: ${user.currency || 'RMB'}"><i class="ph ph-question" style="color: #94a3b8; font-size: 14px;"></i></span></div>
+                                            <div style="min-width: 90px; display: flex; align-items: center; justify-content: flex-end; gap: 4px; font-weight: 600; font-size: 12px;">主钱包 <span class="ued-tooltip tooltip-bottom" data-tooltip="当前币种: ${mainCurrencyText(user)}"><i class="ph ph-question" style="color: #94a3b8; font-size: 14px;"></i></span></div>
                                             <div style="min-width: 90px; display: flex; align-items: center; justify-content: flex-end; gap: 4px; color: #6366f1; font-weight: 600; font-size: 12px;">汇总 <span class="ued-tooltip tooltip-bottom" data-tooltip="当前币种: USDT"><i class="ph ph-question" style="color: #94a3b8; font-size: 14px;"></i></span></div>
                                         </div>
                                     </div>
@@ -2113,7 +2266,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="detail-card dc-list" data-category="推荐关系" style="flex: 0 0 auto; display: ${(dataSourceFieldVisibility['ds_inviter'] !== false || dataSourceFieldVisibility['ds_inviteCode'] !== false || dataSourceFieldVisibility['ds_team'] !== false || dataSourceFieldVisibility['ds_commBal'] !== false) ? 'block' : 'none'};">
                                 <div class="detail-card-header">
                                     <div style="display: flex; align-items: center; gap: 8px;"><i class="ph ph-share-network"></i> 推荐关系</div>
-                                    ${renderDropdownUI(user.currency || 'RMB')}
+                                    ${renderDropdownUI(mainCurrencyText(user))}
                                 </div>
                                 <div class="detail-card-body flex-list-col">
                                     <div class="ds-field" data-ds-id="ds_inviter" style="display:${dataSourceFieldVisibility['ds_inviter'] !== false ? '' : 'none'}"><span class="lbl">邀请人</span> <span class="val">${user.inviter || '-'}</span></div>
@@ -2126,7 +2279,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="detail-card dc-list" data-category="余额宝" style="flex: 0 0 auto; display: ${(dataSourceFieldVisibility['ds_balTreas'] !== false || dataSourceFieldVisibility['ds_balInt'] !== false) ? 'block' : 'none'};">
                                 <div class="detail-card-header">
                                     <div style="display: flex; align-items: center; gap: 8px;"><i class="ph ph-wallet"></i> 余额宝</div>
-                                    ${renderDropdownUI(user.currency || 'RMB')}
+                                    ${renderDropdownUI(mainCurrencyText(user))}
                                 </div>
                                 <div class="detail-card-body flex-list-col">
                                     <div class="ds-field" data-ds-id="ds_balTreas" style="display:${dataSourceFieldVisibility['ds_balTreas'] !== false ? '' : 'none'}"><span class="lbl">余额</span> ${window.renderClickableAmount('余额', 15000, user.currency, '', dataMode === 'nodata')}</div>
@@ -2144,7 +2297,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="detail-card dc-list" data-category="信贷" style="flex: 0 0 auto; display: ${(dataSourceFieldVisibility['ds_debt'] !== false || dataSourceFieldVisibility['ds_creditVal'] !== false) ? 'block' : 'none'};">
                                 <div class="detail-card-header">
                                     <div style="display: flex; align-items: center; gap: 8px;"><i class="ph ph-credit-card"></i> 信贷</div>
-                                    ${renderDropdownUI(user.currency || 'RMB')}
+                                    ${renderDropdownUI(mainCurrencyText(user))}
                                 </div>
                                 <div class="detail-card-body flex-list-col">
                                     <div class="ds-field" data-ds-id="ds_debt" style="display:${dataSourceFieldVisibility['ds_debt'] !== false ? '' : 'none'}"><span class="lbl">欠款</span> ${window.renderClickableAmount('欠款', user.arrears, user.currency, 'color: #ef4444;', dataMode === 'nodata')}</div>
@@ -2352,6 +2505,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Re-apply user column widths, then fix sticky offsets / expanded-card width from the real layout
             syncCompactTableLayout();
+            ensureTableSpace();
         };
 
         if (skipDelay) {
@@ -2681,11 +2835,42 @@ document.addEventListener('DOMContentLoaded', () => {
         tableWrapper.addEventListener('scroll', () => {
             if (tableWrapper.scrollTop > 10) {
                 filterCard.classList.add('collapsed');
-            } else {
+            } else if (!filterAutoCollapsed && !filterUserCollapsed) {
                 filterCard.classList.remove('collapsed');
             }
+            syncFilterRestoreBtn();
         });
     }
+
+    // 筛选列展开／收起切换（按钮常驻于「条/页」左侧）
+    const btnShowFilters = document.getElementById('btnShowFilters');
+    if (btnShowFilters && filterCard) {
+        btnShowFilters.addEventListener('click', () => {
+            filterAutoCollapsed = false;
+            if (filterCard.classList.contains('collapsed')) {
+                filterUserCollapsed = false;
+                filterUserExpanded = true; // user wants the filters even if the table gets short → page scrolls instead
+                filterCard.classList.remove('collapsed');
+                if (tableWrapper) tableWrapper.scrollTop = 0;
+            } else {
+                filterUserExpanded = false;
+                filterUserCollapsed = true; // stay hidden until the user expands again
+                filterCard.classList.add('collapsed');
+            }
+            syncFilterRestoreBtn();
+            ensureTableSpace();
+            // The button moves when the filter row opens/closes: drop the stale tooltip (hover again shows the new text)
+            const tip = document.getElementById('global-tooltip');
+            if (tip) { tip.style.opacity = '0'; tip.style.display = 'none'; }
+        });
+    }
+
+    let ensureSpaceRaf = null;
+    window.addEventListener('resize', () => {
+        filterUserExpanded = false; // re-evaluate automatically for the new window size
+        cancelAnimationFrame(ensureSpaceRaf);
+        ensureSpaceRaf = requestAnimationFrame(() => { layoutFilterTags(); ensureTableSpace(); });
+    });
     // Sidebar Group Collapse/Expand Toggles
     const navHeaders = document.querySelectorAll('.nav-item-header');
     navHeaders.forEach(header => {
@@ -3451,6 +3636,43 @@ document.addEventListener('DOMContentLoaded', () => {
     // Bottom Stats Bar Toggle Logic
     const btnToggleStats = document.getElementById('btnToggleStats');
     const bottomStatsBar = document.getElementById('bottomStatsBar');
+    // Single-line stats bar by default; switch to the wrapping layout only when the stats don't fit on one line
+    // (e.g. 极限金额 or a narrow window). Measured in single-line mode, so no flicker within the frame.
+    if (bottomStatsBar) {
+        // In wrapping mode, long amounts break only after the thousands separators (9,999,999,<wbr>999.99).
+        // <wbr> is added only then: Chrome breaks at <wbr> even under white-space: nowrap.
+        const statValues = [...bottomStatsBar.querySelectorAll('.stat-value > strong')];
+        const setCommaBreaks = (on) => {
+            statValues.forEach(el => {
+                const text = el.textContent;
+                if (!text.includes(',')) return;
+                el.innerHTML = on ? text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/,/g, ',<wbr>') : text;
+            });
+        };
+        const updateStatsWrap = () => {
+            bottomStatsBar.classList.remove('stats-wrap');
+            setCommaBreaks(false);
+            const overflows = bottomStatsBar.scrollWidth > bottomStatsBar.clientWidth + 1;
+            bottomStatsBar.classList.toggle('stats-wrap', overflows);
+            setCommaBreaks(overflows);
+        };
+        updateStatsWrap();
+        let statsWrapRaf = null;
+        window.addEventListener('resize', () => {
+            cancelAnimationFrame(statsWrapRaf);
+            statsWrapRaf = requestAnimationFrame(updateStatsWrap);
+        });
+    }
+
+    // Keep the table's bottom space equal to the stats bar's real height (it grows when long amounts wrap)
+    if (bottomStatsBar && typeof ResizeObserver === 'function') {
+        const syncStatsBarHeight = () => {
+            document.documentElement.style.setProperty('--stats-bar-height', Math.ceil(bottomStatsBar.getBoundingClientRect().height) + 'px');
+        };
+        new ResizeObserver(() => { syncStatsBarHeight(); ensureTableSpace(); }).observe(bottomStatsBar);
+        syncStatsBarHeight();
+    }
+
     if (btnToggleStats && bottomStatsBar) {
         btnToggleStats.addEventListener('click', () => {
             bottomStatsBar.classList.toggle('collapsed');
@@ -3675,6 +3897,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     let availableDataSource = [
+        { id: 'ds_avatar', label: '大头照', category: '基本资料' },
         { id: 'ds_realname', label: '真实姓名', category: '基本资料' },
         { id: 'ds_birthday', label: '生日', category: '基本资料' },
         { id: 'ds_accountType', label: '账号类型', category: '基本资料' },
@@ -3722,6 +3945,9 @@ document.addEventListener('DOMContentLoaded', () => {
             let val = '-';
             let extraClass = 'cell-val';
             switch (col.id) {
+                case 'ds_avatar': val = (window.dataMode === 'nodata' || !user.account || user.account === '-')
+                    ? '<span class="data-empty">-</span>'
+                    : `<div class="table-avatar-initial">${user.account.charAt(0).toUpperCase()}</div>`; break;
                 case 'ds_realname': val = renderDataState(user.realName, 'na'); break;
                 case 'ds_birthday': val = user.birthday || '-'; break;
                 case 'ds_accountType': val = user.accountType || '普通账号'; break;
@@ -3730,7 +3956,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 case 'ds_regMode': val = user.registerMode || '一般注册'; break;
                 case 'ds_nickname': val = renderDataState(user.nickname, 'na'); break;
                 case 'ds_phone': val = renderDataState(user.phone, 'phone'); break;
-                case 'currency': val = user.currency || 'RMB'; break;
+                case 'currency': val = mainCurrencyText(user); break;
                 case 'ds_depTotal_main': val = window.renderClickableAmount('存款总额', user.deposit, user.currency, 'color: #4f46e5;', false); extraClass = 'cell-money text-blue'; break;
                 case 'ds_depCount_main': val = user.depositCount || '0'; break;
                 case 'ds_wdrTotal_main': val = window.renderClickableAmount('取款总额', user.withdraw, user.currency, 'color: #4f46e5;', false); extraClass = 'cell-money text-blue'; break;
