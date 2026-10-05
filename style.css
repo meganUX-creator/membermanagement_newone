@@ -5689,6 +5689,43 @@ th[data-col="ds_avatar"] {
     background: #eef2ff;
 }
 
+/* 跨页勾选提示 */
+.selection-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 24px;
+    padding: 0 8px;
+    border-radius: 4px;
+    background: #eff6ff;
+    color: #1e40af;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.selection-hint i {
+    font-size: 14px;
+    color: #3b82f6;
+}
+
+.selection-hint-sub {
+    color: #64748b;
+}
+
+.selection-hint-clear {
+    border: none;
+    background: none;
+    padding: 0;
+    color: #2563eb;
+    font-size: 12px;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.selection-hint-clear:hover {
+    color: #1d4ed8;
+}
+
 /* 筛选条件被收起时的「展开筛选」 */
 .btn-show-filters {
     display: inline-flex;

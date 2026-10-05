@@ -546,7 +546,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Filter Row Extreme Mock
     // 极限模式：筛选列预填「所有极限资料都符合」的极限值（长字串／大数字），标签与列表结果一致；
-    // 各笔资料不同的栏位（币种、层级、生日、未登入天数…）维持「全部」，不预填与资料矛盾的条件
+    // 各笔资料不同的栏位（币种、层级、生日…）维持「全部」，不预填与资料矛盾的条件
     if (dataMode === 'extreme') {
         const base = window.baseMockUsers || [];
         const common = (key) => {
@@ -562,15 +562,19 @@ document.addEventListener('DOMContentLoaded', () => {
         // 状态：所有资料相同时才预填
         pickSingle('dropdownStatus', common('status'));
 
-        // 用户标签：全选（任一符合即显示，每笔资料都有标签）；排除条件：不预填（任一排除都会滤掉一半资料）
-        const tagsDropdown = document.getElementById('dropdownUserTags');
-        if (tagsDropdown) {
-            tagsDropdown.querySelectorAll('.select-options li[data-value]').forEach(li => {
+        // 会员等级：极限资料统一为最高等级（与 mockUsers 展开时的预设一致）
+        pickSingle('dropdownVip', common('vip') || '至尊会员');
+
+        // 用户标签：全选（任一符合即显示，每笔资料都有标签）
+        // 排除条件：全选（极限会员皆为正式会员，不会被任一排除条件滤掉）
+        ['dropdownUserTags', 'dropdownOther'].forEach(id => {
+            const multi = document.getElementById(id);
+            if (!multi) return;
+            multi.querySelectorAll('.select-options li[data-value]').forEach(li => {
                 const cb = li.querySelector('input[type="checkbox"]');
                 if (cb && !cb.checked) li.click();
             });
-        }
-        if (dropdownOther) clearMultiSelectValue(dropdownOther);
+        });
 
         // 账号：模糊匹配所有极限账号的共同前缀
         const accounts = base.map(u => String(u.account || ''));
@@ -579,9 +583,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const fuzzyLi = document.querySelector('#accountTypeMenu li[data-value="fuzzy"]');
         if (fuzzyLi && prefix) fuzzyLi.click(); // also clears the input, so set the value afterwards
 
+        // 绑定银行卡：模糊匹配所有极限卡号的共同前缀
+        const bankCards = base.map(u => String(u.bankCard || '')).filter(Boolean);
+        let bankCardPrefix = bankCards.length === base.length ? bankCards[0] : '';
+        bankCards.forEach(c => { while (bankCardPrefix && !c.startsWith(bankCardPrefix)) bankCardPrefix = bankCardPrefix.slice(0, -1); });
+
+        // 未登入天数（大于）：取最小值减 1（所有资料都 > 此值）
+        const offlineDays = base.map(u => parseInt(u.offlineDays, 10)).filter(n => !isNaN(n));
+
         const deposits = base.map(u => parseFloat(u.deposit)).filter(n => !isNaN(n));
         const extremeInputValues = {
             'inputAccount': prefix,
+            'inputBankCardOuter': bankCardPrefix,
+            'inputOfflineDaysOuter': offlineDays.length === base.length && offlineDays.length ? String(Math.min(...offlineDays) - 1) : null,
             'inputAgentIdOuter': common('agentId'),
             'inputVipLevelOuter': common('vipLevel'),
             'inputIpOuter': common('ip'),
@@ -687,6 +701,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentTableMode = 'nested'; // 'nested' or 'compact'
     let currentPage = 1;
     let pageSize = 20;
+
+    // 跨页勾选：以 uid 记录已勾选会员，换页／切换模式后仍保留
+    const selectedUserUids = new Set();
+    let currentPageUids = [];
 
     // Sorting State
     let currentSortColumn = '';
@@ -1016,9 +1034,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 uid: newUid,
                 account: newAccount,
                 tags: window.dataMode === 'nodata' ? [] : dynamicTags,
-                offlineDays: window.dataMode === 'nodata' ? '-' : (user.offlineDays + i) % 15,
-                other: window.dataMode === 'nodata' ? '-' : (index % 2 === 0 ? "未充值玩家" : "测试账号"),
-                vip: window.dataMode === 'nodata' ? '-' : (index % 3 === 0 ? "钻石会员" : index % 3 === 1 ? "黄金会员" : "白银会员"),
+                // 极限模式保留极限值（未登入天数 9999、最高会员等级），筛选列才能预填且与列表一致
+                offlineDays: window.dataMode === 'nodata' ? '-' : window.dataMode === 'extreme' ? user.offlineDays : (user.offlineDays + i) % 15,
+                // 极限会员皆为大额存款的正式会员，不属于任一排除条件，排除条件才能全选预填
+                other: window.dataMode === 'nodata' ? '-' : window.dataMode === 'extreme' ? (user.other || '正式会员') : (index % 2 === 0 ? "未充值玩家" : "测试账号"),
+                vip: window.dataMode === 'nodata' ? '-' : window.dataMode === 'extreme' ? (user.vip || '至尊会员') : (index % 3 === 0 ? "钻石会员" : index % 3 === 1 ? "黄金会员" : "白银会员"),
                 level: window.dataMode === 'nodata' ? '-' : (index % 3 === 0 ? "VIP会员" : index % 3 === 1 ? "黄金会员" : "普通会员")
             });
         });
@@ -1655,6 +1675,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const endIndex = Math.min(startIndex + pageSize, totalCount);
         const pagedUsers = filtered.slice(startIndex, endIndex);
 
+        // 筛选结果变动时，移除已不在结果内的勾选，避免批量操作作用到看不到的会员
+        const filteredUidSet = new Set(filtered.map(u => u.uid));
+        selectedUserUids.forEach(uid => { if (!filteredUidSet.has(uid)) selectedUserUids.delete(uid); });
+        currentPageUids = pagedUsers.map(u => u.uid);
+
         // Update Total Count & Pagination Controls
         const totalCountSpan = document.getElementById('totalCount');
         if (totalCountSpan) totalCountSpan.textContent = totalCount;
@@ -1899,6 +1924,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     : (compactColumnsConfig.filter(c => compactColumnVisibility[c.id]).length + 2);
                 userTableBody.innerHTML = `<tr><td colspan="${colspanForLoading}" style="text-align: center; color: var(--text-muted); padding: 32px 0;">无符合筛选条件的会员资料</td></tr>`;
                 applyColumnVisibility();
+                syncSelectionState();
                 return;
             }
 
@@ -1912,7 +1938,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (currentTableMode === 'nested') {
                     // Nested Mode Layout
-                    let nestedRowHtml = `<td style="text-align: center;"><input type="checkbox" class="user-checkbox"></td>`;
+                    let nestedRowHtml = `<td style="text-align: center;"><input type="checkbox" class="user-checkbox" data-uid="${user.uid}" ${selectedUserUids.has(user.uid) ? 'checked' : ''}></td>`;
 
                     nestedColumnsConfig.forEach(col => {
                         if (!nestedColumnVisibility[col.id]) return;
@@ -2077,7 +2103,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
 
                     let cellsHtml = `<td class="cell-val sticky-col" data-col="expand" style="width: 40px; text-align: center; left: 0px;"><i class="ph ph-caret-right expand-btn" style="cursor:pointer; font-size:16px;" data-uid="${user.uid}"></i></td>
-                <td class="sticky-col sticky-col-1" style="left:40px;"><input type="checkbox" class="user-checkbox"></td>`;
+                <td class="sticky-col sticky-col-1" style="left:40px;"><input type="checkbox" class="user-checkbox" data-uid="${user.uid}" ${selectedUserUids.has(user.uid) ? 'checked' : ''}></td>`;
 
                     let currentLeft = 80;
                     pinned.forEach(col => {
@@ -2506,7 +2532,11 @@ document.addEventListener('DOMContentLoaded', () => {
             // Re-apply user column widths, then fix sticky offsets / expanded-card width from the real layout
             syncCompactTableLayout();
             ensureTableSpace();
+            syncSelectionState();
         };
+
+        // 表头在骨架屏期间即依当页勾选状态显示，不沿用上一页的全选
+        syncSelectionState();
 
         if (skipDelay) {
             executeRender();
@@ -2767,13 +2797,58 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Select all logic via delegation
+    // 表头全选状态只反映「当页」：全勾 → 勾选、部分 → 半选、未勾 → 空；并更新跨页勾选提示
+    function syncSelectionState() {
+        const selectedOnPage = currentPageUids.filter(uid => selectedUserUids.has(uid)).length;
+        const pageCount = currentPageUids.length;
+        ['selectAllCheckbox', 'selectAllCheckboxCompact'].forEach(id => {
+            const headerCb = document.getElementById(id);
+            if (!headerCb) return;
+            headerCb.checked = pageCount > 0 && selectedOnPage === pageCount;
+            headerCb.indeterminate = selectedOnPage > 0 && selectedOnPage < pageCount;
+            headerCb.disabled = pageCount === 0;
+        });
+
+        const hint = document.getElementById('selectionHint');
+        if (!hint) return;
+        const total = selectedUserUids.size;
+        hint.style.display = total > 0 ? '' : 'none';
+        if (total > 0) {
+            const otherPages = total - selectedOnPage;
+            document.getElementById('selectionHintText').innerHTML = `已勾选 <b>${total}</b> 位会员` +
+                (otherPages > 0 ? `<span class="selection-hint-sub">（其中 ${otherPages} 位在其他页）</span>` : '');
+        }
+    }
+
+    // Select all logic via delegation：只作用于当页，其他页的勾选保留
     if (userTableHeader) {
         userTableHeader.addEventListener('change', (e) => {
             if (e.target.type === 'checkbox' && (e.target.id === 'selectAllCheckbox' || e.target.id === 'selectAllCheckboxCompact')) {
-                const checkboxes = document.querySelectorAll('.user-checkbox');
-                checkboxes.forEach(cb => cb.checked = e.target.checked);
+                currentPageUids.forEach(uid => {
+                    if (e.target.checked) selectedUserUids.add(uid);
+                    else selectedUserUids.delete(uid);
+                });
+                userTableBody.querySelectorAll('.user-checkbox').forEach(cb => cb.checked = e.target.checked);
+                syncSelectionState();
             }
+        });
+    }
+
+    if (userTableBody) {
+        userTableBody.addEventListener('change', (e) => {
+            if (!e.target.classList.contains('user-checkbox') || !e.target.dataset.uid) return;
+            if (e.target.checked) selectedUserUids.add(e.target.dataset.uid);
+            else selectedUserUids.delete(e.target.dataset.uid);
+            syncSelectionState();
+        });
+    }
+
+    const btnClearSelection = document.getElementById('btnClearSelection');
+    if (btnClearSelection) {
+        btnClearSelection.addEventListener('click', () => {
+            selectedUserUids.clear();
+            userTableBody.querySelectorAll('.user-checkbox').forEach(cb => cb.checked = false);
+            syncSelectionState();
         });
     }
 
