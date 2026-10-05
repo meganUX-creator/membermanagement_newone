@@ -1692,7 +1692,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         nestedHeaderHtml += `<th class="${stickyClass}">${col.label}</th>`;
                     }
                 });
-                nestedHeaderHtml += `<th style="text-align: center; width: 190px;">
+                nestedHeaderHtml += `<th class="sticky-col-right" style="text-align: center; width: 190px; min-width: 190px;">
                     <button type="button" class="btn-custom-columns-header btn-header-columns-toggle" title="自订栏位">
                         <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                             <rect x="3" y="3" width="4" height="10" rx="1" stroke="currentColor" stroke-width="1.5"/>
@@ -2030,7 +2030,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     });
 
-                    nestedRowHtml += `<td style="text-align: center; padding: 12px 8px;">
+                    nestedRowHtml += `<td class="sticky-col-right" style="text-align: center; padding: 12px 8px; min-width: 190px;">
                     <div class="operations-grid-3x3">
                         <a href="#" class="op-link user-detail-link action-edit-user" data-uid="${user.uid}">编辑用户</a>
                         <a href="#" class="op-link user-detail-link action-view-details" data-uid="${user.uid}">查看详情</a>
@@ -3156,6 +3156,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 badge.innerHTML = '<span class="ued-status-dot"></span>目前状态：停用';
             }
         }
+
+        // 会员信息：基本资料 / 联络方式 / 备注 follow the user's own data (missing fields show '-')
+        const dtlVal = (v, emptyVals = []) => (window.dataMode === 'nodata' || v === undefined || v === null || v === '' || v === '-' || emptyVals.includes(v)) ? '-' : v;
+        const dtlFields = {
+            dtlNickname: dtlVal(user.nickname),
+            dtlAccount: dtlVal(user.account),
+            dtlRealName: dtlVal(user.realName),
+            dtlBirthday: dtlVal(user.birthday),
+            dtlPhone: dtlVal(user.phone, ['未绑定']),
+            dtlEmail: dtlVal(user.email),
+            dtlQQ: dtlVal(user.qq),
+            dtlWechat: dtlVal(user.wechat),
+            dtlZalo: dtlVal(user.zalo),
+            dtlWhatsapp: dtlVal(user.whatsapp),
+            dtlTelegram: dtlVal(user.telegram),
+            dtlFacebook: dtlVal(user.facebook),
+            dtlRemark: dtlVal(user.remark),
+            dtlFollowRemark: dtlVal(user.followRemark) === '-' ? '暂无回访备注' : user.followRemark
+        };
+        Object.entries(dtlFields).forEach(([id, val]) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = val;
+        });
 
         // 最新登入纪录：IP / 时间 / 同IP人数 follow the user's own data (so the IP shown can be found via the 登录IP filter)
         if (window.dataMode !== 'nodata') {

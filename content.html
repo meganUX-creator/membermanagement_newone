@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>会员管理 Prototype</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=28">
+    <link rel="stylesheet" href="style.css?v=29">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 
@@ -843,19 +843,19 @@
                         </div>
                         <div class="ued-form-field">
                             <label class="ued-label">用户暱称</label>
-                            <div class="ued-readonly-text">mi***01</div>
+                            <div class="ued-readonly-text" id="dtlNickname">mi***01</div>
                         </div>
                         <div class="ued-form-field">
                             <label class="ued-label">账号</label>
-                            <div class="ued-readonly-text">mingv0717001</div>
+                            <div class="ued-readonly-text" id="dtlAccount">mingv0717001</div>
                         </div>
                         <div class="ued-form-field">
                             <label class="ued-label">真实姓名</label>
-                            <div class="ued-readonly-text">王*明</div>
+                            <div class="ued-readonly-text" id="dtlRealName">王*明</div>
                         </div>
                         <div class="ued-form-field">
                             <label class="ued-label">出生年月日</label>
-                            <div class="ued-readonly-text">1991-02-11</div>
+                            <div class="ued-readonly-text" id="dtlBirthday">1991-02-11</div>
                         </div>
                     </div>
                 </div>
@@ -866,35 +866,35 @@
                     <div class="ued-form-grid">
                         <div class="ued-form-field">
                             <label class="ued-label">电话</label>
-                            <div class="ued-readonly-text">-</div>
+                            <div class="ued-readonly-text" id="dtlPhone">-</div>
                         </div>
                         <div class="ued-form-field">
                             <label class="ued-label">Email</label>
-                            <div class="ued-readonly-text">mingv0717001@example.com</div>
+                            <div class="ued-readonly-text" id="dtlEmail">mingv0717001@example.com</div>
                         </div>
                         <div class="ued-form-field">
                             <label class="ued-label">QQ</label>
-                            <div class="ued-readonly-text">123451</div>
+                            <div class="ued-readonly-text" id="dtlQQ">123451</div>
                         </div>
                         <div class="ued-form-field">
                             <label class="ued-label">微信 (WeChat)</label>
-                            <div class="ued-readonly-text">wx_mingv0717001</div>
+                            <div class="ued-readonly-text" id="dtlWechat">wx_mingv0717001</div>
                         </div>
                         <div class="ued-form-field">
                             <label class="ued-label">Zalo</label>
-                            <div class="ued-readonly-text">zalo_mingv0717001</div>
+                            <div class="ued-readonly-text" id="dtlZalo">zalo_mingv0717001</div>
                         </div>
                         <div class="ued-form-field">
                             <label class="ued-label">WhatsApp</label>
-                            <div class="ued-readonly-text">+1234567891</div>
+                            <div class="ued-readonly-text" id="dtlWhatsapp">+1234567891</div>
                         </div>
                         <div class="ued-form-field">
                             <label class="ued-label">Telegram</label>
-                            <div class="ued-readonly-text">@mingv0717001_tg</div>
+                            <div class="ued-readonly-text" id="dtlTelegram">@mingv0717001_tg</div>
                         </div>
                         <div class="ued-form-field">
                             <label class="ued-label">Facebook</label>
-                            <div class="ued-readonly-text">fb.me/mingv0717001</div>
+                            <div class="ued-readonly-text" id="dtlFacebook">fb.me/mingv0717001</div>
                         </div>
                     </div>
                 </div>
@@ -905,11 +905,11 @@
                     <div class="ued-form-grid">
                         <div class="ued-form-field ued-field-full">
                             <label class="ued-label">备注</label>
-                            <div class="ued-readonly-text">-</div>
+                            <div class="ued-readonly-text" id="dtlRemark">-</div>
                         </div>
                         <div class="ued-form-field ued-field-full">
                             <label class="ued-label">回访备注</label>
-                            <div class="ued-readonly-text">暂无回访备注</div>
+                            <div class="ued-readonly-text" id="dtlFollowRemark">暂无回访备注</div>
                         </div>
                     </div>
                 </div>
@@ -1195,7 +1195,7 @@
             document.write('<script src="mock_data_' + dataMode + '.js?v=3"><\/script>');
         })();
     </script>
-    <script src="script.js?v=39"></script>
+    <script src="script.js?v=40"></script>
 
         <!-- Custom Columns Drawer (Compact Mode) -->
         <div class="advanced-filter-drawer" id="columnsDrawer">
