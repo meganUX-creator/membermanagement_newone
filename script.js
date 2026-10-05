@@ -1517,6 +1517,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnClearAll) btnClearAll.addEventListener('click', clearAllFilters);
     if (btnReset) btnReset.addEventListener('click', clearAllFilters);
 
+    // 钉选等纯版面变动：不显示骨架屏（行数骤减会让列表高度塌陷、卷轴归零造成画面抽动），并保留卷动位置
+    function rerenderLayoutOnly() {
+        const wrap = document.querySelector('.table-wrapper');
+        const scrollTop = wrap ? wrap.scrollTop : 0;
+        const scrollLeft = wrap ? wrap.scrollLeft : 0;
+        renderTable(true);
+        if (wrap) {
+            wrap.scrollTop = scrollTop;
+            wrap.scrollLeft = scrollLeft;
+        }
+    }
+
     function renderTable(skipDelay = false) {
         const previouslyExpanded = [];
         if (userTableBody) {
@@ -2507,7 +2519,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         } else {
                             pinnedColumnIds.push(id);
                         }
-                        renderTable();
+                        rerenderLayoutOnly();
                     });
                 });
             }
@@ -2761,7 +2773,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     pinnedColumnIds.push(id);
                 }
                 renderDropdown(); // Update UI in dropdown
-                renderTable(); // Update table
+                rerenderLayoutOnly(); // Update table
             }
         });
     }
@@ -3682,7 +3694,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     tempCompactColumnVisibility[colId] = e.target.checked;
                 }
                 renderDropdown(); // Update drawer UI only
-                if (currentTableMode === 'nested') renderTable();
+                if (currentTableMode === 'nested') rerenderLayoutOnly();
             } else if (e.target.classList.contains('group-cb-nested')) {
                 const isChecked = e.target.checked;
                 nestedColumnsConfig.forEach(col => {
@@ -3690,7 +3702,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 nestedColumnVisibility = { ...tempNestedColumnVisibility };
                 renderDropdown();
-                if (currentTableMode === 'nested') renderTable();
+                if (currentTableMode === 'nested') rerenderLayoutOnly();
             } else if (e.target.classList.contains('group-cb')) {
                 const groupName = e.target.getAttribute('data-group');
                 const isChecked = e.target.checked;
@@ -3725,7 +3737,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
                 renderDropdown(); // Update drawer UI only
-                if (currentTableMode === 'nested') renderTable();
+                if (currentTableMode === 'nested') rerenderLayoutOnly();
             }
         });
     }
