@@ -698,7 +698,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Table Mode & Pagination States
-    let currentTableMode = 'nested'; // 'nested' or 'compact'
+    let currentTableMode = 'compact'; // 'nested' or 'compact'
     let currentPage = 1;
     let pageSize = 20;
 
