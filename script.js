@@ -768,26 +768,26 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('walletDetailTitle').textContent = title;
         const body = document.getElementById('walletDetailBody');
         if (body) {
+            let html = '';
+            const noData = baseAmount === null || baseAmount === undefined || baseAmount === '' || isNaN(Number(baseAmount));
             const rates = {'RMB': 1, 'VND': 3400, 'PHP': 8, 'MYR': 0.65, 'USDT': 0.14};
             const currentRate = rates[mainCurrency] || 1;
             const rmbBase = baseAmount / currentRate;
-            const noData = baseAmount === null || baseAmount === undefined || baseAmount === '' || isNaN(Number(baseAmount));
-            let html = '';
             const sortedCurrencies = [mainCurrency, ...allCurrencies.filter(c => c !== mainCurrency)];
             sortedCurrencies.forEach(c => {
-                let val = c === mainCurrency ? baseAmount : (rmbBase * rates[c]);
-                if (baseAmount === 0 || isNaN(baseAmount)) val = 0;
-                let formatted = typeof window.formatAmount === 'function' ? window.formatAmount(val, c).replace(/[A-Za-z\s]/g, '') : val.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-                if (val === 0 && c !== 'USDT') formatted = '0';
-                if (val === 0 && c === 'USDT') formatted = '0.00';
-                if (noData) formatted = '-';
-                const tagHtml = c === mainCurrency ? `<span style="font-size: 10px; background: #e0e7ff; color: #4f46e5; padding: 2px 4px; border-radius: 4px; margin-right: 6px;">主钱包</span>` : '';
-                html += `
-                <tr style="border-bottom: 1px solid var(--border-color);">
-                    <td style="border-right: 1px solid var(--border-color); padding: 12px 16px; color: var(--text-main); font-weight: 500; text-align: center;">${tagHtml}${c}</td>
-                    <td style="padding: 12px 16px; color: var(--text-main); font-family: monospace; font-size: 14px; text-align: center;">${formatted}</td>
-                </tr>`;
-            });
+                    let val = c === mainCurrency ? baseAmount : (rmbBase * rates[c]);
+                    if (baseAmount === 0 || isNaN(baseAmount)) val = 0;
+                    let formatted = typeof window.formatAmount === 'function' ? window.formatAmount(val, c).replace(/[A-Za-z\s]/g, '') : val.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    if (val === 0 && c !== 'USDT') formatted = '0';
+                    if (val === 0 && c === 'USDT') formatted = '0.00';
+                    if (noData) formatted = '-';
+                    const tagHtml = c === mainCurrency ? `<span style="font-size: 10px; background: #e0e7ff; color: #4f46e5; padding: 2px 4px; border-radius: 4px; margin-right: 6px;">主钱包</span>` : '';
+                    html += `
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="border-right: 1px solid var(--border-color); padding: 12px 16px; color: var(--text-main); font-weight: 500; text-align: center;">${tagHtml}${c}</td>
+                        <td style="padding: 12px 16px; color: var(--text-main); font-family: monospace; font-size: 14px; text-align: center;">${formatted}</td>
+                    </tr>`;
+                });
             body.innerHTML = html;
         }
         modal.style.display = '';
@@ -1993,14 +1993,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         </td>`;
                         } else if (col.id === 'creditLimit') {
                             nestedRowHtml += `<td class="nested-cell-info ${stickyClass}">
-                            <div><span class="info-label">信用值 :</span> <a class="wallet-detail-link" data-title="信用值" data-wallet="${user.currency || 'RMB'}" data-amount="${user.creditValue}">${formatAmount(user.creditValue, 'RMB')}</a></div>
+                            <div><span class="info-label">信用值 :</span> <span>${formatAmount(user.creditValue, 'RMB')}</span></div>
                             <div><span class="info-label">可用额度 :</span> <a class="wallet-detail-link" data-title="可用额度" data-wallet="${user.currency || 'RMB'}" data-amount="${user.availableCredit}">${formatAmount(user.availableCredit, user.currency)}</a> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
                             <div><span class="info-label">佣金余额 :</span> <a class="wallet-detail-link" data-title="佣金余额" data-wallet="${user.currency || 'RMB'}" data-amount="${user.commissionBal}">${formatAmount(user.commissionBal, user.currency)}</a> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
                             <div><span class="info-label">余额宝 :</span> <a class="wallet-detail-link" data-title="余额宝" data-wallet="${user.currency || 'RMB'}" data-amount="${user.balanceBuy || 0}">${formatAmount(user.balanceBuy || 0, user.currency)}</a> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
                             <div><span class="info-label">欠款 :</span> <a class="wallet-detail-link" data-title="欠款" data-wallet="${user.currency || 'RMB'}" data-amount="${user.arrears || 0}">${formatAmount(user.arrears || 0, user.currency)}</a> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
                             <div><span class="info-label">余额宝利息 :</span> <a class="wallet-detail-link" data-title="余额宝利息" data-wallet="${user.currency || 'RMB'}" data-amount="${user.interest || 0}">${formatAmount(user.interest || 0, user.currency)}</a> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
                             <div><span class="info-label">三方余额 :</span> <a class="wallet-detail-link" data-title="三方余额" data-wallet="${user.currency || 'RMB'}" data-amount="${user.thirdBal || 0}">${formatAmount(user.thirdBal || 0, user.currency)}</a> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')} <a href="#" class="refresh-link" style="color:#2563eb;font-size:12px;margin-left:4px;text-decoration:none;">刷新</a></div>
-                            <div><span class="info-label">会员积分 :</span> <a class="wallet-detail-link" data-title="会员积分" data-wallet="积分" data-amount="${user.points || 0}">${user.points || 0}</a></div>
+                            <div><span class="info-label">会员积分 :</span> <span>${formatAmount(user.points, '积分')}</span></div>
                         </td>`;
                         } else if (col.id === 'depositWithdraw') {
                             nestedRowHtml += `<td class="nested-cell-info ${stickyClass}">
@@ -2297,7 +2297,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <div class="detail-card-body flex-list-col">
                                     <div class="ds-field" data-ds-id="ds_growth" style="display:${dataSourceFieldVisibility['ds_growth'] !== false ? '' : 'none'}"><span class="lbl">成长值</span> <span class="val">${user.growth || '0'}</span></div>
                                     <div class="ds-field" data-ds-id="ds_vipGrowth" style="display:${dataSourceFieldVisibility['ds_vipGrowth'] !== false ? '' : 'none'}"><span class="lbl">VIP成长值</span> <span class="val">${user.vipGrowth || '0'}</span></div>
-                                    <div class="ds-field" data-ds-id="ds_points" style="display:${dataSourceFieldVisibility['ds_points'] !== false ? '' : 'none'}"><span class="lbl">会员积分</span> <span class="val">${user.points || '0'}</span></div>
+                                    <div class="ds-field" data-ds-id="ds_points" style="display:${dataSourceFieldVisibility['ds_points'] !== false ? '' : 'none'}"><span class="lbl">会员积分</span> <span class="val">${formatAmount(user.points, '积分')}</span></div>
                                 </div>
                             </div>
                             <!-- 推荐关系 -->
@@ -2339,7 +2339,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </div>
                                 <div class="detail-card-body flex-list-col">
                                     <div class="ds-field" data-ds-id="ds_debt" style="display:${dataSourceFieldVisibility['ds_debt'] !== false ? '' : 'none'}"><span class="lbl">欠款</span> ${window.renderClickableAmount('欠款', user.arrears, user.currency, 'color: #ef4444;', dataMode === 'nodata')}</div>
-                                    <div class="ds-field" data-ds-id="ds_creditVal" style="display:${dataSourceFieldVisibility['ds_creditVal'] !== false ? '' : 'none'}"><span class="lbl">信用值</span> ${window.renderClickableAmount('信用值', user.creditValue, 'RMB', '', dataMode === 'nodata')}</div>
+                                    <div class="ds-field" data-ds-id="ds_creditVal" style="display:${dataSourceFieldVisibility['ds_creditVal'] !== false ? '' : 'none'}"><span class="lbl">信用值</span> <span class="val">${formatAmount(user.creditValue, 'RMB')}</span></div>
                                 </div>
                             </div>
                         </div>
@@ -4095,7 +4095,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 case 'ds_sysSub_summary': val = window.dataMode === 'nodata' ? '-' : formatAmount(user.adminDeduct || 0, 'USDT'); extraClass = 'cell-money text-red'; break;
                 case 'ds_growth': val = user.growth || '0'; break;
                 case 'ds_vipGrowth': val = user.vipGrowth || '0'; break;
-                case 'ds_points': val = user.points || '0'; break;
+                case 'ds_points': val = formatAmount(user.points, '积分'); break;
                 case 'ds_inviter': val = user.inviter || '-'; break;
                 case 'ds_inviteCode': val = user.inviteCode || '-'; break;
                 case 'ds_team': val = `<a href="#" class="subordinate-link text-blue" style="text-decoration: underline;" data-uid="${user.uid}">${user.directTeam || '0/0'}</a>`; break;
