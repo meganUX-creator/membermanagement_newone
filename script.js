@@ -2999,7 +2999,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Initialize UI
-    setTableMode('nested');
+    setTableMode('compact');
     updateFilters();
 
 
