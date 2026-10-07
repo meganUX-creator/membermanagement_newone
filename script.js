@@ -4481,14 +4481,13 @@ document.addEventListener('DOMContentLoaded', () => {
             rightGroups[grp].push(col);
         });
 
-        // Match the expanded-card order in the list: cards currently shown come first (in list order),
-        // cards with nothing to show (all hidden or all moved to the main table) sink below, 其他 stays last.
-        const isShownInCard = (grp) => rightGroups[grp].some(c => dataSourceFieldVisibility[c.id] !== false && !list.some(x => x.id === c.id));
+        // Match the expanded-card order in the list.
+        // '其他' stays last. All other cards can be freely reordered regardless of whether their fields are in the main table.
         const orderIdx = (grp) => {
             const i = drawerCategoryOrder.indexOf(grp);
             return i === -1 ? 999 : i;
         };
-        const sectionOf = (grp) => grp === '其他' ? 2 : (isShownInCard(grp) ? 0 : 1);
+        const sectionOf = (grp) => grp === '其他' ? 2 : 0;
         const catKeys = Object.keys(rightGroups).sort((a, b) => (sectionOf(a) - sectionOf(b)) || (orderIdx(a) - orderIdx(b)));
 
         // Keep the shared order in sync so the list cards, up/down buttons and drag all follow what the drawer shows
