@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-CN">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>会员管理 Prototype</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=37">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 
@@ -17,7 +17,7 @@
         <aside class="sidebar">
             <div class="sidebar-header">
                 <i class="ph-fill ph-user-circle" id="sidebarHeaderIcon"></i>
-                <span id="sidebarHeaderTitle">个人中心</span>
+                <span id="sidebarHeaderTitle">体育会员中心</span>
                 <i class="ph ph-list" id="btnSidebarToggle"
                     style="margin-left:auto; cursor:pointer; font-size:20px; color:var(--text-muted);"
                     title="收起/展开选单"></i>
@@ -51,10 +51,22 @@
                 </div>
                 <div class="permission-checkboxes"
                     style="display: flex; flex-direction: column; gap: 12px; padding-bottom: 20px;">
-                    <!-- 1. 会员基本管理 -->
+                    <!-- 1. 基础会员与信息维护 -->
                     <div class="permission-group-title"
                         style="font-weight: 600; font-size: 13px; color: var(--text-main); margin-top: 4px; padding-bottom: 4px; border-bottom: 1px dashed var(--border-color);">
-                        1. 会员基本管理</div>
+                        1. 基础会员与信息维护</div>
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="查看会员列表" data-tracecode="TRACE_PERM_11FB"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                        <span>查看会员列表</span>
+                    </label>
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="查看会员详情" data-tracecode="TRACE_PERM_3FEA"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                        <span>查看会员详情</span>
+                    </label>
                     <label
                         style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
                         <input type="checkbox" checked value="新增会员" data-tracecode="TRACE_PERM_6D00"
@@ -69,143 +81,15 @@
                     </label>
                     <label
                         style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="查看会员详情" data-tracecode="TRACE_PERM_3FEA"
+                        <input type="checkbox" checked value="删除会员" data-tracecode="TRACE_PERM_EB34"
                             style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>查看会员详情</span>
+                        <span>删除会员</span>
                     </label>
                     <label
                         style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="查看会员联络资讯" data-tracecode="TRACE_PERM_2ACB"
+                        <input type="checkbox" checked value="备注" data-tracecode="TRACE_PERM_NOTE"
                             style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>查看会员联络资讯</span>
-                    </label>
-                    <label
-                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="会员信息审核" data-tracecode="TRACE_PERM_3EB6"
-                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>会员信息审核</span>
-                    </label>
-                    <label
-                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="会员谷歌验证码查看" data-tracecode="TRACE_PERM_537E"
-                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>会员谷歌验证码查看</span>
-                    </label>
-                    <!-- 2. 提现信息与资金管理 -->
-                    <div class="permission-group-title"
-                        style="font-weight: 600; font-size: 13px; color: var(--text-main); margin-top: 4px; padding-bottom: 4px; border-bottom: 1px dashed var(--border-color);">
-                        2. 提现信息与资金管理</div>
-                    <label
-                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="新增提现信息" data-tracecode="TRACE_PERM_BC8E"
-                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>新增提现信息</span>
-                    </label>
-                    <label
-                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="修改提现信息" data-tracecode="TRACE_PERM_342D"
-                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>修改提现信息</span>
-                    </label>
-                    <label
-                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="删除提现信息" data-tracecode="TRACE_PERM_90AE"
-                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>删除提现信息</span>
-                    </label>
-                    <label
-                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="禁用提现信息" data-tracecode="TRACE_PERM_3A5E"
-                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>禁用提现信息</span>
-                    </label>
-                    <label
-                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="查看会员在线充值提现统计" data-tracecode="TRACE_PERM_E597"
-                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>查看会员在线充值提现统计</span>
-                    </label>
-                    <!-- 3. 敏感资讯管理 -->
-                    <div class="permission-group-title"
-                        style="font-weight: 600; font-size: 13px; color: var(--text-main); margin-top: 4px; padding-bottom: 4px; border-bottom: 1px dashed var(--border-color);">
-                        3. 敏感资讯管理</div>
-
-                    <label
-                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="会员敏感资讯（手机）" data-tracecode="TRACE_PERM_5A2F"
-                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>会员敏感资讯（手机）</span>
-                    </label>
-                    <label
-                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="会员敏感资讯（姓名）" data-tracecode="TRACE_PERM_B9EA"
-                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>会员敏感资讯（姓名）</span>
-                    </label>
-
-                    <!-- 5. 批量变更 -->
-                    <div class="permission-group-title"
-                        style="font-weight: 600; font-size: 13px; color: var(--text-main); margin-top: 4px; padding-bottom: 4px; border-bottom: 1px dashed var(--border-color);">
-                        5. 批量变更</div>
-                    <label
-                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="批量更新用户余额" data-tracecode="TRACE_PERM_E760"
-                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>批量更新用户余额</span>
-                    </label>
-                    <label
-                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="批量更新用户联系方式" data-tracecode="TRACE_PERM_F116"
-                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>批量更新用户联系方式</span>
-                    </label>
-                    <label
-                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="批量更新用户状态" data-tracecode="TRACE_PERM_F0CC"
-                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>批量更新用户状态</span>
-                    </label>
-                    <label
-                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="批量代理变更" data-tracecode="TRACE_PERM_2882"
-                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>批量代理变更</span>
-                    </label>
-                    <label
-                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="批量更新最大提款次数" data-tracecode="TRACE_PERM_9203"
-                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>批量更新最大提款次数</span>
-                    </label>
-                    <!-- 6. 导出用户数据 -->
-                    <div class="permission-group-title"
-                        style="font-weight: 600; font-size: 13px; color: var(--text-main); margin-top: 4px; padding-bottom: 4px; border-bottom: 1px dashed var(--border-color);">
-                        6. 导出用户数据</div>
-                    <label
-                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="导出用户数据" data-tracecode="TRACE_PERM_9CB8"
-                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>导出用户数据</span>
-                    </label>
-                    <!-- 7. 支付层级 -->
-                    <div class="permission-group-title"
-                        style="font-weight: 600; font-size: 13px; color: var(--text-main); margin-top: 4px; padding-bottom: 4px; border-bottom: 1px dashed var(--border-color);">
-                        7. 支付层级</div>
-                    <label
-                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="支付层级" data-tracecode="TRACE_PERM_1EDA"
-                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>支付层级</span>
-                    </label>
-                    <!-- 其他 -->
-                    <div class="permission-group-title"
-                        style="font-weight: 600; font-size: 13px; color: var(--text-main); margin-top: 4px; padding-bottom: 4px; border-bottom: 1px dashed var(--border-color);">
-                        其他</div>
-                    <label
-                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="会员敏感资讯（密码）" data-tracecode="TRACE_PERM_16B6"
-                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>会员敏感资讯（密码）</span>
+                        <span>备注</span>
                     </label>
                     <label
                         style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
@@ -215,23 +99,21 @@
                     </label>
                     <label
                         style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="查看会员列表" data-tracecode="TRACE_PERM_11FB"
+                        <input type="checkbox" checked value="实名认证" data-tracecode="TRACE_PERM_KYC"
                             style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>查看会员列表</span>
+                        <span>实名认证</span>
+                    </label>
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="校验用户任务" data-tracecode="TRACE_PERM_8D00"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                        <span>校验用户任务</span>
                     </label>
 
-                    <label
-                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="删除会员" data-tracecode="TRACE_PERM_EB34"
-                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>删除会员</span>
-                    </label>
-                    <label
-                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="返点设定" data-tracecode="TRACE_PERM_F7C1"
-                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>返点设定</span>
-                    </label>
+                    <!-- 2. 财务与资金相关权限 -->
+                    <div class="permission-group-title"
+                        style="font-weight: 600; font-size: 13px; color: var(--text-main); margin-top: 4px; padding-bottom: 4px; border-bottom: 1px dashed var(--border-color);">
+                        2. 财务与资金相关权限</div>
                     <label
                         style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
                         <input type="checkbox" checked value="资金明细" data-tracecode="TRACE_PERM_9DB0"
@@ -246,22 +128,33 @@
                     </label>
                     <label
                         style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="交易设定" data-tracecode="TRACE_PERM_E854"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                        <span>交易设定</span>
+                    </label>
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="编辑银行卡" data-tracecode="TRACE_PERM_CARD"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                        <span>编辑银行卡</span>
+                    </label>
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
                         <input type="checkbox" checked value="修改余额" data-tracecode="TRACE_PERM_2AD1"
                             style="width: 16px; height: 16px; accent-color: var(--primary-color);">
                         <span>修改余额</span>
                     </label>
                     <label
                         style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="交易设定" data-tracecode="TRACE_PERM_E854"
+                        <input type="checkbox" checked value="批量更新用户余额" data-tracecode="TRACE_PERM_E760"
                             style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>交易设定</span>
+                        <span>批量更新用户余额</span>
                     </label>
-
                     <label
                         style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="第三方游戏" data-tracecode="TRACE_PERM_76B4"
+                        <input type="checkbox" checked value="解锁金额" data-tracecode="TRACE_PERM_UNLOCK"
                             style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>第三方游戏</span>
+                        <span>解锁金额</span>
                     </label>
                     <label
                         style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
@@ -271,58 +164,9 @@
                     </label>
                     <label
                         style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="清除稽核记录" data-tracecode="TRACE_PERM_F2E5"
+                        <input type="checkbox" checked value="链上地址" data-tracecode="TRACE_PERM_FBF8"
                             style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>清除稽核记录</span>
-                    </label>
-                    <label
-                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="代理变更历程" data-tracecode="TRACE_PERM_37A5"
-                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>代理变更历程</span>
-                    </label>
-                    <label
-                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="回访备注" data-tracecode="TRACE_PERM_DB05"
-                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>回访备注</span>
-                    </label>
-                    <label
-                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="隐藏资金明细" data-tracecode="TRACE_PERM_AA83"
-                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>隐藏资金明细</span>
-                    </label>
-                    <label
-                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="用户三方RTP配置" data-tracecode="TRACE_PERM_707E"
-                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>用户三方RTP配置</span>
-                    </label>
-
-                    <label
-                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="快速登录变更" data-tracecode="TRACE_PERM_B03A"
-                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>快速登录变更</span>
-                    </label>
-                    <label
-                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="编辑代理下会员可玩游戏" data-tracecode="TRACE_PERM_A333"
-                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>编辑代理下会员可玩游戏</span>
-                    </label>
-                    <label
-                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="移除会员谷歌验证码" data-tracecode="TRACE_PERM_BB89"
-                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>移除会员谷歌验证码</span>
-                    </label>
-                    <label
-                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="用户钱包展示" data-tracecode="TRACE_PERM_FBF8"
-                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>用户钱包展示</span>
+                        <span>链上地址</span>
                     </label>
                     <label
                         style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
@@ -332,52 +176,133 @@
                     </label>
                     <label
                         style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="会员赔率设置-查看" data-tracecode="TRACE_PERM_8E99"
+                        <input type="checkbox" checked value="清除稽核记录" data-tracecode="TRACE_PERM_F2E5"
                             style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>会员赔率设置-查看</span>
+                        <span>清除稽核记录</span>
                     </label>
                     <label
                         style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="会员赔率设置-保存" data-tracecode="TRACE_PERM_C694"
+                        <input type="checkbox" checked value="查看会员提款信息" data-tracecode="TRACE_PERM_WDR_VIEW"
                             style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>会员赔率设置-保存</span>
-                    </label>
-                    <label
-                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="会员返水快捷设置" data-tracecode="TRACE_PERM_8E6F"
-                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>会员返水快捷设置</span>
-                    </label>
-                    <label
-                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="会员设置最大赔付上限" data-tracecode="TRACE_PERM_0919"
-                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>会员设置最大赔付上限</span>
-                    </label>
-                    <label
-                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="会员赔率设置-重置" data-tracecode="TRACE_PERM_25AC"
-                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>会员赔率设置-重置</span>
+                        <span>查看会员提款信息</span>
                     </label>
 
+                    <!-- 3. 敏感数据与信息解密权限 -->
+                    <div class="permission-group-title"
+                        style="font-weight: 600; font-size: 13px; color: var(--text-main); margin-top: 4px; padding-bottom: 4px; border-bottom: 1px dashed var(--border-color);">
+                        3. 敏感数据与信息解密权限</div>
                     <label
                         style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="校验用户任务" data-tracecode="TRACE_PERM_8D00"
+                        <input type="checkbox" checked value="查看会员解密详情" data-tracecode="TRACE_PERM_DECRYPT_ALL"
                             style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>校验用户任务</span>
+                        <span>查看会员解密详情</span>
                     </label>
                     <label
                         style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="编辑标签" data-tracecode="TRACE_PERM_4F3B"
+                        <input type="checkbox" checked value="查看会员解密电话详情" data-tracecode="TRACE_PERM_DECRYPT_PHONE"
                             style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>编辑标签</span>
+                        <span>查看会员解密电话详情</span>
                     </label>
                     <label
                         style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
-                        <input type="checkbox" checked value="标签编辑纪录" data-tracecode="TRACE_PERM_25E8"
+                        <input type="checkbox" checked value="查看会员解密邮箱详情" data-tracecode="TRACE_PERM_DECRYPT_EMAIL"
                             style="width: 16px; height: 16px; accent-color: var(--primary-color);">
-                        <span>标签编辑纪录</span>
+                        <span>查看会员解密邮箱详情</span>
+                    </label>
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="查看会员解密QQ详情" data-tracecode="TRACE_PERM_DECRYPT_QQ"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                        <span>查看会员解密QQ详情</span>
+                    </label>
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="查看会员解密微信详情" data-tracecode="TRACE_PERM_DECRYPT_WECHAT"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                        <span>查看会员解密微信详情</span>
+                    </label>
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="查看会员解密zalo详情" data-tracecode="TRACE_PERM_DECRYPT_ZALO"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                        <span>查看会员解密zalo详情</span>
+                    </label>
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="查看会员解密facebook详情" data-tracecode="TRACE_PERM_DECRYPT_FB"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                        <span>查看会员解密facebook详情</span>
+                    </label>
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="查看会员解密whatsapp详情" data-tracecode="TRACE_PERM_DECRYPT_WA"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                        <span>查看会员解密whatsapp详情</span>
+                    </label>
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="查看会员解密telegram详情" data-tracecode="TRACE_PERM_DECRYPT_TG"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                        <span>查看会员解密telegram详情</span>
+                    </label>
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="查看会员解密安全问题" data-tracecode="TRACE_PERM_DECRYPT_QA"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                        <span>查看会员解密安全问题</span>
+                    </label>
+
+                    <!-- 4. 配置、安全与数据运维 -->
+                    <div class="permission-group-title"
+                        style="font-weight: 600; font-size: 13px; color: var(--text-main); margin-top: 4px; padding-bottom: 4px; border-bottom: 1px dashed var(--border-color);">
+                        4. 配置、安全与数据运维</div>
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="返点设定" data-tracecode="TRACE_PERM_F7C1"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                        <span>返点设定</span>
+                    </label>
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="导出用户数据" data-tracecode="TRACE_PERM_9CB8"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                        <span>导出用户数据</span>
+                    </label>
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="批量更新用户联系方式" data-tracecode="TRACE_PERM_F116"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                        <span>批量更新用户联系方式</span>
+                    </label>
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="第三方游戏" data-tracecode="TRACE_PERM_76B4"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                        <span>第三方游戏</span>
+                    </label>
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="用户三方RTP配置" data-tracecode="TRACE_PERM_707E"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                        <span>用户三方RTP配置</span>
+                    </label>
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="会员谷歌验证码查看" data-tracecode="TRACE_PERM_537E"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                        <span>会员谷歌验证码查看</span>
+                    </label>
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="移除会员谷歌验证码" data-tracecode="TRACE_PERM_BB89"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                        <span>移除会员谷歌验证码</span>
+                    </label>
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-main);">
+                        <input type="checkbox" checked value="ES数据同步" data-tracecode="TRACE_PERM_ES_SYNC"
+                            style="width: 16px; height: 16px; accent-color: var(--primary-color);">
+                        <span>ES数据同步</span>
                     </label>
                 </div>
             </nav>
@@ -409,7 +334,7 @@
                                 <i class="ph-fill ph-chat-centered-text text-orange-capsule"></i>
                                 <span>反馈 : <span id="topFeedbackCount" class="num text-blue-num">2</span></span>
                             </div>
-                            <div class="capsule-item-divider"></div>uu
+                            <div class="capsule-item-divider"></div>
                             <div class="capsule-item">
                                 <i class="ph-fill ph-wallet text-cyan-capsule"></i>
                                 <span>充值 : <span class="num text-blue-num">-</span></span>
@@ -461,15 +386,29 @@
 
             <div class="iframe-container"
                 style="flex: 1; display: flex; flex-direction: column; height: 100%; overflow: hidden; background-color: var(--bg-body);">
-                <iframe src="content.html?v=2" style="width: 100%; height: 100%; border: none;"></iframe>
+                <iframe src="content.html?mock=normal&v=20261021_15" style="width: 100%; height: 100%; border: none;"></iframe>
             </div>
         </main>
     </div>
 
-    <script src="script.js?v=8"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const iframe = document.querySelector('iframe');
+
+            // Sidebar Toggle
+            const btnSidebarToggle = document.getElementById('btnSidebarToggle');
+            const mainLayout = document.querySelector('.main-layout');
+            if (btnSidebarToggle && mainLayout) {
+                btnSidebarToggle.addEventListener('click', () => {
+                    const isCollapsed = mainLayout.classList.toggle('sidebar-collapsed');
+                    btnSidebarToggle.setAttribute('title', isCollapsed ? '展开选单' : '收起选单');
+                    setTimeout(() => {
+                        if (iframe && iframe.contentWindow) {
+                            iframe.contentWindow.dispatchEvent(new Event('resize'));
+                        }
+                    }, 350);
+                });
+            }
 
             function broadcastPermissions() {
                 if (iframe && iframe.contentWindow) {
@@ -495,6 +434,11 @@
             if (iframe) {
                 iframe.addEventListener('load', broadcastPermissions);
             }
+            window.addEventListener('message', (e) => {
+                if (e.data && e.data.type === 'REQUEST_PERMISSIONS') {
+                    broadcastPermissions();
+                }
+            });
 
             // Tracecode event listener for permission checkboxes
             const permissionCheckboxes = document.querySelectorAll('input[type="checkbox"][data-tracecode], input[value="查看会员在线充值提现统计"]');

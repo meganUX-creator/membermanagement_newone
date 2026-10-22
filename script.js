@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    let dataSourceFieldVisibility = { 'ds_debt': false, 'ds_creditVal': false, 'currency': false, 'availableCredit': false, 'thirdBal': false };
+    let dataSourceFieldVisibility = { 'currency': false, 'availableCredit': false, 'thirdBal': false };
     let tableFieldVisibility = {};
     window.toggleTableFieldVisibility = function (id, isVisible) {
         tableFieldVisibility[id] = isVisible;
@@ -12,17 +12,14 @@ document.addEventListener('DOMContentLoaded', () => {
         updateTableFromDrawer();
         window.applyDrawerOrderToTable();
     };
-    let drawerCategoryOrder = ['基本资料', '额度', '存取款资料', '成长与积分', '推荐关系', '余额宝', '信贷', '用户标签', '其他'];
-    let drawerCategoryVisibility = { '信贷': false };
-    // Order of the 主钱包 / 汇总 columns inside the expanded 存取款资料 card (展开卡片)
+    let drawerCategoryOrder = ['基本资料', '额度', '存取款资料', '成长与积分', '推荐关系', '余额宝', '用户标签', '其他'];
+    let drawerCategoryVisibility = {};
     // Filter-tag area / table space state (see layoutFilterTags & ensureTableSpace)
     let filterTagsExpanded = false;   // user opened the full tag list
     let filterAutoCollapsed = false;  // filter card hidden automatically to give the table room
     let filterUserExpanded = false;   // user re-opened the filter card on purpose (don't auto-hide again)
     let filterUserCollapsed = false;  // user hid the filter card on purpose (don't auto-show again)
     let lastFilterCardHeight = 0;     // filter card height (incl. margins) while visible
-    const DEPOSIT_SUB_TAGS = ['主钱包', '汇总'];
-    const depositCardSubOrder = [...DEPOSIT_SUB_TAGS];
 
     window.moveCategoryUp = function (cat) {
         const idx = drawerCategoryOrder.indexOf(cat);
@@ -61,18 +58,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     return idxA - idxB;
                 });
                 cards.forEach(card => wrapper.appendChild(card));
-
-                // 存取款资料 card: 主钱包 / 汇总 value columns follow the 展开卡片 sub-block order
-                const summaryFirst = depositCardSubOrder[0] === '汇总';
-                wrapper.querySelectorAll('.detail-card[data-category="存取款资料"]').forEach(card => {
-                    card.querySelectorAll('.detail-card-header div[style*="grid-template-columns: 1fr 1fr"]').forEach(grid => {
-                        const [mainLbl, sumLbl] = grid.children;
-                        if (mainLbl) mainLbl.style.order = summaryFirst ? '2' : '';
-                        if (sumLbl) sumLbl.style.order = summaryFirst ? '1' : '';
-                    });
-                    card.querySelectorAll('.ds-val-grid > [data-ds-id$="_main"]').forEach(el => { el.style.order = summaryFirst ? '2' : ''; });
-                    card.querySelectorAll('.ds-val-grid > [data-ds-id$="_summary"]').forEach(el => { el.style.order = summaryFirst ? '1' : ''; });
-                });
 
                 const activeLists = typeof getActiveLists === 'function' ? getActiveLists() : { frozen: [], scroll: [] };
 
@@ -117,9 +102,40 @@ document.addEventListener('DOMContentLoaded', () => {
                             } else {
                                 card.style.display = 'block';
                             }
+                        } else if (body && body.hasAttribute('data-no-sort')) {
+                            const fields = Array.from(body.querySelectorAll('.ds-field[data-ds-id]'));
+                            let hasVisibleField = false;
+                            fields.forEach(f => {
+                                const dsId = f.getAttribute('data-ds-id');
+                                const isCol1 = card.classList.contains('dc-dw') ? false : (activeLists.frozen.some(c => c.id === dsId) || activeLists.scroll.some(c => c.id === dsId));
+                                const isVisible = dataSourceFieldVisibility[dsId] !== false && !isCol1;
+                                f.style.display = isVisible ? (card.classList.contains('dc-dw') ? 'flex' : '') : 'none';
+                                if (isVisible) hasVisibleField = true;
+                            });
+
+                            if (!hasVisibleField) {
+                                card.style.display = 'none';
+                            } else {
+                                card.style.display = card.classList.contains('dc-dw') ? 'flex' : 'block';
+                            }
                         }
                     }
                 });
+            }
+
+            const bottomInfo = row.querySelector('.detail-bottom-info');
+            if (bottomInfo) {
+                const activeLists = typeof getActiveLists === 'function' ? getActiveLists() : { frozen: [], scroll: [] };
+                const fields = bottomInfo.querySelectorAll('.ds-field[data-ds-id]');
+                let hasVisible = false;
+                fields.forEach(f => {
+                    const dsId = f.getAttribute('data-ds-id');
+                    const isCol1 = activeLists.frozen.some(c => c.id === dsId) || activeLists.scroll.some(c => c.id === dsId);
+                    const isVisible = dataSourceFieldVisibility[dsId] !== false && !isCol1;
+                    f.style.display = isVisible ? 'flex' : 'none';
+                    if (isVisible) hasVisible = true;
+                });
+                bottomInfo.style.display = (hasVisible && drawerCategoryVisibility['其他'] !== false) ? 'block' : 'none';
             }
         });
     };
@@ -167,13 +183,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const dropdownVip = document.getElementById('dropdownVip');
     const dropdownCurrency = document.getElementById('dropdownCurrency');
     const dropdownOther = document.getElementById('dropdownOther');
+    const dropdownUserTags = document.getElementById('dropdownUserTags') || dropdownOther;
     const inputAccount = document.getElementById('inputAccount');
 
     // Account Type Dropdown Controls
     const accountTypeSelected = document.getElementById('accountTypeSelected');
     const accountTypeMenu = document.getElementById('accountTypeMenu');
     const accountTypeText = document.getElementById('accountTypeText');
-    let currentAccountType = 'exact'; // Default type: exact
+    let currentAccountType = 'account'; // Default type: account
 
     // Toggle Account Type Dropdown
     if (accountTypeSelected && accountTypeMenu) {
@@ -199,8 +216,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (inputAccount) {
                     if (value === 'exact') {
                         inputAccount.placeholder = '请输入精确账号';
-                    } else if (value === 'fuzzy') {
-                        inputAccount.placeholder = '请输入模糊账号关键字';
+                    } else if (value === 'account' || value === 'fuzzy') {
+                        inputAccount.placeholder = '请输入账号';
                     } else if (value === 'multi') {
                         inputAccount.placeholder = "账号以';'隔开，上限限制 50 个账号";
                     } else {
@@ -295,25 +312,31 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Export Data Dropdown Toggler
+    // Export Data Button / Dropdown Toggler
     const btnExportData = document.getElementById('btnExportData');
     const exportDataMenu = document.getElementById('exportDataMenu');
-    if (btnExportData && exportDataMenu) {
-        btnExportData.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const isOpen = exportDataMenu.classList.contains('show');
-            closeAllDropdowns();
-            if (!isOpen) {
-                exportDataMenu.classList.add('show');
-            }
-        });
-
-        exportDataMenu.querySelectorAll('li').forEach(li => {
-            li.addEventListener('click', () => {
-                alert(`触发操作：${li.textContent.trim()}`);
-                exportDataMenu.classList.remove('show');
+    if (btnExportData) {
+        if (exportDataMenu) {
+            btnExportData.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isOpen = exportDataMenu.classList.contains('show');
+                closeAllDropdowns();
+                if (!isOpen) {
+                    exportDataMenu.classList.add('show');
+                }
             });
-        });
+
+            exportDataMenu.querySelectorAll('li').forEach(li => {
+                li.addEventListener('click', () => {
+                    alert(`触发操作：${li.textContent.trim()}`);
+                    exportDataMenu.classList.remove('show');
+                });
+            });
+        } else {
+            btnExportData.addEventListener('click', () => {
+                alert('触发操作：导出数据');
+            });
+        }
     }
 
     // Custom Dropdown single-select initializer
@@ -343,10 +366,91 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Format multi-select dropdown display text:
+    // 0: '请选择'
+    // 1: '选项1'
+    // 2: '选项1、选项2' (至少露出两个选项)
+    // 3+: '选项1、选项2 +1' (至少露出两个选项，后面出现 "+" 数量)
+    function formatMultiSelectDisplay(items) {
+        if (!items || items.length === 0) {
+            return '请选择';
+        }
+        if (items.length === 1) {
+            return items[0];
+        }
+        if (items.length === 2) {
+            return `${items[0]}、${items[1]}`;
+        }
+        return `${items[0]}、${items[1]} +${items.length - 2}`;
+    }
+    window.formatMultiSelectDisplay = formatMultiSelectDisplay;
+
+    // Render multi-select dropdown display in the filter box:
+    // Guarantees:
+    // - At least 2 options are exposed (each gets up to 50% max-width when 2+, so neither crowds out the other).
+    // - When 3+ options are selected, a dedicated +<count> badge appears and will NEVER be truncated or hidden by text overflow.
+    function renderMultiSelectDisplay(element, items) {
+        if (!element) return;
+        const selected = element.querySelector('.select-selected');
+        const selectedValSpan = element.querySelector('.selected-val');
+        if (!selected || !selectedValSpan) return;
+
+        let countBadge = selected.querySelector('.selected-count-badge');
+        if (!countBadge) {
+            countBadge = document.createElement('span');
+            countBadge.className = 'selected-count-badge';
+            const caret = selected.querySelector('i');
+            if (caret) {
+                selected.insertBefore(countBadge, caret);
+            } else {
+                selected.appendChild(countBadge);
+            }
+        }
+
+        const escapeHtml = (str) => String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+        if (!items || items.length === 0) {
+            selectedValSpan.className = 'selected-val';
+            selectedValSpan.innerHTML = '<span class="selected-placeholder">请选择</span>';
+            countBadge.style.display = 'none';
+            countBadge.textContent = '';
+            selected.removeAttribute('title');
+        } else if (items.length === 1) {
+            selectedValSpan.className = 'selected-val';
+            selectedValSpan.innerHTML = `<span class="selected-tag-item" title="${escapeHtml(items[0])}">${escapeHtml(items[0])}</span>`;
+            countBadge.style.display = 'none';
+            countBadge.textContent = '';
+            selected.title = items[0];
+        } else if (items.length === 2) {
+            selectedValSpan.className = 'selected-val has-two';
+            selectedValSpan.innerHTML = `
+                <span class="selected-tag-item" title="${escapeHtml(items[0])}">${escapeHtml(items[0])}</span>
+                <span class="selected-tag-sep">、</span>
+                <span class="selected-tag-item" title="${escapeHtml(items[1])}">${escapeHtml(items[1])}</span>
+            `;
+            countBadge.style.display = 'none';
+            countBadge.textContent = '';
+            selected.title = items.join('、');
+        } else {
+            // 3 or more: expose first 2 options + separate count badge that never clips
+            const extraCount = items.length - 2;
+            selectedValSpan.className = 'selected-val has-two';
+            selectedValSpan.innerHTML = `
+                <span class="selected-tag-item" title="${escapeHtml(items[0])}">${escapeHtml(items[0])}</span>
+                <span class="selected-tag-sep">、</span>
+                <span class="selected-tag-item" title="${escapeHtml(items[1])}">${escapeHtml(items[1])}</span>
+            `;
+            countBadge.textContent = `+${extraCount}`;
+            countBadge.style.display = 'inline-flex';
+            countBadge.title = `已选择 ${items.length} 项（包含额外 ${extraCount} 项）`;
+            selected.title = items.join('、');
+        }
+    }
+    window.renderMultiSelectDisplay = renderMultiSelectDisplay;
+
     // Custom Dropdown multi-select initializer
     function initMultiSelect(element, onChange) {
         const selected = element.querySelector('.select-selected');
-        const selectedValSpan = element.querySelector('.selected-val');
         const optionsList = element.querySelector('.select-options');
 
         selected.addEventListener('click', (e) => {
@@ -362,31 +466,28 @@ document.addEventListener('DOMContentLoaded', () => {
             if (li.classList.contains('search-box-item')) {
                 const input = li.querySelector('.dropdown-search-input');
                 const btn = li.querySelector('button');
-
                 if (input) {
-                    // 精准搜寻：完整比对标签名称（忽略空白与大小写）；无符合时显示「无标签」
+                    // 标签搜寻：比对标签名称（忽略空白与大小写）；无符合时显示「无标签」
                     const normalize = (s) => s.replace(/\s+/g, '').toLowerCase();
                     const emptyLi = optionsList.querySelector('.search-empty-item');
                     const doSearch = () => {
                         const keyword = normalize(input.value);
                         let matched = 0;
                         optionsList.querySelectorAll('li:not(.search-box-item):not(.search-empty-item)').forEach(optLi => {
-                            const show = keyword === '' || normalize(optLi.textContent) === keyword;
+                            const text = normalize(optLi.textContent);
+                            const show = keyword === '' || text.includes(keyword);
                             optLi.style.display = show ? '' : 'none';
                             if (show) matched++;
                         });
                         if (emptyLi) emptyLi.style.display = (keyword !== '' && matched === 0) ? '' : 'none';
                     };
+                    input.addEventListener('input', doSearch);
                     input.addEventListener('keydown', (e) => {
                         // Ignore the Enter that confirms an IME composition (e.g. 中文输入法选字)
                         if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) {
                             e.preventDefault();
                             doSearch();
                         }
-                    });
-                    // Clearing the box restores the full list
-                    input.addEventListener('input', () => {
-                        if (input.value.trim() === '') doSearch();
                     });
                     input.addEventListener('click', (e) => e.stopPropagation());
                     if (btn) {
@@ -399,46 +500,44 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            li.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const checkbox = li.querySelector('input[type="checkbox"]');
-                if (checkbox) {
-                    checkbox.checked = !checkbox.checked;
+            const checkbox = li.querySelector('input[type="checkbox"]');
+            if (checkbox) {
+                checkbox.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
+                checkbox.addEventListener('change', () => {
                     li.classList.toggle('selected', checkbox.checked);
                     updateDisplay();
                     if (onChange) onChange();
+                });
+            }
+
+            li.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (checkbox && e.target !== checkbox) {
+                    checkbox.checked = !checkbox.checked;
                 }
+                if (checkbox) {
+                    li.classList.toggle('selected', checkbox.checked);
+                } else {
+                    li.classList.toggle('selected');
+                }
+                updateDisplay();
+                if (onChange) onChange();
             });
         });
 
         function updateDisplay() {
             const selectedItems = [];
             optionsList.querySelectorAll('li.selected').forEach(li => {
-                selectedItems.push(li.getAttribute('data-value'));
+                const val = li.getAttribute('data-value') || (li.querySelector('span') ? li.querySelector('span').textContent.trim() : '');
+                if (val) selectedItems.push(val);
             });
-
-            if (selectedItems.length === 0) {
-                selectedValSpan.textContent = '请选择';
-            } else if (selectedItems.length === 1) {
-                selectedValSpan.textContent = selectedItems[0];
-            } else {
-                let displayText = selectedItems[0];
-                let shownCount = 1;
-                for (let i = 1; i < selectedItems.length; i++) {
-                    if ((displayText + "、" + selectedItems[i]).length > 15) {
-                        break;
-                    }
-                    displayText += "、" + selectedItems[i];
-                    shownCount++;
-                }
-
-                if (shownCount < selectedItems.length) {
-                    selectedValSpan.textContent = `${displayText} + ${selectedItems.length - shownCount}`;
-                } else {
-                    selectedValSpan.textContent = displayText;
-                }
-            }
+            renderMultiSelectDisplay(element, selectedItems);
         }
+
+        // Attach update method to element for external triggers
+        element._updateMultiSelectDisplay = updateDisplay;
 
         // Initial run
         updateDisplay();
@@ -450,11 +549,27 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedVipVal = '';
     let selectedCurrencyVal = '';
     let selectedBirthdayOuterVal = '';
+    let selectedDeviceTypeVal = '';
+    let selectedCountryVal = '';
 
     const dropdownBirthdayOuter = document.getElementById('dropdownBirthdayOuter');
     if (dropdownBirthdayOuter) {
         initSingleSelect(dropdownBirthdayOuter, (val) => {
             selectedBirthdayOuterVal = val;
+        });
+    }
+
+    const dropdownDeviceType = document.getElementById('dropdownDeviceType');
+    if (dropdownDeviceType) {
+        initSingleSelect(dropdownDeviceType, (val) => {
+            selectedDeviceTypeVal = val;
+        });
+    }
+
+    const dropdownCountry = document.getElementById('dropdownCountry');
+    if (dropdownCountry) {
+        initSingleSelect(dropdownCountry, (val) => {
+            selectedCountryVal = val;
         });
     }
 
@@ -482,45 +597,46 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    if (typeof dropdownOther !== 'undefined' && dropdownOther) {
+    if (typeof dropdownOther !== 'undefined' && dropdownOther && dropdownOther !== dropdownUserTags) {
         initMultiSelect(dropdownOther, () => {
         });
     }
 
-    // Tag sets assigned to generated mock users (shared with the 用户标签 dropdown options)
-    const GENERATED_USER_TAG_SETS = [["新注册"], ["正常", "活跃"], ["大户", "VIP 客户"], ["异常风险", "VIP 客户"]];
-    const dropdownUserTags = document.getElementById('dropdownUserTags');
+    // Tag sets assigned to generated mock users (shared with the 标签筛选 dropdown options)
+    const GENERATED_USER_TAG_SETS = [
+        ["彩票偏好 — RMB", "稳定活跃"],
+        ["体育偏好 — RMB", "正常", "活跃"],
+        ["大户", "VIP 客户", "真人偏好 — RMB"],
+        ["异常风险", "电子游戏偏好 — RMB", "高消费"]
+    ];
     if (typeof dropdownUserTags !== 'undefined' && dropdownUserTags) {
         populateUserTagOptions(dropdownUserTags);
         initMultiSelect(dropdownUserTags, () => {
         });
     }
 
-    // 用户标签下拉选项 = 资料中实际存在的所有标签（原有的常用标签排在前面，其余依出现顺序附加），
-    // 让每个出现在会员身上的标签都能被勾选与精准搜寻
+    // 标签筛选下拉选项 = 保留 HTML 内预设的偏好与常用标签，并追加资料中实际存在的其他标签
     function populateUserTagOptions(dropdownEl) {
+        if (!dropdownEl) return;
         const optionsList = dropdownEl.querySelector('.select-options');
         if (!optionsList) return;
-        const existing = [...optionsList.querySelectorAll('li[data-value]')];
-        const ordered = existing.map(li => li.getAttribute('data-value'));
-        const seen = new Set();
-        const allTags = [];
-        const add = (t) => { if (t && !seen.has(t)) { seen.add(t); allTags.push(t); } };
-        const dataTags = new Set();
-        (window.baseMockUsers || []).forEach(u => (u.tags || []).forEach(t => dataTags.add(t)));
-        GENERATED_USER_TAG_SETS.forEach(set => set.forEach(t => dataTags.add(t)));
-        ordered.filter(t => dataTags.has(t)).forEach(add);
-        dataTags.forEach(add);
-        if (allTags.length === 0) return; // no data (e.g. 无数据模式): keep the static markup
-
-        const escapeHtml = (v) => String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-        existing.forEach(li => li.remove());
+        const existingValues = new Set([...optionsList.querySelectorAll('li[data-value]')].map(li => li.getAttribute('data-value')));
         const emptyLi = optionsList.querySelector('.search-empty-item');
-        allTags.forEach(tag => {
-            const li = document.createElement('li');
-            li.setAttribute('data-value', tag);
-            li.innerHTML = `<input type="checkbox"> <span>${escapeHtml(tag)}</span>`;
-            optionsList.insertBefore(li, emptyLi);
+        const escapeHtml = (v) => String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        (window.baseMockUsers || []).forEach(u => {
+            (u.tags || []).forEach(t => {
+                if (t && !existingValues.has(t) && !existingValues.has(formatTagName(t))) {
+                    existingValues.add(t);
+                    const li = document.createElement('li');
+                    li.setAttribute('data-value', t);
+                    li.innerHTML = `<input type="checkbox"> <span>${escapeHtml(t)}</span>`;
+                    if (emptyLi) {
+                        optionsList.insertBefore(li, emptyLi);
+                    } else {
+                        optionsList.appendChild(li);
+                    }
+                }
+            });
         });
     }
 
@@ -529,8 +645,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const inputDateEndOuter = document.getElementById('inputDateEndOuter');
     const inputBankCardOuter = document.getElementById('inputBankCardOuter');
     const inputOfflineDaysOuter = document.getElementById('inputOfflineDaysOuter');
+    const inputThirdPartyAmount = document.getElementById('inputThirdPartyAmount');
+    const inputPromoterAccount = document.getElementById('inputPromoterAccount');
     const inputIpOuter = document.getElementById('inputIpOuter');
     const inputDepositOuter = document.getElementById('inputDepositOuter');
+
+    if (inputThirdPartyAmount) {
+        inputThirdPartyAmount.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                if (btnSearch) btnSearch.click();
+            }
+        });
+    }
+    if (inputPromoterAccount) {
+        inputPromoterAccount.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                if (btnSearch) btnSearch.click();
+            }
+        });
+    }
+    if (inputOfflineDaysOuter) {
+        inputOfflineDaysOuter.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                if (btnSearch) btnSearch.click();
+            }
+        });
+    }
 
     // Actions & Containers
     const btnSearch = document.getElementById('btnSearch');
@@ -543,6 +683,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const dataMode = urlParams.get('mock') || 'normal';
     window.dataMode = dataMode; // export globally if needed
+    document.documentElement.setAttribute('data-mode', dataMode);
+    if (document.body) document.body.classList.add('mode-' + dataMode);
 
     // Filter Row Extreme Mock
     // 极限模式：筛选列预填「所有极限资料都符合」的极限值（长字串／大数字），标签与列表结果一致；
@@ -562,8 +704,23 @@ document.addEventListener('DOMContentLoaded', () => {
         // 状态：所有资料相同时才预填
         pickSingle('dropdownStatus', common('status'));
 
+        // 用户层级：极限资料统一为最高层级
+        const extremeLevel = common('payLevel') || '尊贵VIP无敌无限层';
+        pickSingle('dropdownLevel', extremeLevel);
+        selectedLevelVal = extremeLevel;
+
         // 会员等级：极限资料统一为最高等级（与 mockUsers 展开时的预设一致）
         pickSingle('dropdownVip', common('vip') || '至尊会员');
+
+        // 国家：极限模式预填国家数据
+        const extremeCountry = common('country') || '中国';
+        pickSingle('dropdownCountry', extremeCountry);
+        selectedCountryVal = extremeCountry;
+
+        // 设备类型：极限模式预填设备类型
+        const extremeDeviceType = common('deviceType') || 'iOS';
+        pickSingle('dropdownDeviceType', extremeDeviceType);
+        selectedDeviceTypeVal = extremeDeviceType;
 
         // 用户标签：全选（任一符合即显示，每笔资料都有标签）
         // 排除条件：全选（极限会员皆为正式会员，不会被任一排除条件滤掉）
@@ -580,7 +737,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const accounts = base.map(u => String(u.account || ''));
         let prefix = accounts[0] || '';
         accounts.forEach(a => { while (prefix && !a.startsWith(prefix)) prefix = prefix.slice(0, -1); });
-        const fuzzyLi = document.querySelector('#accountTypeMenu li[data-value="fuzzy"]');
+        const fuzzyLi = document.querySelector('#accountTypeMenu li[data-value="account"]') || document.querySelector('#accountTypeMenu li[data-value="fuzzy"]');
         if (fuzzyLi && prefix) fuzzyLi.click(); // also clears the input, so set the value afterwards
 
         // 绑定银行卡：模糊匹配所有极限卡号的共同前缀
@@ -590,12 +747,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 未登入天数（大于）：取最小值减 1（所有资料都 > 此值）
         const offlineDays = base.map(u => parseInt(u.offlineDays, 10)).filter(n => !isNaN(n));
+        const offlineDaysVal = offlineDays.length ? String(Math.min(...offlineDays) - 1) : '9998';
+
+        // 三方额度（大于）：取略低于最小三方额度的整数（所有资料都 > 此值）
+        const thirdBals = base.map(u => parseFloat(u.thirdBal)).filter(n => !isNaN(n));
+        const thirdAmountVal = thirdBals.length ? String(Number.isInteger(Math.min(...thirdBals)) ? Math.min(...thirdBals) - 1 : Math.floor(Math.min(...thirdBals))) : '99999999';
+
+        // 推广人账号
+        const promoterVal = common('inviter') || common('agentId') || 'agent999999999999999';
 
         const deposits = base.map(u => parseFloat(u.deposit)).filter(n => !isNaN(n));
         const extremeInputValues = {
             'inputAccount': prefix,
+            'inputPromoterAccount': promoterVal,
+            'inputOfflineDaysOuter': offlineDaysVal,
+            'inputThirdPartyAmount': thirdAmountVal,
             'inputBankCardOuter': bankCardPrefix,
-            'inputOfflineDaysOuter': offlineDays.length === base.length && offlineDays.length ? String(Math.min(...offlineDays) - 1) : null,
             'inputAgentIdOuter': common('agentId'),
             'inputVipLevelOuter': common('vipLevel'),
             'inputIpOuter': common('ip'),
@@ -622,29 +789,47 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Extreme Mock for top statistics
-        const statYuEBao = document.getElementById('statYuEBao');
         const statTotalAmount = document.getElementById('statTotalAmount');
         const statThirdParty = document.getElementById('statThirdParty');
         const statReg = document.getElementById('statReg');
         const statFirstDep = document.getElementById('statFirstDep');
 
-        if (statYuEBao) statYuEBao.innerText = '9,999,999,999,999.99';
-        if (statTotalAmount) statTotalAmount.innerText = '9,999,999,999,999.99';
-        if (statThirdParty) statThirdParty.innerText = '9,999,999,999,999.99';
+        if (statTotalAmount) {
+            statTotalAmount.setAttribute('data-raw', '9,999,999,999,999.99');
+            if (statTotalAmount.classList.contains('unmasked')) {
+                statTotalAmount.innerText = '9,999,999,999,999.99';
+            } else {
+                statTotalAmount.innerText = '***';
+            }
+        }
+        if (statThirdParty) {
+            statThirdParty.setAttribute('data-raw', '9,999,999,999,999.99');
+            if (statThirdParty.classList.contains('unmasked')) {
+                statThirdParty.innerText = '9,999,999,999,999.99';
+            } else {
+                statThirdParty.innerText = '***';
+            }
+        }
         if (statReg) statReg.innerText = '9,999,999,999';
         if (statFirstDep) statFirstDep.innerText = '9,999,999,999';
     }
     // Update static DOM elements if nodata
     if (dataMode === 'nodata') {
-        const statYuEBao = document.getElementById('statYuEBao');
         const statTotalAmount = document.getElementById('statTotalAmount');
         const statThirdParty = document.getElementById('statThirdParty');
         const statReg = document.getElementById('statReg');
         const statFirstDep = document.getElementById('statFirstDep');
 
-        if (statYuEBao) statYuEBao.innerText = '-';
-        if (statTotalAmount) statTotalAmount.innerText = '-';
-        if (statThirdParty) statThirdParty.innerText = '-';
+        if (statTotalAmount) {
+            statTotalAmount.innerText = '-';
+            const btn = document.querySelector('.stat-eye-btn[data-target="statTotalAmount"]');
+            if (btn) btn.style.display = 'none';
+        }
+        if (statThirdParty) {
+            statThirdParty.innerText = '-';
+            const btn = document.querySelector('.stat-eye-btn[data-target="statThirdParty"]');
+            if (btn) btn.style.display = 'none';
+        }
         if (statReg) statReg.innerText = '-';
         if (statFirstDep) statFirstDep.innerText = '-';
 
@@ -653,7 +838,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const filterDropdownsNoData = [
             'dropdownStatus', 'dropdownLevel', 'dropdownVip', 'dropdownCurrency', 'dropdownUserTags',
-            'dropdownOther', 'dropdownBirthdayOuter', 'dropdownAgentId'
+            'dropdownOther', 'dropdownBirthdayOuter', 'dropdownAgentId', 'dropdownDeviceType', 'dropdownCountry'
         ];
         filterDropdownsNoData.forEach(id => {
             const el = document.getElementById(id);
@@ -718,14 +903,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Nested Visibility State
     let nestedColumnsConfig = [
+        { id: 'status', label: '状态' },
         { id: 'avatar', label: '头像' },
         { id: 'memberInfo', label: '会员信息' },
         { id: 'levelTeam', label: '等级&团队' },
-        { id: 'creditLimit', label: '信用&额度 (主钱包)' },
-        { id: 'depositWithdraw', label: '存取款 (主钱包)' },
-        { id: 'dwSummary', label: '存取款 (汇总 USDT)' },
+        { id: 'creditLimit', label: '信用&额度' },
+        { id: 'depositWithdraw', label: '存取款' },
         { id: 'tags', label: '标签' },
-        { id: 'status', label: '状态' },
         { id: 'dateInfo', label: '日期信息' },
         { id: 'remark', label: '备注' }
     ];
@@ -747,7 +931,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let num = parseFloat(val);
         if (isNaN(num)) return '-';
 
-        if (currency === 'USDT') {
+        if (currency && String(currency).trim().toUpperCase() === 'USDT') {
             return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         } else {
             return Math.floor(num).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
@@ -755,59 +939,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     window.formatAmount = formatAmount;
 
+    // Format tag name: strip currency suffix (e.g. " — RMB", " — VND", " - RMB", " - USDT")
+    function formatTagName(tag) {
+        if (!tag || tag === '-') return '-';
+        return String(tag).replace(/\s*[-—]\s*[A-Za-z]+$/g, '').trim();
+    }
+    window.formatTagName = formatTagName;
+
     // 主钱包币种 display text: no currency in 无数据 mode → "-"
     function mainCurrencyText(user) {
         return window.dataMode === 'nodata' ? '-' : (user.currency || 'RMB');
     }
 
-    window.openCurrencyModal = function(title, baseAmount, mainCurrency) {
-        const modal = document.getElementById('walletDetailModal');
-        if (!modal) return;
-        const allCurrencies = ['RMB', 'VND', 'PHP', 'MYR', 'USDT'];
-        if (!mainCurrency || !allCurrencies.includes(mainCurrency)) mainCurrency = 'RMB';
-        document.getElementById('walletDetailTitle').textContent = title;
-        const body = document.getElementById('walletDetailBody');
-        if (body) {
-            let html = '';
-            const noData = baseAmount === null || baseAmount === undefined || baseAmount === '' || isNaN(Number(baseAmount));
-            const rates = {'RMB': 1, 'VND': 3400, 'PHP': 8, 'MYR': 0.65, 'USDT': 0.14};
-            const currentRate = rates[mainCurrency] || 1;
-            const rmbBase = baseAmount / currentRate;
-            const sortedCurrencies = [mainCurrency, ...allCurrencies.filter(c => c !== mainCurrency)];
-            sortedCurrencies.forEach(c => {
-                    let val = c === mainCurrency ? baseAmount : (rmbBase * rates[c]);
-                    if (baseAmount === 0 || isNaN(baseAmount)) val = 0;
-                    let formatted = typeof window.formatAmount === 'function' ? window.formatAmount(val, c).replace(/[A-Za-z\s]/g, '') : val.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-                    if (val === 0 && c !== 'USDT') formatted = '0';
-                    if (val === 0 && c === 'USDT') formatted = '0.00';
-                    if (noData) formatted = '-';
-                    const tagHtml = c === mainCurrency ? `<span style="font-size: 10px; background: #e0e7ff; color: #4f46e5; padding: 2px 4px; border-radius: 4px; margin-right: 6px;">主钱包</span>` : '';
-                    html += `
-                    <tr style="border-bottom: 1px solid var(--border-color);">
-                        <td style="border-right: 1px solid var(--border-color); padding: 12px 16px; color: var(--text-main); font-weight: 500; text-align: center;">${tagHtml}${c}</td>
-                        <td style="padding: 12px 16px; color: var(--text-main); font-family: monospace; font-size: 14px; text-align: center;">${formatted}</td>
-                    </tr>`;
-                });
-            body.innerHTML = html;
-        }
-        modal.style.display = '';
-        modal.classList.add('show');
-    };
+    window.openCurrencyModal = function() {};
+    window.openWalletDetailModal = function() {};
 
     window.renderClickableAmount = function(title, val, currency, extraStyle = '', isDataModeNoData = false) {
         const safeCurrency = (currency && ['RMB','VND','PHP','MYR','USDT'].includes(currency)) ? currency : 'RMB';
         const noData = isDataModeNoData || window.dataMode === 'nodata' || val === undefined || val === null;
         const formatted = noData ? '-' : (typeof window.formatAmount === 'function' ? window.formatAmount(val, safeCurrency) : val);
-        // "-" stays clickable: the modal then shows "-" for every currency
-        const amountArg = formatted === '-' ? 'null' : val;
-        return `<a href="#" class="val" style="color: #4f46e5; cursor: pointer; text-decoration: none; border-bottom: 1px dashed #4f46e5; ${extraStyle}" onclick="window.openCurrencyModal('${title}', ${amountArg}, '${safeCurrency}'); return false;" title="查看各币种明细">${formatted}</a>`;
+        return `<span class="val" style="${extraStyle}">${formatted}</span>`;
     };
 
     // --- Data State Rendering Helper ---
-    function renderDataState(val, type = 'text') {
-        if (window.dataMode === 'nodata' || val === '-' || val === null || val === undefined || val === '' || val === '无数据') {
-            if (type === 'na') {
-                return `<span class="data-na">N/A</span>`;
+    function renderDataState(val, type = 'text', label = '') {
+        const isNoData = window.dataMode === 'nodata' || val === '-' || val === null || val === undefined || val === '' || val === '无数据' || val === '暂无备注' || val === '暂无回访备注' || val === 'N/A';
+        if (isNoData) {
+            if (type === 'na' || type === 'remark' || label === '会员名' || type === 'account') {
+                return `<span class="data-na" style="color: #94a3b8;">N/A</span>`;
             }
             return `<span class="data-empty">-</span>`;
         }
@@ -838,12 +997,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (type === 'bankCard' || type === 'masked') {
             return `<span class="status-bound"><span class="data-masked">${val}</span></span>`;
         }
-        if (type === 'longText') {
+        if (type === 'longText' || type === 'remark') {
             return `<span class="text-truncate" title="${val}">${val}</span>`;
         }
         if (type === 'copyable') {
             const safeVal = String(val).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
-            return `<span class="copyable-text" data-copy="${safeVal}" title="点击复制">${val}<i class="ph-bold ph-copy copy-icon"></i></span>`;
+            const labelText = label || '';
+            const copyTitle = labelText ? `复制${labelText}` : '复制';
+            return `<span class="copyable-text" data-copy="${safeVal}" data-label="${labelText}" title="${copyTitle}"><span class="copyable-val">${val}</span><button type="button" class="btn-copy-icon" data-copy="${safeVal}" data-label="${labelText}" title="${copyTitle}" aria-label="${copyTitle}"><i class="ph ph-copy"></i></button></span>`;
         }
         if (type === 'ip') {
             return `<a href="#" class="ip-link" data-ip="${val}" style="color: var(--primary-color); text-decoration: none;">${val}</a> <i class="ph ph-copy copy-ip-btn" data-ip="${val}" style="cursor: pointer; color: var(--text-muted);" title="复制IP"></i> <i class="ph ph-link ip-link-icon" data-ip="${val}" style="cursor: pointer; color: #3b82f6; margin-left: 4px;" title="前往IP统计页面"></i>`;
@@ -854,23 +1015,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     let compactColumnsConfig = [
-        { id: 'online', group: '账号信息', label: '在线', checkboxIndex: 1, render: (user) => `<td data-col="online" style="text-align: center;">${dataMode === 'nodata' ? '-' : `<span class="status-dot-icon ${user.offlineDays === 0 ? 'online' : 'offline'}" title="${user.offlineDays === 0 ? '在线' : '离线'}"></span>`}</td>` },
-        { id: 'uid', group: '账号信息', label: '用户ID', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="uid">${dataMode === 'nodata' ? '-' : renderDataState(user.uid, 'copyable')}</td>` },
-        { id: 'account', group: '账号信息', label: '会员名', checkboxIndex: 3, render: (user) => `<td data-col="account"><span class="cell-username cell-username-static" data-uid="${user.uid}">${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : renderDataState(user.account, 'copyable')}</span></td>` },
+        {
+            id: 'online', group: '账号信息', label: '在线', checkboxIndex: 1, render: (user) => {
+                if (dataMode === 'nodata') {
+                    return `<td data-col="online" style="text-align: center;">-</td>`;
+                }
+                const isOnline = user.offlineDays === 0;
+                return `<td data-col="online" style="text-align: center;">
+                    <div class="online-cell-container">
+                        <span class="status-dot-icon ${isOnline ? 'online' : 'offline'}" title="${isOnline ? '在线' : '离线'}"></span>
+                        ${isOnline ? `<button type="button" class="btn-force-logout" data-uid="${user.uid}" data-account="${user.account || ''}" data-tooltip="登出在线用户" data-tooltip-pos="top" aria-label="登出在线用户"><i class="ph ph-plugs"></i></button>` : ''}
+                    </div>
+                </td>`;
+            }
+        },
+        { id: 'uid', group: '账号信息', label: '用户ID', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="uid">${dataMode === 'nodata' ? '-' : renderDataState(user.uid, 'copyable', '用户ID')}</td>` },
+        { id: 'account', group: '账号信息', label: '会员名', checkboxIndex: 3, render: (user) => {
+            const isNoData = window.dataMode === 'nodata' || !user.account || user.account === '-' || user.account === '无数据' || user.account === 'N/A';
+            if (isNoData) {
+                return `<td data-col="account"><span class="data-na" style="color: #94a3b8;">N/A</span></td>`;
+            }
+            return `<td data-col="account"><span class="cell-username cell-username-static" data-uid="${user.uid}">${renderDataState(user.account, 'copyable', '会员名')}</span></td>`;
+        } },
+        { id: 'currency', group: '账号信息', label: '用户币别', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="currency">${mainCurrencyText(user)}</td>` },
+        { id: 'country', group: '账号信息', label: '国家', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="country">${dataMode === 'nodata' || !user.country || user.country === '-' ? '-' : `<span class="country-highlight-val">${user.country || '中国'}</span>`}</td>` },
         { id: 'agentId', group: '账号信息', label: '代理', checkboxIndex: 3, render: (user) => `<td class="cell-val" data-col="agentId">${renderDataState(user.agentId)}</td>` },
-        { id: 'status', group: '账号信息', label: '状态', checkboxIndex: 1, render: (user) => `<td data-col="status"><span class="user-custom-tag ${user.status === '正常' ? 'tag-green' : user.status === '冻结' ? 'tag-blue' : 'tag-red'}">${user.status}</span></td>` },
+        { id: 'status', group: '账号信息', label: '状态', checkboxIndex: 1, render: (user) => {
+            const isNormal = user.status === '正常';
+            const disableIcon = isNormal ? `<i class="ph ph-prohibit btn-disable-user-icon" data-uid="${user.uid}" data-account="${user.account}" data-tooltip="停用会员" data-tooltip-pos="top" title="停用会员" aria-label="停用会员"></i>` : '';
+            return `<td data-col="status"><div style="display:inline-flex;align-items:center;"><span class="user-custom-tag ${user.status === '正常' ? 'tag-green' : user.status === '冻结' ? 'tag-blue' : 'tag-red'}">${user.status}</span>${disableIcon}</div></td>`;
+        } },
         { id: 'vipLevel', group: '等级', label: 'VIP等级', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="vipLevel">${user.vipLevel || 'VIP ' + (user.vipLevel || 1)}</td>` },
         { id: 'payLevel', group: '等级', label: '支付层级', checkboxIndex: 4, render: (user) => `<td class="cell-val" data-col="payLevel">${user.payLevel}</td>` },
-        { id: 'currency', group: '额度', label: '主钱包币种', checkboxIndex: 5, render: (user) => `<td class="cell-val" data-col="currency">${mainCurrencyText(user)}</td>` },
         { id: 'availableCredit', group: '额度', label: '可用额度', sortable: true, checkboxIndex: 5, render: (user) => `<td class="cell-money" data-col="availableCredit">${window.renderClickableAmount('可用额度', user.availableCredit, user.currency, '', dataMode === 'nodata')}</td>` },
         { id: 'thirdBal', group: '额度', label: '三方余额', sortable: true, checkboxIndex: 5, render: (user) => `<td data-col="thirdBal"><div style="display:flex;align-items:center;justify-content:flex-start;">${window.renderClickableAmount('三方余额', user.thirdBal, user.currency, '', dataMode === 'nodata')} <i class="ph ph-arrows-clockwise refresh-icon-compact" data-uid="${user.uid}" style="margin-left:4px;cursor:pointer;color:#2563eb;" title="刷新余额"></i></div></td>` },
-        { id: 'ds_depTotal_main', category: '存取款资料', group: '主钱包', label: '存款总额', tag: '主钱包', tagColor: 'blue', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money ${user.deposit > 0 ? 'highlight' : ''}" data-col="ds_depTotal_main">${window.renderClickableAmount('存款总额', user.deposit, user.currency, 'color: #4f46e5;', dataMode === 'nodata')}</td>` },
-        { id: 'ds_wdrTotal_main', category: '存取款资料', group: '主钱包', label: '取款总额', tag: '主钱包', tagColor: 'blue', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money" data-col="ds_wdrTotal_main">${window.renderClickableAmount('取款总额', user.withdraw, user.currency, 'color: #4f46e5;', dataMode === 'nodata')}</td>` },
-        { id: 'ds_depTotal_summary', category: '存取款资料', group: '汇总 USDT', label: '存款总额', tag: '汇总', tagColor: 'purple', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money ${user.deposit > 0 ? 'highlight' : ''}" data-col="ds_depTotal_summary">${formatAmount(user.deposit, 'USDT')}</td>` },
-        { id: 'ds_wdrTotal_summary', category: '存取款资料', group: '汇总 USDT', label: '取款总额', tag: '汇总', tagColor: 'purple', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money" data-col="ds_wdrTotal_summary">${formatAmount(user.withdraw, 'USDT')}</td>` },
-        { id: 'ip', group: '日期信息', label: '登入IP', checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="ip"><div class="ip-row" style="display: flex; align-items: center; gap: 4px;">${renderDataState(user.ip, 'ip')}</div></td>` },
-        { id: 'date', group: '日期信息', label: '新增时间', sortable: true, checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="date">${user.date}</td>` },
-        { id: 'lastLogin', group: '日期信息', label: '登入时间', sortable: true, checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="lastLogin">${user.lastLogin}</td>` },
+        { id: 'ds_depTotal_main', category: '存取款资料', group: '存取款', label: '存款总额', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money ${user.deposit > 0 ? 'highlight' : ''}" data-col="ds_depTotal_main">${window.renderClickableAmount('存款总额', user.deposit, user.currency, 'color: #4f46e5;', dataMode === 'nodata')}</td>` },
+        { id: 'ds_wdrTotal_main', category: '存取款资料', group: '存取款', label: '提款总额', sortable: true, checkboxIndex: 6, render: (user) => `<td class="cell-money" data-col="ds_wdrTotal_main">${window.renderClickableAmount('提款总额', user.withdraw, user.currency, 'color: #4f46e5;', dataMode === 'nodata')}</td>` },
+        { id: 'ip', group: '日期信息', label: '当前登录IP', checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="ip"><div class="ip-row" style="display: flex; align-items: center; gap: 4px;">${dataMode === 'nodata' ? '-' : renderDataState(user.currentLoginIp || user.ip, 'ip')}</div></td>` },
+        { id: 'date', group: '日期信息', label: '注册时间', sortable: true, checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="date">${dataMode === 'nodata' ? '-' : (user.date || '-')}</td>` },
+        { id: 'lastLogin', group: '日期信息', label: '最后登录', sortable: true, checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="lastLogin">${dataMode === 'nodata' ? '-' : formatNestedLastLogin(user)}</td>` },
+        { id: 'lastLoginIp', group: '日期信息', label: '上次登录IP', checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="lastLoginIp"><div class="ip-row" style="display: flex; align-items: center; gap: 4px;">${dataMode === 'nodata' ? '-' : renderDataState(user.lastLoginIp || user.ip, 'ip')}</div></td>` },
+        { id: 'registerIp', group: '日期信息', label: '注册 IP', checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="registerIp"><div class="ip-row" style="display: flex; align-items: center; gap: 4px;">${dataMode === 'nodata' ? '-' : renderDataState(user.registerIp || user.regIp || user.ip, 'ip')}</div></td>` },
         {
             id: 'action', group: '', label: '操作', checkboxIndex: 10, render: (user) => `<td class="cell-action sticky-col-right" data-col="action" style="text-align: center; width: 100px;">
             <div class="op-dropdown-container">
@@ -907,7 +1092,15 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         </td>` }
     ];
-    compactColumnsConfig.forEach(col => { compactColumnVisibility[col.id] = true; });
+    compactColumnsConfig.forEach(col => {
+        if (['lastLogin', 'lastLoginIp', 'registerIp'].includes(col.id)) {
+            compactColumnVisibility[col.id] = false;
+            tableFieldVisibility[col.id] = false;
+        } else {
+            compactColumnVisibility[col.id] = true;
+            tableFieldVisibility[col.id] = true;
+        }
+    });
 
     // Elements for Table Mode & Pagination
     const btnModeNested = document.getElementById('btnModeNested');
@@ -930,13 +1123,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (btnModeNested) btnModeNested.classList.add('active');
             if (btnModeCompact) btnModeCompact.classList.remove('active');
             if (modeDescriptionText) modeDescriptionText.textContent = '巢状结构：分组整合属性，减少表格栏位宽度';
-            if (modeNoticeText) modeNoticeText.innerHTML = '<strong>巢状模式</strong>：将栏位属性垂直分组组合，画面精简展示。点击切换为压缩模式可展开所有独立列进行横向比对。';
+            if (modeNoticeText) modeNoticeText.innerHTML = '<strong>巢状模式</strong>：将栏位属性垂直分组组合，画面精简展示。点击切换为列表模式可展开所有独立列进行横向比对。';
             if (userTable) userTable.classList.remove('compact-mode-table');
         } else {
             if (btnModeCompact) btnModeCompact.classList.add('active');
             if (btnModeNested) btnModeNested.classList.remove('active');
-            if (modeDescriptionText) modeDescriptionText.textContent = '压缩结构：扁平化所有属性，适合横向数据比对';
-            if (modeNoticeText) modeNoticeText.innerHTML = '<strong>压缩模式</strong>：所有栏位变成独立的列，标题只出现在最上方一次，数据按行排列，方便横向比对，类似 Excel 的视图。';
+            if (modeDescriptionText) modeDescriptionText.textContent = '列表结构：扁平化所有属性，适合横向数据比对';
+            if (modeNoticeText) modeNoticeText.innerHTML = '<strong>列表模式</strong>：所有栏位变成独立的列，标题只出现在最上方一次，数据按行排列，方便横向比对，类似 Excel 的视图。';
             if (userTable) userTable.classList.add('compact-mode-table');
         }
         currentPage = 1;
@@ -1034,12 +1227,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 uid: newUid,
                 account: newAccount,
                 tags: window.dataMode === 'nodata' ? [] : dynamicTags,
+                bankCard: window.dataMode === 'nodata' ? '-' : (user.bankCard || ('622202' + String(100000000000 + num).slice(-13))),
+                walletAddress: window.dataMode === 'nodata' ? '-' : (user.walletAddress || ('0x71C...' + String(num).padStart(4, '0'))),
+                cpf: window.dataMode === 'nodata' ? '-' : (user.cpf || `123.456.789-${String(num % 100).padStart(2, '0')}`),
+                securityAnswer: window.dataMode === 'nodata' ? '-' : (user.securityAnswer || '我的宠物'),
+                googleAccount: window.dataMode === 'nodata' ? '-' : (user.googleAccount || (num % 2 === 0 ? `${user.account || 'user'}@gmail.com` : '暂未绑定')),
+                registerIp: window.dataMode === 'nodata' ? '-' : (user.registerIp || user.ip || `192.168.1.${(num % 250) + 1}`),
+                currentLoginIp: window.dataMode === 'nodata' ? '-' : (user.currentLoginIp || user.ip || `192.168.1.${(num % 250) + 1}`),
+                lastLoginIp: window.dataMode === 'nodata' ? '-' : (user.lastLoginIp || user.ip || `192.168.2.${(num % 250) + 1}`),
                 // 极限模式保留极限值（未登入天数 9999、最高会员等级），筛选列才能预填且与列表一致
                 offlineDays: window.dataMode === 'nodata' ? '-' : window.dataMode === 'extreme' ? user.offlineDays : (user.offlineDays + i) % 15,
                 // 极限会员皆为大额存款的正式会员，不属于任一排除条件，排除条件才能全选预填
-                other: window.dataMode === 'nodata' ? '-' : window.dataMode === 'extreme' ? (user.other || '正式会员') : (index % 2 === 0 ? "未充值玩家" : "测试账号"),
+                other: window.dataMode === 'nodata' ? '-' : window.dataMode === 'extreme' ? (user.other || '正式会员') : ((user.account && user.account.toLowerCase().startsWith('test_')) ? "测试账号" : ((user.tags || []).includes('测试账号') ? "测试账号" : (Number(user.deposit || 0) === 0 ? "未充值玩家" : "正式会员"))),
                 vip: window.dataMode === 'nodata' ? '-' : window.dataMode === 'extreme' ? (user.vip || '至尊会员') : (index % 3 === 0 ? "钻石会员" : index % 3 === 1 ? "黄金会员" : "白银会员"),
-                level: window.dataMode === 'nodata' ? '-' : (index % 3 === 0 ? "VIP会员" : index % 3 === 1 ? "黄金会员" : "普通会员")
+                level: window.dataMode === 'nodata' ? '-' : window.dataMode === 'extreme' ? (user.payLevel || user.level || '尊贵VIP无敌无限层') : (user.payLevel || (index % 3 === 0 ? "VIP层" : index % 3 === 1 ? "核心层" : "默认层"))
             });
         });
     }
@@ -1071,8 +1272,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Helper: Reset single select UI to specific value
     function setSingleSelectValue(element, val, text) {
+        if (!element) return;
         const selectedValSpan = element.querySelector('.selected-val');
         const optionsList = element.querySelector('.select-options');
+        if (!selectedValSpan || !optionsList) return;
 
         let matchedText = '';
         optionsList.querySelectorAll('li').forEach(li => {
@@ -1105,9 +1308,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const cb = li.querySelector('input[type="checkbox"]');
             if (cb) cb.checked = true;
         });
-        if (initial.length > 0) {
-            element.querySelector('.selected-val').textContent = initial.join('、');
-        }
+        renderMultiSelectDisplay(element, initial);
     }
 
     // Reset 账号搜寻类型 to its default (first option)
@@ -1118,32 +1319,37 @@ document.addEventListener('DOMContentLoaded', () => {
         const first = items[0];
         if (!first) return;
         first.classList.add('active');
-        currentAccountType = first.getAttribute('data-value');
-        if (accountTypeText) accountTypeText.textContent = first.querySelector('span').textContent;
-        if (inputAccount) inputAccount.placeholder = '请输入精确账号';
+        currentAccountType = first.getAttribute('data-value') || 'account';
+        const span = first.querySelector('span');
+        const text = span ? span.textContent : '账号';
+        if (accountTypeText) accountTypeText.textContent = text;
+        if (inputAccount) {
+            inputAccount.placeholder = (currentAccountType === 'exact') ? '请输入精确账号' : '请输入账号';
+            inputAccount.value = '';
+        }
     }
 
     // Helper: Clear multi select choices
     function clearMultiSelectValue(element) {
-        const selectedValSpan = element.querySelector('.selected-val');
         const optionsList = element.querySelector('.select-options');
-
-        optionsList.querySelectorAll('li').forEach(li => {
-            if (li.classList.contains('search-box-item')) {
-                const searchInput = li.querySelector('.dropdown-search-input');
-                if (searchInput) searchInput.value = '';
-                return;
-            }
-            if (li.classList.contains('search-empty-item')) {
-                li.style.display = 'none';
-                return;
-            }
-            li.classList.remove('selected');
-            li.style.display = '';
-            const checkbox = li.querySelector('input[type="checkbox"]');
-            if (checkbox) checkbox.checked = false;
-        });
-        selectedValSpan.textContent = '请选择';
+        if (optionsList) {
+            optionsList.querySelectorAll('li').forEach(li => {
+                if (li.classList.contains('search-box-item')) {
+                    const searchInput = li.querySelector('.dropdown-search-input');
+                    if (searchInput) searchInput.value = '';
+                    return;
+                }
+                if (li.classList.contains('search-empty-item')) {
+                    li.style.display = 'none';
+                    return;
+                }
+                li.classList.remove('selected');
+                li.style.display = '';
+                const checkbox = li.querySelector('input[type="checkbox"]');
+                if (checkbox) checkbox.checked = false;
+            });
+        }
+        renderMultiSelectDisplay(element, []);
     }
 
     // Read form values and update Tags & Badge count
@@ -1167,65 +1373,35 @@ document.addEventListener('DOMContentLoaded', () => {
         if (selectedVipVal) {
             tags.push({ key: 'vip', label: `等级: ${selectedVipVal}`, type: 'single-custom', element: dropdownVip, defaultValue: '', defaultText: '请选择', valueVarSetter: (v) => selectedVipVal = v });
         }
-        // 4. 主钱包币种
-        if (selectedCurrencyVal) {
-            tags.push({ key: 'currency', label: `主钱包币种: ${selectedCurrencyVal}`, type: 'single-custom', element: dropdownCurrency, defaultValue: '', defaultText: '全部币种', valueVarSetter: (v) => selectedCurrencyVal = v });
+        // 4. 设备类型
+        if (selectedDeviceTypeVal) {
+            tags.push({ key: 'deviceType', label: `设备类型: ${selectedDeviceTypeVal}`, type: 'single-custom', element: dropdownDeviceType, defaultValue: '', defaultText: '全部', valueVarSetter: (v) => selectedDeviceTypeVal = v });
         }
-        // 5. 排除条件
-        const selectedOthers = getMultiSelectValues(dropdownOther);
-        if (selectedOthers.length > 0) {
-            selectedOthers.forEach(v => tags.push({ key: `other:${v}`, label: `排除条件: ${v}`, type: 'multi-value', element: dropdownOther, value: v }));
+        // 国家
+        if (selectedCountryVal) {
+            tags.push({ key: 'country', label: `国家: ${selectedCountryVal}`, type: 'single-custom', element: dropdownCountry, defaultValue: '', defaultText: '全部', valueVarSetter: (v) => selectedCountryVal = v });
         }
-        // 5-1. 用户标签
-        const selectedUserTags = getMultiSelectValues(dropdownUserTags);
-        if (selectedUserTags.length > 0) {
-            selectedUserTags.forEach(v => tags.push({ key: `userTags:${v}`, label: `用户标签: ${v}`, type: 'multi-value', element: dropdownUserTags, value: v }));
+        // 5. 推广人账号
+        const inputPromoterAccount = document.getElementById('inputPromoterAccount');
+        if (inputPromoterAccount && inputPromoterAccount.value.trim()) {
+            tags.push({ key: 'promoterAccount', label: `推广人账号: ${inputPromoterAccount.value.trim()}`, type: 'input', element: inputPromoterAccount });
         }
-        // 6. 账号搜寻
+        // 6. 未登入天数
+        if (inputOfflineDaysOuter && inputOfflineDaysOuter.value.trim()) {
+            tags.push({ key: 'offlineDaysOuter', label: `未登入天数 > ${inputOfflineDaysOuter.value.trim()} 天`, type: 'input', element: inputOfflineDaysOuter });
+        }
+        // 7. 三方额度大于
+        const inputThirdPartyAmount = document.getElementById('inputThirdPartyAmount');
+        if (inputThirdPartyAmount && inputThirdPartyAmount.value.trim()) {
+            tags.push({ key: 'thirdPartyAmount', label: `三方额度 > ${inputThirdPartyAmount.value.trim()} 元`, type: 'input', element: inputThirdPartyAmount });
+        }
+        // 8. 账号搜寻
         if (inputAccount && inputAccount.value.trim()) {
-            // Other search types use the dropdown option's own name (e.g. 用户ID / 邀请码) so tag and dropdown match
             const activeTypeLi = accountTypeMenu ? accountTypeMenu.querySelector(`li[data-value="${currentAccountType}"] span`) : null;
             let labelPrefix = activeTypeLi ? activeTypeLi.textContent.trim() : '账号';
-            if (currentAccountType === 'exact') labelPrefix = '账号(精确)';
-            if (currentAccountType === 'fuzzy') labelPrefix = '账号(模糊)';
-            if (currentAccountType === 'multi') labelPrefix = '账号(多笔)';
             tags.push({ key: 'account', label: `${labelPrefix}: ${inputAccount.value.trim()}`, type: 'input', element: inputAccount });
         }
-        // 7. 过滤测试账号
-        if (filterTestAccountsToggle && filterTestAccountsToggle.checked) {
-            tags.push({ key: 'filterTestAccounts', label: `过滤测试账号`, type: 'checkbox', element: filterTestAccountsToggle });
-        }
-        // 8. 生日月份
-        if (selectedBirthdayOuterVal) {
-            tags.push({ key: 'birthdayOuter', label: `生日: ${selectedBirthdayOuterVal}月`, type: 'single-custom', element: dropdownBirthdayOuter, defaultValue: '', defaultText: '全部', valueVarSetter: (v) => selectedBirthdayOuterVal = v });
-        }
-        // 9. 绑定银行卡
-        if (inputBankCardOuter && inputBankCardOuter.value.trim()) {
-            tags.push({ key: 'bankCardOuter', label: `绑定银行卡: ${inputBankCardOuter.value.trim()}`, type: 'input', element: inputBankCardOuter });
-        }
-        // 10. 未登入天数
-        if (inputOfflineDaysOuter && inputOfflineDaysOuter.value.trim()) {
-            tags.push({ key: 'offlineDaysOuter', label: `未登入天数 > ${inputOfflineDaysOuter.value.trim()}`, type: 'input', element: inputOfflineDaysOuter });
-        }
-        // 11. 代理Id
-        const inputAgentIdOuter = document.getElementById('inputAgentIdOuter');
-        if (inputAgentIdOuter && inputAgentIdOuter.value.trim()) {
-            tags.push({ key: 'agentIdOuter', label: `代理Id: ${inputAgentIdOuter.value.trim()}`, type: 'input', element: inputAgentIdOuter });
-        }
-        // 12. VIP会员等级
-        const inputVipLevelOuter = document.getElementById('inputVipLevelOuter');
-        if (inputVipLevelOuter && inputVipLevelOuter.value.trim()) {
-            tags.push({ key: 'vipLevelOuter', label: `VIP等级: ${inputVipLevelOuter.value.trim()}`, type: 'input', element: inputVipLevelOuter });
-        }
-        // 13. 登录IP
-        if (inputIpOuter && inputIpOuter.value.trim()) {
-            tags.push({ key: 'ipOuter', label: `登入 IP: ${inputIpOuter.value.trim()}`, type: 'input', element: inputIpOuter });
-        }
-        // 14. 存款金额大于
-        if (inputDepositOuter && inputDepositOuter.value.trim()) {
-            tags.push({ key: 'depositOuter', label: `存款大于 ${inputDepositOuter.value.trim()}`, type: 'input', element: inputDepositOuter });
-        }
-        // 15. 新增时间（只填开始时，结束显示为当前时间，精确到秒）
+        // 9. 注册时间（只填开始时，结束显示为当前时间，精确到秒）
         const formatNowToSeconds = () => {
             const now = new Date();
             const pad = (n) => String(n).padStart(2, '0');
@@ -1236,10 +1412,56 @@ document.addEventListener('DOMContentLoaded', () => {
             const endStr = inputDateEndOuter.value ? inputDateEndOuter.value.replace('T', ' ') : formatNowToSeconds();
             tags.push({
                 key: 'dateRangeOuter',
-                label: `新增时间: ${startStr} ~ ${endStr}`,
+                label: `注册时间: ${startStr} ~ ${endStr}`,
                 type: 'inputs',
                 elements: [inputDateStartOuter, inputDateEndOuter]
             });
+        }
+        // 10. 用户币别
+        if (selectedCurrencyVal) {
+            tags.push({ key: 'currency', label: `用户币别: ${selectedCurrencyVal}`, type: 'single-custom', element: dropdownCurrency, defaultValue: '', defaultText: '全部币种', valueVarSetter: (v) => selectedCurrencyVal = v });
+        }
+        // 11. 过滤测试账号
+        if (filterTestAccountsToggle && filterTestAccountsToggle.checked) {
+            tags.push({ key: 'filterTestAccounts', label: `过滤测试账号`, type: 'checkbox', element: filterTestAccountsToggle });
+        }
+        // 12. 生日月份
+        if (selectedBirthdayOuterVal) {
+            tags.push({ key: 'birthdayOuter', label: `生日: ${selectedBirthdayOuterVal}月`, type: 'single-custom', element: dropdownBirthdayOuter, defaultValue: '', defaultText: '全部', valueVarSetter: (v) => selectedBirthdayOuterVal = v });
+        }
+        // 13. 绑定银行卡
+        if (inputBankCardOuter && inputBankCardOuter.value.trim()) {
+            tags.push({ key: 'bankCardOuter', label: `绑定银行卡: ${inputBankCardOuter.value.trim()}`, type: 'input', element: inputBankCardOuter });
+        }
+        // 14. 代理Id
+        const inputAgentIdOuter = document.getElementById('inputAgentIdOuter');
+        if (inputAgentIdOuter && inputAgentIdOuter.value.trim()) {
+            tags.push({ key: 'agentIdOuter', label: `代理Id: ${inputAgentIdOuter.value.trim()}`, type: 'input', element: inputAgentIdOuter });
+        }
+        // 15. VIP会员等级
+        const inputVipLevelOuter = document.getElementById('inputVipLevelOuter');
+        if (inputVipLevelOuter && inputVipLevelOuter.value.trim()) {
+            tags.push({ key: 'vipLevelOuter', label: `VIP等级: ${inputVipLevelOuter.value.trim()}`, type: 'input', element: inputVipLevelOuter });
+        }
+        // 16. 当前登录IP
+        if (inputIpOuter && inputIpOuter.value.trim()) {
+            tags.push({ key: 'ipOuter', label: `当前登录IP: ${inputIpOuter.value.trim()}`, type: 'input', element: inputIpOuter });
+        }
+        // 17. 存款金额大于
+        if (inputDepositOuter && inputDepositOuter.value.trim()) {
+            tags.push({ key: 'depositOuter', label: `存款大于 ${inputDepositOuter.value.trim()}`, type: 'input', element: inputDepositOuter });
+        }
+        // 18. 排除条件
+        if (dropdownOther && dropdownOther !== dropdownUserTags) {
+            const selectedOthers = getMultiSelectValues(dropdownOther);
+            if (selectedOthers.length > 0) {
+                selectedOthers.forEach(v => tags.push({ key: `other:${v}`, label: `排除: ${v}`, type: 'multi-value', element: dropdownOther, value: v }));
+            }
+        }
+        // 19. 标签筛选
+        const selectedUserTags = dropdownUserTags ? getMultiSelectValues(dropdownUserTags) : [];
+        if (selectedUserTags.length > 0) {
+            selectedUserTags.forEach(v => tags.push({ key: `userTags:${v}`, label: `标签: ${v}`, type: 'multi-value', element: dropdownUserTags, value: v }));
         }
         // 16. 动态筛选
         const dynamicFilters = document.querySelectorAll('.dynamic-filter-tag');
@@ -1420,8 +1642,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const tableNeed = otherH + currentFilters.getBoundingClientRect().height + (thead ? thead.getBoundingClientRect().height : 0) + MIN_VISIBLE_ROWS_PX + barH;
         const available = main.clientHeight - appChrome;
 
-        // C. auto-collapse / restore the filter card (hysteresis 40px avoids flip-flopping)
-        if (!isCollapsed && !filterUserExpanded && lastFilterCardHeight + tableNeed > available) {
+        // C. auto-collapse / restore the filter card (only when available space is critically small or user scrolls)
+        if (!isCollapsed && !filterUserExpanded && (available < 380 || (lastFilterCardHeight + tableNeed > available && tableWrapper && tableWrapper.scrollTop > 10))) {
             filterCard.classList.add('collapsed');
             filterAutoCollapsed = true;
         } else if (isCollapsed && filterAutoCollapsed && !filterUserCollapsed && lastFilterCardHeight + tableNeed <= available - 40) {
@@ -1468,18 +1690,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // 重置 restores the initial state (incl. default 排除条件); 清除所有标签 passes restoreDefaults:false to clear everything
     function clearAllFilters(opts) {
         const restoreDefaults = !(opts && opts.restoreDefaults === false);
-        setSingleSelectValue(dropdownStatus, '', '所有');
+        if (dropdownStatus) setSingleSelectValue(dropdownStatus, '', '所有');
         selectedStatusVal = '';
 
         if (filterTestAccountsToggle) filterTestAccountsToggle.checked = false;
 
-        setSingleSelectValue(dropdownLevel, '', '全部');
+        if (dropdownLevel) setSingleSelectValue(dropdownLevel, '', '全部');
         selectedLevelVal = '';
 
-        setSingleSelectValue(dropdownVip, '', '请选择');
+        if (dropdownVip) setSingleSelectValue(dropdownVip, '', '请选择');
         selectedVipVal = '';
 
-        setSingleSelectValue(dropdownCurrency, '', '全部币种');
+        if (dropdownCurrency) setSingleSelectValue(dropdownCurrency, '', '全部币种');
         selectedCurrencyVal = '';
         if (restoreDefaults) {
             restoreMultiSelectInitial(dropdownOther);
@@ -1506,6 +1728,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (inputDateEndOuter) inputDateEndOuter.value = '';
         if (inputBankCardOuter) inputBankCardOuter.value = '';
         if (inputOfflineDaysOuter) inputOfflineDaysOuter.value = '';
+        const inputThirdPartyAmountEl = document.getElementById('inputThirdPartyAmount');
+        if (inputThirdPartyAmountEl) inputThirdPartyAmountEl.value = '';
+        const inputPromoterAccount = document.getElementById('inputPromoterAccount');
+        if (inputPromoterAccount) inputPromoterAccount.value = '';
+        const dropdownDeviceTypeEl = document.getElementById('dropdownDeviceType');
+        if (dropdownDeviceTypeEl) setSingleSelectValue(dropdownDeviceTypeEl, '', '全部');
+        selectedDeviceTypeVal = '';
+        const dropdownCountryEl = document.getElementById('dropdownCountry');
+        if (dropdownCountryEl) setSingleSelectValue(dropdownCountryEl, '', '全部');
+        selectedCountryVal = '';
         if (inputIpOuter) inputIpOuter.value = '';
         if (inputDepositOuter) inputDepositOuter.value = '';
 
@@ -1529,6 +1761,44 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function formatNestedCreatedDate(dateStr) {
+        if (!dateStr || dateStr === '-' || window.dataMode === 'nodata') return '-';
+        const str = String(dateStr).trim();
+        const m = str.match(/^(\d{2,4})-(\d{2})-(\d{2})(?:\s+(\d{2}:\d{2}(?::\d{2})?))?/);
+        if (m) {
+            const yr = m[1].length === 2 ? `20${m[1]}` : m[1];
+            let time = m[4] || '00:00:00';
+            if (time.length === 5) {
+                time += ':00';
+            }
+            return `${yr}-${m[2]}-${m[3]} ${time}`;
+        }
+        return str;
+    }
+
+    function formatNestedLastLogin(user) {
+        if (!user || window.dataMode === 'nodata' || !user.lastLogin || user.lastLogin === '-') return '-';
+        const str = String(user.lastLogin).trim();
+        if (str.startsWith('今日')) return str;
+        if (Number(user.offlineDays) === 0) {
+            let timePart = str.split(' ')[1] || '22:51:27';
+            if (timePart.length === 5) {
+                timePart += ':00';
+            }
+            return `今日 ${timePart}`;
+        }
+        const m = str.match(/^(\d{2,4})-(\d{2})-(\d{2})(?:\s+(\d{2}:\d{2}(?::\d{2})?))?/);
+        if (m) {
+            const yr = m[1].length === 2 ? `20${m[1]}` : m[1];
+            let time = m[4] || '00:00:00';
+            if (time.length === 5) {
+                time += ':00';
+            }
+            return `${yr}-${m[2]}-${m[3]} ${time}`;
+        }
+        return str;
+    }
+
     function renderTable(skipDelay = false) {
         const previouslyExpanded = [];
         if (userTableBody) {
@@ -1538,7 +1808,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        const selectedOthers = getMultiSelectValues(dropdownOther);
         const inputAccount = document.getElementById('inputAccount');
         const accountVal = inputAccount ? inputAccount.value.trim().toLowerCase() : '';
 
@@ -1547,6 +1816,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const inputDateEndOuter = document.getElementById('inputDateEndOuter');
         const inputBankCardOuter = document.getElementById('inputBankCardOuter');
         const inputOfflineDaysOuter = document.getElementById('inputOfflineDaysOuter');
+        const inputThirdPartyAmount = document.getElementById('inputThirdPartyAmount');
+        const inputPromoterAccount = document.getElementById('inputPromoterAccount');
         const inputIpOuter = document.getElementById('inputIpOuter');
         const inputDepositOuter = document.getElementById('inputDepositOuter');
         const inputAgentIdOuter = document.getElementById('inputAgentIdOuter');
@@ -1559,39 +1830,100 @@ document.addEventListener('DOMContentLoaded', () => {
         const vipLevelVal = inputVipLevelOuter ? inputVipLevelOuter.value.trim() : '';
         const bankCardVal = inputBankCardOuter ? inputBankCardOuter.value.trim() : '';
         const offlineDaysVal = parseInt(inputOfflineDaysOuter ? inputOfflineDaysOuter.value.trim() : '', 10);
+        const thirdPartyAmountVal = parseFloat(inputThirdPartyAmount ? inputThirdPartyAmount.value.trim() : '');
+        const promoterAccountVal = inputPromoterAccount ? inputPromoterAccount.value.trim().toLowerCase() : '';
         const ipVal = inputIpOuter ? inputIpOuter.value.trim() : '';
         const depositVal = parseFloat(inputDepositOuter ? inputDepositOuter.value.trim() : '');
-        const selectedUserTags = getMultiSelectValues(dropdownUserTags);
+        const selectedUserTags = dropdownUserTags ? getMultiSelectValues(dropdownUserTags) : [];
+        const selectedOthers = (dropdownOther && dropdownOther !== dropdownUserTags) ? getMultiSelectValues(dropdownOther) : [];
 
         // Perform Filtering
         const filtered = mockUsers.filter(user => {
             if (selectedStatusVal && user.status !== selectedStatusVal) return false;
-            if (selectedLevelVal && user.level !== selectedLevelVal) return false;
+            if (selectedLevelVal && (user.payLevel !== selectedLevelVal && user.level !== selectedLevelVal)) return false;
             if (selectedVipVal && user.vip !== selectedVipVal) return false;
-            // 排除条件: hide users matching any selected exclusion
-            if (selectedOthers.length > 0 && selectedOthers.includes(user.other)) return false;
-            // 用户标签: keep users having any of the selected tags
-            if (selectedUserTags.length > 0 && !(user.tags || []).some(t => selectedUserTags.includes(t))) return false;
+            if (selectedCountryVal && user.country !== selectedCountryVal) return false;
+
+            // 标签筛选: keep users having any of the selected tags (matching clean tag name or exact)
+            if (selectedUserTags.length > 0) {
+                const match = selectedUserTags.some(sel => {
+                    const cleanSel = formatTagName(sel);
+                    return (user.tags || []).some(ut => ut === sel || formatTagName(ut) === cleanSel) ||
+                           user.accountType === sel;
+                });
+                if (!match) return false;
+            }
+
+            // 排除条件: 排除选中的测试账号、未充值玩家等
+            if (selectedOthers.length > 0) {
+                const shouldExclude = selectedOthers.some(sel => {
+                    if (sel === '测试账号') {
+                        return user.other === '测试账号' ||
+                               (user.tags || []).includes('测试账号') ||
+                               user.accountType === '测试账号' ||
+                               (user.account && user.account.toLowerCase().startsWith('test_'));
+                    }
+                    if (sel === '未充值玩家') {
+                        return user.other === '未充值玩家' ||
+                               (user.tags || []).includes('未充值玩家') ||
+                               (Number(user.deposit || 0) === 0 && Number(user.withdraw || 0) === 0 && Number(user.thirdBal || 0) === 0);
+                    }
+                    return user.other === sel || (user.tags || []).includes(sel);
+                });
+                if (shouldExclude) return false;
+            }
 
             // Account filter
             if (accountVal) {
                 if (currentAccountType === 'exact') {
                     if (user.account.toLowerCase() !== accountVal) return false;
-                } else if (currentAccountType === 'fuzzy') {
+                } else if (currentAccountType === 'account' || currentAccountType === 'fuzzy') {
                     if (!user.account.toLowerCase().includes(accountVal)) return false;
                 } else if (currentAccountType === 'multi') {
                     const accounts = accountVal.split(';').map(a => a.trim()).filter(Boolean);
                     if (accounts.length > 0 && !accounts.some(acc => user.account.toLowerCase() === acc)) return false;
-                } else if (currentAccountType === 'quickLogin') {
-                    if (!user.quickLogin || !user.quickLogin.toLowerCase().includes(accountVal)) return false;
                 } else if (currentAccountType === 'uid') {
-                    if (!user.uid || !user.uid.toLowerCase().includes(accountVal)) return false;
-                } else if (currentAccountType === 'inviteCode') {
-                    if (!user.inviteCode || !user.inviteCode.toLowerCase().includes(accountVal)) return false;
+                    if (!user.uid || !String(user.uid).toLowerCase().includes(accountVal)) return false;
+                } else if (currentAccountType === 'bankCard') {
+                    const matchesBankCard = user.bankCard && String(user.bankCard).toLowerCase().includes(accountVal);
+                    const matchesWallet = user.walletAddress && String(user.walletAddress).toLowerCase().includes(accountVal);
+                    if (!matchesBankCard && !matchesWallet) return false;
+                } else if (currentAccountType === 'cpf') {
+                    const cpfVal = String(user.cpf || '123.456.789-00').toLowerCase();
+                    if (!cpfVal.includes(accountVal)) return false;
                 } else if (currentAccountType === 'nickname') {
-                    if (!user.nickname || !user.nickname.toLowerCase().includes(accountVal)) return false;
+                    if (!user.nickname || !String(user.nickname).toLowerCase().includes(accountVal)) return false;
                 } else if (currentAccountType === 'realName') {
-                    if (!user.realName || !user.realName.toLowerCase().includes(accountVal)) return false;
+                    if (!user.realName || !String(user.realName).toLowerCase().includes(accountVal)) return false;
+                } else if (currentAccountType === 'inviteCode') {
+                    if (!user.inviteCode || !String(user.inviteCode).toLowerCase().includes(accountVal)) return false;
+                } else if (currentAccountType === 'email') {
+                    if (!user.email || !String(user.email).toLowerCase().includes(accountVal)) return false;
+                } else if (currentAccountType === 'phone') {
+                    if (!user.phone || !String(user.phone).toLowerCase().includes(accountVal)) return false;
+                } else if (currentAccountType === 'zalo') {
+                    if (!user.zalo || !String(user.zalo).toLowerCase().includes(accountVal)) return false;
+                } else if (currentAccountType === 'facebook') {
+                    if (!user.facebook || !String(user.facebook).toLowerCase().includes(accountVal)) return false;
+                } else if (currentAccountType === 'whatsapp') {
+                    if (!user.whatsapp || !String(user.whatsapp).toLowerCase().includes(accountVal)) return false;
+                } else if (currentAccountType === 'telegram' || currentAccountType === 'tg') {
+                    if (!user.telegram || !String(user.telegram).toLowerCase().includes(accountVal)) return false;
+                } else if (currentAccountType === 'securityAnswer') {
+                    const qaVal = String(user.securityAnswer || user.qa || '我的宠物').toLowerCase();
+                    if (!qaVal.includes(accountVal)) return false;
+                } else if (currentAccountType === 'googleAccount') {
+                    const googleVal = String(user.googleAccount || user.googleAuth || user.googleCode || '暂未绑定').toLowerCase();
+                    if (!googleVal.includes(accountVal)) return false;
+                } else if (currentAccountType === 'registerIp') {
+                    const regIp = String(user.registerIp || user.ip || '').toLowerCase();
+                    if (!regIp.includes(accountVal)) return false;
+                } else if (currentAccountType === 'currentLoginIp') {
+                    const curIp = String(user.currentLoginIp || user.ip || '').toLowerCase();
+                    if (!curIp.includes(accountVal)) return false;
+                } else if (currentAccountType === 'lastLoginIp') {
+                    const lastIp = String(user.lastLoginIp || user.ip || '').toLowerCase();
+                    if (!lastIp.includes(accountVal)) return false;
                 } else {
                     const fieldVal = user[currentAccountType];
                     if (fieldVal === undefined || fieldVal === null || !String(fieldVal).toLowerCase().includes(accountVal)) return false;
@@ -1611,8 +1943,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (formattedDateEnd && user.date > formattedDateEnd) return false;
             if (agentIdVal && user.agentId !== agentIdVal) return false;
             if (vipLevelVal && user.vipLevel !== undefined && user.vipLevel.toString() !== vipLevelVal) return false;
+            if (selectedDeviceTypeVal && user.deviceType !== selectedDeviceTypeVal) return false;
+            if (promoterAccountVal && !String(user.inviter || '').toLowerCase().includes(promoterAccountVal) && !String(user.agentId || '').toLowerCase().includes(promoterAccountVal)) return false;
             if (bankCardVal && !String(user.bankCard || '').includes(bankCardVal)) return false;
             if (!isNaN(offlineDaysVal) && user.offlineDays <= offlineDaysVal) return false;
+            if (!isNaN(thirdPartyAmountVal) && (parseFloat(user.thirdBal) || 0) <= thirdPartyAmountVal) return false;
             if (ipVal && !String(user.ip || '').includes(ipVal)) return false;
             if (!isNaN(depositVal) && user.deposit <= depositVal) return false;
 
@@ -1641,13 +1976,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     'ds_wdrFee_main': 'withdrawPre',
                     'ds_sysAdd_main': 'adminAdd',
                     'ds_sysSub_main': 'adminDeduct',
-                    'ds_depTotal_summary': 'deposit',
-                    'ds_depCount_summary': 'depositCount',
-                    'ds_wdrTotal_summary': 'withdraw',
-                    'ds_wdrCount_summary': 'withdrawCount',
-                    'ds_wdrFee_summary': 'withdrawPre',
-                    'ds_sysAdd_summary': 'adminAdd',
-                    'ds_sysSub_summary': 'adminDeduct',
+                    'ds_sysActAdd_main': 'adminActAdd',
+                    'ds_sysAddCount_main': 'adminAddCount',
+                    'ds_sysSubCount_main': 'adminDeductCount',
+                    'ds_sysActAddCount_main': 'adminActAddCount',
+                    'ds_directDepTotal': 'directDepositTotal',
+                    'ds_directDepCount': 'directDepositCount',
+                    'ds_directWdrTotal': 'directWithdrawTotal',
+                    'ds_directWdrCount': 'directWithdrawCount',
+                    'ds_directDepTotal_main': 'directDepositTotal',
+                    'ds_directDepCount_main': 'directDepositCount',
+                    'ds_directWdrTotal_main': 'directWithdrawTotal',
+                    'ds_directWdrCount_main': 'directWithdrawCount',
                 };
                 if (dsMapping[sortKey]) {
                     sortKey = dsMapping[sortKey];
@@ -1725,8 +2065,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 nestedColumnsConfig.forEach(col => {
                     if (nestedColumnVisibility[col.id]) {
                         const isPinned = nestedPinnedColumnIds && nestedPinnedColumnIds.includes(col.id);
-                        const stickyClass = isPinned ? 'sticky-col sticky-col-header' : '';
-                        nestedHeaderHtml += `<th class="${stickyClass}">${col.label}</th>`;
+                        const stickyClass = isPinned ? 'sticky-col' : '';
+                        const centerStyle = (col.id === 'status' || col.id === 'avatar') ? 'text-align: center;' : '';
+                        nestedHeaderHtml += `<th class="${stickyClass}" style="${centerStyle}">${col.label}</th>`;
                     }
                 });
                 nestedHeaderHtml += `<th class="sticky-col-right" style="text-align: center; width: 190px; min-width: 190px;">
@@ -1764,9 +2105,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 pinned.forEach(col => {
                     const isMoney = ['availableCredit', 'thirdBal', 'deposit', 'withdraw'].includes(col.id);
                     const justifyAttr = 'space-between';
-                    const isSummary = col.group === '汇总 USDT';
-                    const bgStyle = isSummary ? 'background-color: #f1f5f9 !important;' : '';
-                    headerHtml += `<th class="header-sub sticky-col" style="left:${currentLeft}px; min-width:110px; z-index:12; ${bgStyle}" data-col="${col.id}">
+                    headerHtml += `<th class="header-sub sticky-col" style="left:${currentLeft}px; min-width:110px; z-index:12;" data-col="${col.id}">
                         <div style="display:flex;align-items:center;white-space:nowrap;justify-content:${justifyAttr};">
                             <div style="display:flex;align-items:center;">
                                 <span>${col.label}</span>
@@ -1800,14 +2139,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 // Unpinned headers sequentially
-                // Unpinned headers sequentially
                 const unpinnedWithoutAction = unpinned.filter(col => col.id !== 'action');
                 unpinnedWithoutAction.forEach(col => {
                     const isMoney = ['availableCredit', 'thirdBal', 'deposit', 'withdraw'].includes(col.id);
                     const justifyAttr = 'space-between';
-                    const isSummary = col.group === '汇总 USDT';
-                    const bgStyle = isSummary ? 'background-color: #f1f5f9 !important;' : '';
-                    headerHtml += `<th class="header-sub" style="${bgStyle}" data-col="${col.id}">
+                    headerHtml += `<th class="header-sub" data-col="${col.id}">
                         <div style="display:flex;align-items:center;white-space:nowrap;justify-content:${justifyAttr};">
                             <div style="display:flex;align-items:center;">
                                 <span>${col.label}</span>
@@ -1838,25 +2174,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     let currentGroup = null;
                     let count = 0;
                     const renderGroupLabel = (groupName) => {
-                        if (groupName === '主钱包') {
-                            return `
-                            <div style="color: #4338ca; font-weight: 600; font-size: 13px; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 4px; white-space: nowrap;">
-                                <span>主钱包</span>
-                            </div>`;
-                        } else if (groupName === '汇总 USDT') {
-                            return `
-                            <div style="color: #4338ca; font-weight: 600; font-size: 13px; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 4px; white-space: nowrap;">
-                                <span>汇总</span>
-                                <span style="font-size: 12px;">(USDT)</span>
-                            </div>`;
-                        }
                         return groupName || '';
                     };
 
                     cols.forEach((col) => {
                         if (col.group !== currentGroup) {
                             if (currentGroup !== null) {
-                                html += `<th class="header-group ${isPinned ? 'sticky-col' : ''}" colspan="${count}" style="${isPinned ? `left:${currentLeftGroup}px; z-index: 40;` : 'z-index: 20;'} text-align: center; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; background: ${currentGroup === '汇总 USDT' ? '#f1f5f9 !important' : '#f8fafc'}; padding: 6px; font-weight: 600; color: #475569; overflow: visible;">${renderGroupLabel(currentGroup)}</th>`;
+                                html += `<th class="header-group ${isPinned ? 'sticky-col' : ''}" colspan="${count}" style="${isPinned ? `left:${currentLeftGroup}px; z-index: 40;` : 'z-index: 20;'} text-align: center; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; background: #f8fafc; padding: 6px; font-weight: 600; color: #475569; overflow: visible;">${renderGroupLabel(currentGroup)}</th>`;
                                 if (isPinned) currentLeftGroup += 110 * count;
                             }
                             currentGroup = col.group;
@@ -1866,7 +2190,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     });
                     if (currentGroup !== null) {
-                        html += `<th class="header-group ${isPinned ? 'sticky-col' : ''}" colspan="${count}" style="${isPinned ? `left:${currentLeftGroup}px; z-index: 40;` : 'z-index: 20;'} text-align: center; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; background: ${currentGroup === '汇总 USDT' ? '#f1f5f9 !important' : '#f8fafc'}; padding: 6px; font-weight: 600; color: #475569; overflow: visible;">${renderGroupLabel(currentGroup)}</th>`;
+                        html += `<th class="header-group ${isPinned ? 'sticky-col' : ''}" colspan="${count}" style="${isPinned ? `left:${currentLeftGroup}px; z-index: 40;` : 'z-index: 20;'} text-align: center; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; background: #f8fafc; padding: 6px; font-weight: 600; color: #475569; overflow: visible;">${renderGroupLabel(currentGroup)}</th>`;
                         if (isPinned) currentLeftGroup += 110 * count;
                     }
                     return html;
@@ -1892,15 +2216,18 @@ document.addEventListener('DOMContentLoaded', () => {
             if (currentTableMode === 'nested') {
                 skeletonHtml += `<tr>`;
                 skeletonHtml += `<td style="text-align: center; padding: 16px 8px;"><div class="skeleton-box skeleton-text-short" style="height: 14px; margin: 0 auto; display: block; max-width: 20px;"></div></td>`;
-                if (nestedColumnVisibility['avatar']) skeletonHtml += `<td style="padding: 16px 8px;"><div class="skeleton-avatar"></div></td>`;
-                if (nestedColumnVisibility['memberInfo']) skeletonHtml += `<td style="padding: 16px 8px;"><div class="skeleton-box skeleton-text-medium" style="margin-bottom:8px; display: block;"></div><div class="skeleton-box skeleton-text-long" style="display: block;"></div></td>`;
-                if (nestedColumnVisibility['levelTeam']) skeletonHtml += `<td style="padding: 16px 8px;"><div class="skeleton-box skeleton-text-medium" style="margin-bottom:8px; display: block;"></div><div class="skeleton-box skeleton-text-long" style="display: block;"></div></td>`;
-                if (nestedColumnVisibility['creditLimit']) skeletonHtml += `<td style="padding: 16px 8px;"><div class="skeleton-box skeleton-text-medium" style="margin-bottom:8px; display: block;"></div><div class="skeleton-box skeleton-text-long" style="display: block;"></div></td>`;
-                if (nestedColumnVisibility['depositWithdraw']) skeletonHtml += `<td style="padding: 16px 8px;"><div class="skeleton-box skeleton-text-medium" style="margin-bottom:8px; display: block;"></div><div class="skeleton-box skeleton-text-long" style="display: block;"></div></td>`;
-                if (nestedColumnVisibility['tags']) skeletonHtml += `<td style="padding: 16px 8px;"><div class="skeleton-box skeleton-text-medium" style="display: block;"></div></td>`;
-                if (nestedColumnVisibility['status']) skeletonHtml += `<td style="padding: 16px 8px;"><div class="skeleton-box skeleton-text-short" style="display: block;"></div></td>`;
-                if (nestedColumnVisibility['dateInfo']) skeletonHtml += `<td style="padding: 16px 8px;"><div class="skeleton-box skeleton-text-medium" style="margin-bottom:8px; display: block;"></div><div class="skeleton-box skeleton-text-long" style="display: block;"></div></td>`;
-                if (nestedColumnVisibility['remark']) skeletonHtml += `<td style="padding: 16px 8px;"><div class="skeleton-box skeleton-text-medium" style="margin-bottom:8px; display: block;"></div><div class="skeleton-box skeleton-text-long" style="display: block;"></div></td>`;
+                nestedColumnsConfig.forEach(col => {
+                    if (!nestedColumnVisibility[col.id]) return;
+                    if (col.id === 'avatar') {
+                        skeletonHtml += `<td style="padding: 16px 8px;"><div class="skeleton-avatar"></div></td>`;
+                    } else if (col.id === 'status') {
+                        skeletonHtml += `<td style="padding: 16px 8px;"><div class="skeleton-box skeleton-text-short" style="display: block;"></div></td>`;
+                    } else if (col.id === 'tags') {
+                        skeletonHtml += `<td style="padding: 16px 8px;"><div class="skeleton-box skeleton-text-medium" style="display: block;"></div></td>`;
+                    } else {
+                        skeletonHtml += `<td style="padding: 16px 8px;"><div class="skeleton-box skeleton-text-medium" style="margin-bottom:8px; display: block;"></div><div class="skeleton-box skeleton-text-long" style="display: block;"></div></td>`;
+                    }
+                });
                 skeletonHtml += `<td style="padding: 16px 8px;"><div class="skeleton-box skeleton-text-medium" style="margin-bottom:8px; margin: 0 auto; display: block;"></div><div class="skeleton-box skeleton-text-short" style="margin: 0 auto; display: block;"></div></td>`;
                 skeletonHtml += `</tr>`;
             } else {
@@ -1942,6 +2269,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             pagedUsers.forEach(user => {
                 const tr = document.createElement('tr');
+                tr.dataset.uid = user.uid;
 
                 let rowClass = '';
                 if (rowClass) {
@@ -1962,16 +2290,25 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (col.id === 'avatar') {
                             const isOnline = user.offlineDays === 0;
                             const statusDotHtml = window.dataMode === 'nodata' ? '' : `<span class="status-dot-icon ${isOnline ? 'online' : 'offline'}" title="${isOnline ? '在线' : '离线'}"></span>`;
+                            const logoutBtnHtml = (isOnline && window.dataMode !== 'nodata') ? `<button type="button" class="btn-force-logout" data-uid="${user.uid}" data-account="${user.account || ''}" data-tooltip="登出在线用户" data-tooltip-pos="top" aria-label="登出在线用户" style="margin-top: 4px; position: static; transform: none;"><i class="ph ph-plugs"></i></button>` : '';
                             nestedRowHtml += `<td class="${stickyClass}" style="text-align: center;">
-                            <div class="user-avatar-circle-grey">
+                            <div class="user-avatar-circle-grey" style="position: relative;">
                                 <i class="ph-fill ph-user"></i>
                                 ${statusDotHtml}
                             </div>
+                            ${logoutBtnHtml}
                         </td>`;
                         } else if (col.id === 'memberInfo') {
+                            const isAccountNoData = window.dataMode === 'nodata' || !user.account || user.account === '-' || user.account === '无数据' || user.account === 'N/A';
+                            const accountHtml = isAccountNoData
+                                ? `<span class="data-na" style="color: #94a3b8;">N/A</span>`
+                                : `<span class="cell-username-static" data-uid="${user.uid}">${renderDataState(user.account, 'copyable', '会员名')}</span>`;
                             nestedRowHtml += `<td class="nested-cell-info ${stickyClass}">
-                            <div><span class="info-label">用户ID :</span> ${dataMode === 'nodata' ? '-' : renderDataState(user.uid, 'copyable')}</div>
-                            <div><span class="info-label">会员名 :</span> <span class="cell-username-static" data-uid="${user.uid}">${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : renderDataState(user.account, 'copyable')}</span></div>
+                            <div><span class="info-label">用户ID :</span> ${dataMode === 'nodata' ? '-' : renderDataState(user.uid, 'copyable', '用户ID')}</div>
+                            <div><span class="info-label">会员名 :</span> ${accountHtml}</div>
+                            <div><span class="info-label">用户币别 :</span> ${mainCurrencyText(user)}</div>
+                            <div><span class="info-label">国家 :</span> ${dataMode === 'nodata' || !user.country || user.country === '-' ? '-' : `<span class="country-highlight-val">${user.country || '中国'}</span>`}</div>
+                            <div><span class="info-label">设备类型 :</span> ${dataMode === 'nodata' ? '-' : (user.deviceType || 'iOS')}</div>
                             <div><span class="info-label">真实姓名 :</span> ${renderDataState(user.realName, 'na')}</div>
                             <div><span class="info-label">用户暱称 :</span> ${renderDataState(user.nickname, 'na')}</div>
                             <div><span class="info-label">代理 :</span> ${renderDataState(user.agentId)}</div>
@@ -1994,46 +2331,48 @@ document.addEventListener('DOMContentLoaded', () => {
                         } else if (col.id === 'creditLimit') {
                             nestedRowHtml += `<td class="nested-cell-info ${stickyClass}">
                             <div><span class="info-label">信用值 :</span> <span>${formatAmount(user.creditValue, 'RMB')}</span></div>
-                            <div><span class="info-label">可用额度 :</span> <a class="wallet-detail-link" data-title="可用额度" data-wallet="${user.currency || 'RMB'}" data-amount="${user.availableCredit}">${formatAmount(user.availableCredit, user.currency)}</a> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
-                            <div><span class="info-label">佣金余额 :</span> <a class="wallet-detail-link" data-title="佣金余额" data-wallet="${user.currency || 'RMB'}" data-amount="${user.commissionBal}">${formatAmount(user.commissionBal, user.currency)}</a> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
-                            <div><span class="info-label">余额宝 :</span> <a class="wallet-detail-link" data-title="余额宝" data-wallet="${user.currency || 'RMB'}" data-amount="${user.balanceBuy || 0}">${formatAmount(user.balanceBuy || 0, user.currency)}</a> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
-                            <div><span class="info-label">欠款 :</span> <a class="wallet-detail-link" data-title="欠款" data-wallet="${user.currency || 'RMB'}" data-amount="${user.arrears || 0}">${formatAmount(user.arrears || 0, user.currency)}</a> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
-                            <div><span class="info-label">余额宝利息 :</span> <a class="wallet-detail-link" data-title="余额宝利息" data-wallet="${user.currency || 'RMB'}" data-amount="${user.interest || 0}">${formatAmount(user.interest || 0, user.currency)}</a> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
-                            <div><span class="info-label">三方余额 :</span> <a class="wallet-detail-link" data-title="三方余额" data-wallet="${user.currency || 'RMB'}" data-amount="${user.thirdBal || 0}">${formatAmount(user.thirdBal || 0, user.currency)}</a> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')} <a href="#" class="refresh-link" style="color:#2563eb;font-size:12px;margin-left:4px;text-decoration:none;">刷新</a></div>
+                            <div><span class="info-label">可用额度 :</span> <span class="val">${formatAmount(user.availableCredit, user.currency)}</span> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
+                            <div><span class="info-label">佣金余额 :</span> <span class="val text-red" style="color: #ef4444;">${formatAmount(user.commissionBal, user.currency)}</span> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
+                            <div><span class="info-label">余额宝 :</span> <span class="val">${formatAmount(user.balanceBuy || 0, user.currency)}</span> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
+                            <div><span class="info-label">欠款 :</span> <span class="val text-red" style="color: #ef4444;">${formatAmount(user.arrears || 0, user.currency)}</span> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
+                            <div><span class="info-label">余额宝利息 :</span> <span class="val text-green" style="color: #10b981;">${formatAmount(user.interest || 0, user.currency)}</span> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
+                            <div><span class="info-label">三方余额 :</span> <span class="val">${formatAmount(user.thirdBal || 0, user.currency)}</span> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')} <a href="#" class="refresh-link" style="color:#2563eb;font-size:12px;margin-left:4px;text-decoration:none;">刷新</a></div>
                             <div><span class="info-label">会员积分 :</span> <span>${formatAmount(user.points, '积分')}</span></div>
                         </td>`;
                         } else if (col.id === 'depositWithdraw') {
                             nestedRowHtml += `<td class="nested-cell-info ${stickyClass}">
-                            <div><span class="info-label">存款总额 :</span> <a class="wallet-detail-link" data-title="存款总额" data-wallet="${user.currency || 'RMB'}" data-amount="${user.deposit}">${formatAmount(user.deposit, user.currency)}</a> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
-                            <div><span class="info-label">取款总额 :</span> <a class="wallet-detail-link" data-title="取款总额" data-wallet="${user.currency || 'RMB'}" data-amount="${user.withdraw}">${formatAmount(user.withdraw, user.currency)}</a> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
-                            <div><span class="info-label">提款预扣金额 :</span> <a class="wallet-detail-link" data-title="提款预扣金额" data-wallet="${user.currency || 'RMB'}" data-amount="${user.withdrawPre}">${formatAmount(user.withdrawPre, user.currency)}</a> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
-                            <div><span class="info-label">后台加款总额 :</span> <a class="wallet-detail-link" data-title="后台加款总额" data-wallet="${user.currency || 'RMB'}" data-amount="${user.adminAdd || 0}">${formatAmount(user.adminAdd || 0, user.currency)}</a> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
-                            <div><span class="info-label">后台扣款总额 :</span> <a class="wallet-detail-link" data-title="后台扣款总额" data-wallet="${user.currency || 'RMB'}" data-amount="${user.adminDeduct}">${formatAmount(user.adminDeduct, user.currency)}</a> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
-                            <div><span class="info-label">存款次数 :</span> <a class="wallet-detail-link" data-title="存款次数" data-wallet="${user.currency || 'RMB'}" data-amount="${user.depositCount || 0}">${user.depositCount || 0}</a></div>
-                            <div><span class="info-label">取款次数 :</span> <a class="wallet-detail-link" data-title="取款次数" data-wallet="${user.currency || 'RMB'}" data-amount="${user.withdrawCount || 0}">${user.withdrawCount || 0}</a></div>
+                            <div><span class="info-label">存款总额 :</span> <span class="val" style="color: #4f46e5;">${formatAmount(user.deposit, user.currency)}</span> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
+                            <div><span class="info-label">提款总额 :</span> <span class="val" style="color: #4f46e5;">${formatAmount(user.withdraw, user.currency)}</span> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
+                            <div><span class="info-label">存款次数 :</span> <span>${dataMode === 'nodata' ? '-' : (user.depositCount !== undefined && user.depositCount !== '-' ? user.depositCount : '0')}</span></div>
+                            <div><span class="info-label">提款次数 :</span> <span>${dataMode === 'nodata' ? '-' : (user.withdrawCount !== undefined && user.withdrawCount !== '-' ? user.withdrawCount : '0')}</span></div>
+                            <div><span class="info-label">后台加款总额 :</span> <span class="val text-green" style="color: #10b981;">${formatAmount(user.adminAdd !== undefined ? user.adminAdd : 50000, user.currency)}</span> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
+                            <div><span class="info-label">后台扣款总额 :</span> <span class="val" style="color: #a1a1aa;">${formatAmount(user.adminDeduct !== undefined ? user.adminDeduct : '-', user.currency)}</span> ${window.dataMode === 'nodata' || user.adminDeduct === '-' ? '' : (user.currency || 'RMB')}</div>
+                            <div><span class="info-label">后台活动加款总额 :</span> <span class="val text-green" style="color: #10b981;">${formatAmount(user.adminActAdd !== undefined ? user.adminActAdd : 0, user.currency)}</span> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
+                            <div><span class="info-label">后台加款次数 :</span> <span>${dataMode === 'nodata' ? '-' : (user.adminAddCount !== undefined && user.adminAddCount !== '-' ? user.adminAddCount : '1')}</span></div>
+                            <div><span class="info-label">后台扣款次数 :</span> <span>${dataMode === 'nodata' ? '-' : (user.adminDeductCount !== undefined && user.adminDeductCount !== '-' ? user.adminDeductCount : '0')}</span></div>
+                            <div><span class="info-label">后台活动加款次数 :</span> <span>${dataMode === 'nodata' ? '-' : (user.adminActAddCount !== undefined && user.adminActAddCount !== '-' ? user.adminActAddCount : '0')}</span></div>
+                            <div><span class="info-label">免提直充充值总额 :</span> <span class="val" style="color: #4f46e5;">${formatAmount(user.directDepositTotal !== undefined ? user.directDepositTotal : 0, user.currency)}</span> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
+                            <div><span class="info-label">免提直充充值次数 :</span> <span>${dataMode === 'nodata' ? '-' : (user.directDepositCount !== undefined && user.directDepositCount !== '-' ? user.directDepositCount : '0')}</span></div>
+                            <div><span class="info-label">免提直充提款总额 :</span> <span class="val" style="color: #4f46e5;">${formatAmount(user.directWithdrawTotal !== undefined ? user.directWithdrawTotal : 0, user.currency)}</span> ${window.dataMode === 'nodata' ? '' : (user.currency || 'RMB')}</div>
+                            <div><span class="info-label">免提直充提款次数 :</span> <span>${dataMode === 'nodata' ? '-' : (user.directWithdrawCount !== undefined && user.directWithdrawCount !== '-' ? user.directWithdrawCount : '0')}</span></div>
                         </td>`;
-                        } else if (col.id === 'dwSummary') {
-                            let depUSDT = user.depositUSDT || (user.deposit && user.deposit !== '-' ? (user.deposit / 7.2) : 0);
-                            let witUSDT = user.withdrawUSDT || (user.withdraw && user.withdraw !== '-' ? (user.withdraw / 7.2) : 0);
-                            let preUSDT = user.withdrawPreUSDT || (user.withdrawPre && user.withdrawPre !== '-' ? (user.withdrawPre / 7.2) : 0);
-                            nestedRowHtml += `<td class="nested-cell-info ${stickyClass}">
-                            <div><span class="info-label">存款总额 :</span> <a class="wallet-detail-link" data-title="存款总额 (USDT)" data-wallet="USDT" data-amount="${depUSDT}">${formatAmount(depUSDT, 'USDT')}</a> USDT</div>
-                            <div><span class="info-label">取款总额 :</span> <a class="wallet-detail-link" data-title="取款总额 (USDT)" data-wallet="USDT" data-amount="${witUSDT}">${formatAmount(witUSDT, 'USDT')}</a> USDT</div>
-                            <div><span class="info-label">提款预扣金额 :</span> <a class="wallet-detail-link" data-title="提款预扣金额 (USDT)" data-wallet="USDT" data-amount="${preUSDT}">${formatAmount(preUSDT, 'USDT')}</a> USDT</div>
-                            <div><span class="info-label">后台加款总额 :</span> <a class="wallet-detail-link" data-title="后台加款总额 (USDT)" data-wallet="USDT" data-amount="0">${formatAmount(0, 'USDT')}</a> USDT</div>
-                            <div><span class="info-label">后台扣款总额 :</span> <a class="wallet-detail-link" data-title="后台扣款总额 (USDT)" data-wallet="USDT" data-amount="0">${formatAmount(0, 'USDT')}</a> USDT</div>
-                            <div><span class="info-label">存款次数 :</span> <a class="wallet-detail-link" data-title="存款次数 (USDT)" data-wallet="USDT" data-amount="${user.depositCountUSDT || user.depositCount || 0}">${user.depositCountUSDT || user.depositCount || 0}</a></div>
-                            <div><span class="info-label">取款次数 :</span> <a class="wallet-detail-link" data-title="取款次数 (USDT)" data-wallet="USDT" data-amount="${user.withdrawCountUSDT || user.withdrawCount || 0}">${user.withdrawCountUSDT || user.withdrawCount || 0}</a></div>
-                        </td>`;
+
                         } else if (col.id === 'tags') {
-                            const tagStyles = { '正常': 'tag-blue', 'VIP 客户': 'tag-blue', 'VIP': 'tag-blue', '活跃': 'tag-green', '高频交易': 'tag-green', '大户': 'tag-purple', '高消费': 'tag-purple', '异常风险': 'tag-red' };
-                            let nestedTagsOutput = user.tags.map(tag => {
-                                let styleClass = tagStyles[tag] || 'tag-grey';
-                                if (tag === '异常风险') {
-                                    return `<span class="user-custom-tag ${styleClass}"><i class="ph-fill ph-warning-circle" style="margin-right: 4px; font-size: 13px;"></i>${tag}</span>`;
-                                }
-                                return `<span class="user-custom-tag ${styleClass}">${tag}</span>`;
-                            }).join('');
+                            const hasTags = window.dataMode !== 'nodata' && user.tags && Array.isArray(user.tags) && user.tags.length > 0 && user.tags.some(t => t && t !== '-');
+                            let nestedTagsOutput = '';
+                            if (hasTags) {
+                                const tagStyles = { '正常': 'tag-blue', 'VIP 客户': 'tag-blue', 'VIP': 'tag-blue', '活跃': 'tag-green', '高频交易': 'tag-green', '大户': 'tag-purple', '高消费': 'tag-purple', '异常风险': 'tag-red' };
+                                nestedTagsOutput = user.tags.map(tag => {
+                                    const cleanTag = formatTagName(tag);
+                                    let styleClass = tagStyles[cleanTag] || tagStyles[tag] || 'tag-blue';
+                                    if (cleanTag === '异常风险' || tag === '异常风险') {
+                                        return `<span class="user-custom-tag ${styleClass}" title="${cleanTag}"><i class="ph-fill ph-warning-circle" style="margin-right: 4px; font-size: 13px;"></i>${cleanTag}</span>`;
+                                    }
+                                    return `<span class="user-custom-tag ${styleClass}" title="${cleanTag}">${cleanTag}</span>`;
+                                }).join('');
+                            } else {
+                                nestedTagsOutput = '<span class="data-empty" style="color: #94a3b8;">无数据</span>';
+                            }
 
                             nestedRowHtml += `<td class="${stickyClass}" style="width: 140px; max-width: 140px;">
                             <div class="user-tags-container" style="flex-wrap: wrap;">
@@ -2041,24 +2380,30 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                         </td>`;
                         } else if (col.id === 'status') {
-                            nestedRowHtml += `<td class="${stickyClass}">
-                            <span class="user-custom-tag ${user.status === '正常' ? 'tag-blue' : user.status === '冻结' ? 'tag-blue' : 'tag-red'}">${user.status}</span>
+                            const isNormal = user.status === '正常';
+                            const disableIcon = isNormal ? `<i class="ph ph-prohibit btn-disable-user-icon" data-uid="${user.uid}" data-account="${user.account}" data-tooltip="停用会员" data-tooltip-pos="top" title="停用会员" aria-label="停用会员" style="margin-left: 0; font-size: 16px;"></i>` : '';
+                            nestedRowHtml += `<td class="${stickyClass}" style="text-align: center; vertical-align: middle; min-width: 68px;">
+                            <div style="display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;">
+                                <span class="user-custom-tag ${user.status === '正常' ? 'tag-green' : user.status === '冻结' ? 'tag-blue' : 'tag-red'}">${user.status}</span>
+                                ${disableIcon}
+                            </div>
                         </td>`;
                         } else if (col.id === 'dateInfo') {
+                            const curIp = user.currentLoginIp || user.ip;
+                            const lastIp = user.lastLoginIp || user.ip;
+                            const regIp = user.registerIp || user.regIp || user.ip;
                             nestedRowHtml += `<td class="nested-cell-info ${stickyClass}">
-                            <div><span class="info-label">新增时间 :</span> ${renderDataState(user.date)}</div>
-                            <div><span class="info-label">最后登录 :</span> ${renderDataState(user.lastLogin)}</div>
-                            <div><span class="info-label">离开天数 :</span> ${user.offlineDays === '-' ? '-' : user.offlineDays + '天'}</div>
-                            <div><span class="info-label">登录IP :</span></div>
-                            <div class="ip-row" style="display: flex; align-items: center; gap: 4px;">
-                                ${renderDataState(user.ip, 'ip')}
-                            </div>
+                            <div><span class="info-label">新增时间 :</span> ${formatNestedCreatedDate(user.date)}</div>
+                            <div><span class="info-label">最后登录 :</span> ${formatNestedLastLogin(user)}</div>
+                            <div><span class="info-label">离开天数 :</span> ${window.dataMode === 'nodata' || user.offlineDays === '-' || user.offlineDays === undefined ? '-' : user.offlineDays + '天'}</div>
+                            <div><span class="info-label">当前登录IP :</span> ${renderDataState(curIp, 'ip')}</div>
+                            <div><span class="info-label">上次登录IP :</span> ${renderDataState(lastIp, 'ip')}</div>
+                            <div><span class="info-label">注册 IP :</span> ${renderDataState(regIp, 'ip')}</div>
                         </td>`;
                         } else if (col.id === 'remark') {
                             nestedRowHtml += `<td class="nested-cell-info wrap-text ${stickyClass}">
-                            <div><span class="info-label">备注 :</span> ${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : renderDataState(user.remark, 'longText')}</div>
-                            <div><span class="info-label">回访备注 :</span> ${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : renderDataState(user.followRemark, 'longText')}</div>
-                            <div><span class="info-label">注 :</span> ${renderDataState(user.note, 'longText')}</div>
+                            <div><span class="info-label">备注 :</span> ${renderDataState(user.remark, 'remark')}</div>
+                            <div><span class="info-label">回访备注 :</span> ${renderDataState(user.followRemark, 'remark')}</div>
                         </td>`;
                         } else if (typeof col.render === 'function') {
                             // Fields promoted from 展开卡片 (e.g. 大头照 / 真实姓名) use their own cell renderer
@@ -2120,12 +2465,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     let currentLeft = 80;
                     pinned.forEach(col => {
                         let cellStr = col.render(user);
-                        let bgStyle = col.group === '汇总 USDT' ? 'background-color: #f1f5f9 !important; ' : '';
                         const match = cellStr.match(/^<td([^>]*?)class="([^"]*)"/);
                         if (match) {
-                            cellStr = cellStr.replace(/^<td([^>]*?)class="/, `<td$1style="left:${currentLeft}px; min-width:110px; ${bgStyle}" class="sticky-col `);
+                            cellStr = cellStr.replace(/^<td([^>]*?)class="/, `<td$1style="left:${currentLeft}px; min-width:110px;" class="sticky-col `);
                         } else {
-                            cellStr = cellStr.replace(/^<td/, `<td style="left:${currentLeft}px; min-width:110px; ${bgStyle}" class="sticky-col"`);
+                            cellStr = cellStr.replace(/^<td/, `<td style="left:${currentLeft}px; min-width:110px;" class="sticky-col"`);
                         }
                         cellsHtml += cellStr;
                         currentLeft += 110;
@@ -2134,13 +2478,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     const unpinnedWithoutAction = unpinned.filter(col => col.id !== 'action');
                     unpinnedWithoutAction.forEach(col => {
                         let cellStr = col.render(user);
-                        if (col.group === '汇总 USDT') {
-                            if (cellStr.includes('style="')) {
-                                cellStr = cellStr.replace('style="', 'style="background-color: #f1f5f9 !important; ');
-                            } else {
-                                cellStr = cellStr.replace(/^<td/, '<td style="background-color: #f1f5f9 !important;"');
-                            }
-                        }
                         cellsHtml += cellStr;
                     });
 
@@ -2176,17 +2513,20 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <div style="width:60px; height:60px; background:#6366f1; color:white; border-radius:8px; display:flex; justify-content:center; align-items:center; font-size:24px; font-weight:bold;">${user.account.charAt(0).toUpperCase()}</div>
                             </div>
                             <!-- 基本资料 -->
-                            <div class="detail-card dc-grid2" data-category="基本资料" style="flex: 0 0 auto; display: ${(dataSourceFieldVisibility['ds_realname'] !== false || dataSourceFieldVisibility['ds_birthday'] !== false || dataSourceFieldVisibility['ds_accountType'] !== false || dataSourceFieldVisibility['ds_memberType'] !== false || dataSourceFieldVisibility['ds_level'] !== false || dataSourceFieldVisibility['ds_regMode'] !== false || dataSourceFieldVisibility['ds_nickname'] !== false || dataSourceFieldVisibility['ds_phone'] !== false) ? 'block' : 'none'};">
+                            <div class="detail-card dc-grid2" data-category="基本资料" data-mode="${dataMode}" style="flex: 0 0 auto; display: ${(dataSourceFieldVisibility['ds_realname'] !== false || dataSourceFieldVisibility['ds_birthday'] !== false || dataSourceFieldVisibility['ds_accountType'] !== false || dataSourceFieldVisibility['ds_memberType'] !== false || dataSourceFieldVisibility['ds_level'] !== false || dataSourceFieldVisibility['ds_regMode'] !== false || dataSourceFieldVisibility['ds_nickname'] !== false || dataSourceFieldVisibility['ds_phone'] !== false || dataSourceFieldVisibility['ds_deviceType'] !== false || dataSourceFieldVisibility['country'] !== false || dataSourceFieldVisibility['offlineDays'] !== false) ? 'block' : 'none'};">
                                 <div class="detail-card-header"><i class="ph ph-user"></i> 基本资料</div>
                                 <div class="detail-card-body grid-2-col">
-                                    <div class="ds-field" data-ds-id="ds_realname" style="display:${dataSourceFieldVisibility['ds_realname'] !== false ? '' : 'none'}"><span class="lbl">真实姓名</span> <span class="val" title="${dataMode === 'nodata' ? '' : user.realName}">${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : (user.realName || '-')}</span></div>
+                                    <div class="ds-field" data-ds-id="ds_realname" style="display:${dataSourceFieldVisibility['ds_realname'] !== false ? '' : 'none'}"><span class="lbl">真实姓名</span> <span class="val">${renderDataState(user.realName, 'na')}</span></div>
                                     <div class="ds-field" data-ds-id="ds_birthday" style="display:${dataSourceFieldVisibility['ds_birthday'] !== false ? '' : 'none'}"><span class="lbl">生日</span> <span class="val">${dataMode === 'nodata' ? '-' : (user.birthday || '-')}</span></div>
                                     <div class="ds-field" data-ds-id="ds_accountType" style="display:${dataSourceFieldVisibility['ds_accountType'] !== false ? '' : 'none'}"><span class="lbl">账号类型</span> <span class="val">${user.accountType || '普通账号'}</span></div>
                                     <div class="ds-field" data-ds-id="ds_memberType" style="display:${dataSourceFieldVisibility['ds_memberType'] !== false ? '' : 'none'}"><span class="lbl">会员类型</span> <span class="val">${user.userType || '代理会员'}</span></div>
                                     <div class="ds-field" data-ds-id="ds_level" style="display:${dataSourceFieldVisibility['ds_level'] !== false ? '' : 'none'}"><span class="lbl">等级</span> <span class="val">${dataMode === 'nodata' ? '-' : (user.vipLevel ? 'VIP ' + user.vipLevel : 'VIP 1')}</span></div>
                                     <div class="ds-field" data-ds-id="ds_regMode" style="display:${dataSourceFieldVisibility['ds_regMode'] !== false ? '' : 'none'}"><span class="lbl">注册模式</span> <span class="val">${user.registerMode || '一般注册'}</span></div>
-                                    <div class="ds-field" data-ds-id="ds_nickname" style="display:${dataSourceFieldVisibility['ds_nickname'] !== false ? '' : 'none'}"><span class="lbl">昵称</span> <span class="val">${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : (user.nickname || '-')}</span></div>
+                                    <div class="ds-field" data-ds-id="ds_nickname" style="display:${dataSourceFieldVisibility['ds_nickname'] !== false ? '' : 'none'}"><span class="lbl">昵称</span> <span class="val">${renderDataState(user.nickname, 'na')}</span></div>
                                     <div class="ds-field" data-ds-id="ds_phone" style="display:${dataSourceFieldVisibility['ds_phone'] !== false ? '' : 'none'}"><span class="lbl">手机号</span> <span class="val">${dataMode === 'nodata' ? '-' : renderDataState(user.phone, 'phone')}</span></div>
+                                    <div class="ds-field" data-ds-id="ds_deviceType" style="display:${dataSourceFieldVisibility['ds_deviceType'] !== false ? '' : 'none'}"><span class="lbl">设备类型</span> <span class="val">${dataMode === 'nodata' ? '-' : (user.deviceType || 'iOS')}</span></div>
+                                    <div class="ds-field" data-ds-id="country" style="display:${dataSourceFieldVisibility['country'] !== false ? '' : 'none'}"><span class="lbl">国家</span> <span class="val">${dataMode === 'nodata' || !user.country || user.country === '-' ? '-' : `<span class="country-highlight-val">${user.country || '中国'}</span>`}</span></div>
+                                    <div class="ds-field" data-ds-id="offlineDays" style="display:${dataSourceFieldVisibility['offlineDays'] !== false ? '' : 'none'}"><span class="lbl">离开天数</span> <span class="val">${(window.dataMode === 'nodata' || user.offlineDays === '-' || user.offlineDays === undefined || user.offlineDays === null) ? '-' : (user.offlineDays + '天')}</span></div>
                                 </div>
                             </div>
                             <!-- 额度 Card -->
@@ -2196,99 +2536,35 @@ document.addEventListener('DOMContentLoaded', () => {
                                     ${renderDropdownUI(mainCurrencyText(user))}
                                 </div>
                                 <div class="detail-card-body flex-list-col" data-no-sort="true">
-                                    <div class="ds-field" data-ds-id="currency" style="display:${dataSourceFieldVisibility['currency'] !== false ? '' : 'none'}"><span class="lbl">主钱包币种</span> <span class="val">${dataMode === 'nodata' ? '-' : (user.currency || 'RMB')}</span></div>
+                                    <div class="ds-field" data-ds-id="currency" style="display:${dataSourceFieldVisibility['currency'] !== false ? '' : 'none'}"><span class="lbl">用户币别</span> <span class="val">${dataMode === 'nodata' ? '-' : (user.currency || 'RMB')}</span></div>
                                     <div class="ds-field" data-ds-id="availableCredit" style="display:${dataSourceFieldVisibility['availableCredit'] !== false ? '' : 'none'}"><span class="lbl">可用额度</span> ${window.renderClickableAmount('可用额度', user.availableCredit, user.currency, '', dataMode === 'nodata')}</div>
                                     <div class="ds-field" data-ds-id="thirdBal" style="display:${dataSourceFieldVisibility['thirdBal'] !== false ? '' : 'none'}"><span class="lbl">三方余额</span> <div style="display:flex; align-items:center; justify-content:flex-end; gap:4px;">${window.renderClickableAmount('三方余额', user.thirdBal, user.currency, '', dataMode === 'nodata')} <i class="ph ph-arrows-clockwise refresh-icon-compact" data-uid="${user.uid}" style="cursor:pointer;color:#3b82f6;" title="刷新余额"></i></div></div>
                                 </div>
                             </div>
-                            <!-- 存取款数据 (主钱包 / 汇总) Combined Card -->
-                            <div class="detail-card dc-dw" data-category="存取款资料" style="flex: 0 0 auto; display: ${(dataSourceFieldVisibility['ds_depTotal_main'] !== false || dataSourceFieldVisibility['ds_depTotal_summary'] !== false || dataSourceFieldVisibility['ds_depCount_main'] !== false || dataSourceFieldVisibility['ds_depCount_summary'] !== false || dataSourceFieldVisibility['ds_wdrTotal_main'] !== false || dataSourceFieldVisibility['ds_wdrTotal_summary'] !== false || dataSourceFieldVisibility['ds_wdrCount_main'] !== false || dataSourceFieldVisibility['ds_wdrCount_summary'] !== false || dataSourceFieldVisibility['ds_wdrFee_main'] !== false || dataSourceFieldVisibility['ds_wdrFee_summary'] !== false || dataSourceFieldVisibility['ds_sysAdd_main'] !== false || dataSourceFieldVisibility['ds_sysAdd_summary'] !== false || dataSourceFieldVisibility['ds_sysSub_main'] !== false || dataSourceFieldVisibility['ds_sysSub_summary'] !== false) ? 'flex' : 'none'}; flex-direction: column;">
-                                <div class="detail-card-header" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px 0; width: 100%; box-sizing: border-box; align-items: center;">
-                                    <div style="display: flex; align-items: center; padding-right: 24px;">
-                                        <span style="font-weight: 600; white-space: nowrap; width: 100px; display: flex; align-items: center; gap: 8px;">
-                                            <i class="ph ph-bank"></i> 存取款资料
-                                        </span>
-                                        <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; justify-items: end;">
-                                            <div style="min-width: 90px; display: flex; align-items: center; justify-content: flex-end; gap: 4px; font-weight: 600; font-size: 12px;">主钱包 <span class="ued-tooltip tooltip-bottom" data-tooltip="当前币种: ${mainCurrencyText(user)}"><i class="ph ph-question" style="color: #94a3b8; font-size: 14px;"></i></span></div>
-                                            <div style="min-width: 90px; display: flex; align-items: center; justify-content: flex-end; gap: 4px; color: #6366f1; font-weight: 600; font-size: 12px;">汇总 <span class="ued-tooltip tooltip-bottom" data-tooltip="当前币种: USDT"><i class="ph ph-question" style="color: #94a3b8; font-size: 14px;"></i></span></div>
-                                        </div>
-                                    </div>
-                                    <div style="display: flex; align-items: center; padding-left: 24px;">
-                                        <span style="width: 100px;"></span>
-                                        <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; justify-items: end;">
-                                            <div style="min-width: 90px; display: flex; align-items: center; justify-content: flex-end; gap: 4px; font-weight: 600; font-size: 12px;">主钱包 <span class="ued-tooltip tooltip-bottom" data-tooltip="当前币种: ${mainCurrencyText(user)}"><i class="ph ph-question" style="color: #94a3b8; font-size: 14px;"></i></span></div>
-                                            <div style="min-width: 90px; display: flex; align-items: center; justify-content: flex-end; gap: 4px; color: #6366f1; font-weight: 600; font-size: 12px;">汇总 <span class="ued-tooltip tooltip-bottom" data-tooltip="当前币种: USDT"><i class="ph ph-question" style="color: #94a3b8; font-size: 14px;"></i></span></div>
-                                        </div>
-                                    </div>
+                            <!-- 存取款数据 Card -->
+                            <div class="detail-card dc-dw" data-category="存取款资料" style="flex: 0 0 auto; display: ${(dataSourceFieldVisibility['ds_depTotal_main'] !== false || dataSourceFieldVisibility['ds_depCount_main'] !== false || dataSourceFieldVisibility['ds_directDepTotal_main'] !== false || dataSourceFieldVisibility['ds_directDepCount_main'] !== false || dataSourceFieldVisibility['ds_wdrTotal_main'] !== false || dataSourceFieldVisibility['ds_wdrCount_main'] !== false || dataSourceFieldVisibility['ds_directWdrTotal_main'] !== false || dataSourceFieldVisibility['ds_directWdrCount_main'] !== false || dataSourceFieldVisibility['ds_sysAdd_main'] !== false || dataSourceFieldVisibility['ds_sysSub_main'] !== false || dataSourceFieldVisibility['ds_sysActAdd_main'] !== false || dataSourceFieldVisibility['ds_sysAddCount_main'] !== false || dataSourceFieldVisibility['ds_sysSubCount_main'] !== false || dataSourceFieldVisibility['ds_sysActAddCount_main'] !== false) ? 'flex' : 'none'}; flex-direction: column;">
+                                <div class="detail-card-header" style="display: flex; align-items: center; justify-content: space-between;">
+                                    <div style="display: flex; align-items: center; gap: 8px;"><i class="ph ph-bank"></i> 存取款资料</div>
+                                    ${renderDropdownUI(mainCurrencyText(user))}
                                 </div>
-                                <div class="detail-card-body" data-no-sort="true" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px 0; padding: 16px;">
-                                    <!-- Column 1 -->
-                                    <div style="display: flex; flex-direction: column; gap: 12px; padding-right: 24px;">
-                                        <!-- Micro Header Removed -->
-                                        
-                                        <!-- Rows -->
-                                        <div data-ds-row="ds_depTotal" style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
-                                            <span style="width: 100px; color: #64748b; font-weight: 500;">存款总额</span>
-                                            <div class="ds-val-grid" style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; justify-items: end;">
-                                                <div class="ds-field" data-ds-id="ds_depTotal_main" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;">${window.renderClickableAmount('存款总额', user.deposit, user.currency, 'font-family: monospace; font-weight: 600; color: #4f46e5;', dataMode === 'nodata')}</div>
-                                                <div class="ds-field" data-ds-id="ds_depTotal_summary" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;"><span class="val" style="font-family: monospace; font-weight: 600; color: #4338ca; background: #f8fafc; padding: 2px 6px; border-radius: 4px;">${formatAmount(user.deposit, 'USDT')}</span></div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div data-ds-row="ds_depCount" style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
-                                            <span style="width: 100px; color: #64748b; font-weight: 500;">存款次数</span>
-                                            <div class="ds-val-grid" style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; justify-items: end;">
-                                                <div class="ds-field" data-ds-id="ds_depCount_main" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;"><span class="val" style="font-family: monospace; font-weight: 600; color: #334155;">${user.depositCount || '0'}</span></div>
-                                                <div class="ds-field" data-ds-id="ds_depCount_summary" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;"><span class="val" style="font-family: monospace; font-weight: 600; color: #4338ca; background: #f8fafc; padding: 2px 6px; border-radius: 4px;">${user.depositCount || '0'}</span></div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div data-ds-row="ds_wdrTotal" style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
-                                            <span style="width: 100px; color: #64748b; font-weight: 500;">取款总额</span>
-                                            <div class="ds-val-grid" style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; justify-items: end;">
-                                                <div class="ds-field" data-ds-id="ds_wdrTotal_main" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;">${window.renderClickableAmount('取款总额', user.withdraw, user.currency, 'font-family: monospace; font-weight: 600; color: #4f46e5;', dataMode === 'nodata')}</div>
-                                                <div class="ds-field" data-ds-id="ds_wdrTotal_summary" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;"><span class="val" style="font-family: monospace; font-weight: 600; color: #4338ca; background: #f8fafc; padding: 2px 6px; border-radius: 4px;">${formatAmount(user.withdraw, 'USDT')}</span></div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div data-ds-row="ds_wdrCount" style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
-                                            <span style="width: 100px; color: #64748b; font-weight: 500;">取款次数</span>
-                                            <div class="ds-val-grid" style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; justify-items: end;">
-                                                <div class="ds-field" data-ds-id="ds_wdrCount_main" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;"><span class="val" style="font-family: monospace; font-weight: 600; color: #334155;">${user.withdrawCount || '0'}</span></div>
-                                                <div class="ds-field" data-ds-id="ds_wdrCount_summary" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;"><span class="val" style="font-family: monospace; font-weight: 600; color: #4338ca; background: #f8fafc; padding: 2px 6px; border-radius: 4px;">${user.withdrawCount || '0'}</span></div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                <div class="detail-card-body" data-no-sort="true" style="padding: 16px;">
+                                    <div class="ds-field" data-ds-id="ds_depTotal_main" style="display:${dataSourceFieldVisibility['ds_depTotal_main'] !== false ? 'flex' : 'none'}; justify-content: space-between; align-items: center; font-size: 13px;"><span class="lbl">存款总额</span> <span class="val">${window.renderClickableAmount('存款总额', user.deposit !== undefined ? user.deposit : 0, user.currency, 'font-family: monospace; font-weight: 600; color: #4f46e5;', dataMode === 'nodata')}</span></div>
+                                    <div class="ds-field" data-ds-id="ds_wdrTotal_main" style="display:${dataSourceFieldVisibility['ds_wdrTotal_main'] !== false ? 'flex' : 'none'}; justify-content: space-between; align-items: center; font-size: 13px;"><span class="lbl">提款总额</span> <span class="val">${window.renderClickableAmount('提款总额', user.withdraw !== undefined ? user.withdraw : 0, user.currency, 'font-family: monospace; font-weight: 600; color: #4f46e5;', dataMode === 'nodata')}</span></div>
+                                    <div class="ds-field" data-ds-id="ds_depCount_main" style="display:${dataSourceFieldVisibility['ds_depCount_main'] !== false ? 'flex' : 'none'}; justify-content: space-between; align-items: center; font-size: 13px;"><span class="lbl">存款次数</span> <span class="val" style="font-family: monospace; font-weight: 600; color: #334155;">${dataMode === 'nodata' ? '-' : (user.depositCount !== undefined && user.depositCount !== '-' ? user.depositCount : '0')}</span></div>
+                                    <div class="ds-field" data-ds-id="ds_wdrCount_main" style="display:${dataSourceFieldVisibility['ds_wdrCount_main'] !== false ? 'flex' : 'none'}; justify-content: space-between; align-items: center; font-size: 13px;"><span class="lbl">提款次数</span> <span class="val" style="font-family: monospace; font-weight: 600; color: #334155;">${dataMode === 'nodata' ? '-' : (user.withdrawCount !== undefined && user.withdrawCount !== '-' ? user.withdrawCount : '0')}</span></div>
                                     
-                                    <!-- Column 2 -->
-                                    <div style="display: flex; flex-direction: column; gap: 12px; padding-left: 24px; border-left: 1px solid #f1f5f9;">
-                                        <!-- Micro Header Removed -->
-                                        
-                                        <!-- Rows -->
-                                        <div data-ds-row="ds_wdrFee" style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
-                                            <span style="width: 100px; color: #64748b; font-weight: 500;">提款预扣金额</span>
-                                            <div class="ds-val-grid" style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; justify-items: end;">
-                                                <div class="ds-field" data-ds-id="ds_wdrFee_main" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;">${window.renderClickableAmount('提款预扣金额', user.withdrawPre, user.currency, 'font-family: monospace; font-weight: 600; color: #4f46e5;', dataMode === 'nodata')}</div>
-                                                <div class="ds-field" data-ds-id="ds_wdrFee_summary" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;"><span class="val" style="font-family: monospace; font-weight: 600; color: #4338ca; background: #f8fafc; padding: 2px 6px; border-radius: 4px;">${formatAmount(user.withdrawPre, 'USDT')}</span></div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div data-ds-row="ds_sysAdd" style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
-                                            <span style="width: 100px; color: #64748b; font-weight: 500;">后台加款总额</span>
-                                            <div class="ds-val-grid" style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; justify-items: end;">
-                                                <div class="ds-field" data-ds-id="ds_sysAdd_main" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;">${window.renderClickableAmount('后台加款总额', 1000000, user.currency, 'font-family: monospace; font-weight: 600; color: #10b981;', dataMode === 'nodata')}</div>
-                                                <div class="ds-field" data-ds-id="ds_sysAdd_summary" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;"><span class="val text-green" style="font-family: monospace; font-weight: 600; background: #f8fafc; padding: 2px 6px; border-radius: 4px;">${dataMode === 'nodata' ? '-' : formatAmount(1800, 'USDT')}</span></div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div data-ds-row="ds_sysSub" style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
-                                            <span style="width: 100px; color: #64748b; font-weight: 500;">后台扣款总额</span>
-                                            <div class="ds-val-grid" style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; justify-items: end;">
-                                                <div class="ds-field" data-ds-id="ds_sysSub_main" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;">${window.renderClickableAmount('后台扣款总额', 0, user.currency, 'font-family: monospace; font-weight: 600; color: #a1a1aa;', dataMode === 'nodata')}</div>
-                                                <div class="ds-field" data-ds-id="ds_sysSub_summary" style="min-width: 90px; width: auto; text-align: right; white-space: nowrap;"><span class="val text-red" style="font-family: monospace; font-weight: 600; background: #f8fafc; padding: 2px 6px; border-radius: 4px;">${dataMode === 'nodata' ? '-' : formatAmount(50, 'USDT')}</span></div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <div class="ds-field" data-ds-id="ds_sysAdd_main" style="display:${dataSourceFieldVisibility['ds_sysAdd_main'] !== false ? 'flex' : 'none'}; justify-content: space-between; align-items: center; font-size: 13px;"><span class="lbl">后台加款总额</span> <span class="val">${window.renderClickableAmount('后台加款总额', user.adminAdd !== undefined ? user.adminAdd : 50000, user.currency, 'font-family: monospace; font-weight: 600; color: #10b981;', dataMode === 'nodata')}</span></div>
+                                    <div class="ds-field" data-ds-id="ds_sysSub_main" style="display:${dataSourceFieldVisibility['ds_sysSub_main'] !== false ? 'flex' : 'none'}; justify-content: space-between; align-items: center; font-size: 13px;"><span class="lbl">后台扣款总额</span> <span class="val">${window.renderClickableAmount('后台扣款总额', user.adminDeduct !== undefined ? user.adminDeduct : '-', user.currency, 'font-family: monospace; font-weight: 600; color: #a1a1aa;', dataMode === 'nodata')}</span></div>
+                                    <div class="ds-field" data-ds-id="ds_sysActAdd_main" style="display:${dataSourceFieldVisibility['ds_sysActAdd_main'] !== false ? 'flex' : 'none'}; justify-content: space-between; align-items: center; font-size: 13px;"><span class="lbl">后台活动加款总额</span> <span class="val">${window.renderClickableAmount('后台活动加款总额', user.adminActAdd !== undefined ? user.adminActAdd : 0, user.currency, 'font-family: monospace; font-weight: 600; color: #10b981;', dataMode === 'nodata')}</span></div>
+                                    <div class="ds-field" data-ds-id="ds_sysAddCount_main" style="display:${dataSourceFieldVisibility['ds_sysAddCount_main'] !== false ? 'flex' : 'none'}; justify-content: space-between; align-items: center; font-size: 13px;"><span class="lbl">后台加款次数</span> <span class="val" style="font-family: monospace; font-weight: 600; color: #334155;">${dataMode === 'nodata' ? '-' : (user.adminAddCount !== undefined && user.adminAddCount !== '-' ? user.adminAddCount : '1')}</span></div>
+                                    
+                                    <div class="ds-field" data-ds-id="ds_sysSubCount_main" style="display:${dataSourceFieldVisibility['ds_sysSubCount_main'] !== false ? 'flex' : 'none'}; justify-content: space-between; align-items: center; font-size: 13px;"><span class="lbl">后台扣款次数</span> <span class="val" style="font-family: monospace; font-weight: 600; color: #334155;">${dataMode === 'nodata' ? '-' : (user.adminDeductCount !== undefined && user.adminDeductCount !== '-' ? user.adminDeductCount : '0')}</span></div>
+                                    <div class="ds-field" data-ds-id="ds_sysActAddCount_main" style="display:${dataSourceFieldVisibility['ds_sysActAddCount_main'] !== false ? 'flex' : 'none'}; justify-content: space-between; align-items: center; font-size: 13px;"><span class="lbl">后台活动加款次数</span> <span class="val" style="font-family: monospace; font-weight: 600; color: #334155;">${dataMode === 'nodata' ? '-' : (user.adminActAddCount !== undefined && user.adminActAddCount !== '-' ? user.adminActAddCount : '0')}</span></div>
+                                    <div class="ds-field" data-ds-id="ds_directDepTotal_main" style="display:${dataSourceFieldVisibility['ds_directDepTotal_main'] !== false ? 'flex' : 'none'}; justify-content: space-between; align-items: center; font-size: 13px;"><span class="lbl">免提直充充值总额</span> <span class="val">${window.renderClickableAmount('免提直充充值总额', user.directDepositTotal !== undefined ? user.directDepositTotal : 0, user.currency, 'font-family: monospace; font-weight: 600; color: #4f46e5;', dataMode === 'nodata')}</span></div>
+                                    <div class="ds-field" data-ds-id="ds_directDepCount_main" style="display:${dataSourceFieldVisibility['ds_directDepCount_main'] !== false ? 'flex' : 'none'}; justify-content: space-between; align-items: center; font-size: 13px;"><span class="lbl">免提直充充值次数</span> <span class="val" style="font-family: monospace; font-weight: 600; color: #334155;">${dataMode === 'nodata' ? '-' : (user.directDepositCount !== undefined && user.directDepositCount !== '-' ? user.directDepositCount : '0')}</span></div>
+                                    
+                                    <div class="ds-field" data-ds-id="ds_directWdrTotal_main" style="display:${dataSourceFieldVisibility['ds_directWdrTotal_main'] !== false ? 'flex' : 'none'}; justify-content: space-between; align-items: center; font-size: 13px;"><span class="lbl">免提直充提款总额</span> <span class="val">${window.renderClickableAmount('免提直充提款总额', user.directWithdrawTotal !== undefined ? user.directWithdrawTotal : 0, user.currency, 'font-family: monospace; font-weight: 600; color: #4f46e5;', dataMode === 'nodata')}</span></div>
+                                    <div class="ds-field" data-ds-id="ds_directWdrCount_main" style="display:${dataSourceFieldVisibility['ds_directWdrCount_main'] !== false ? 'flex' : 'none'}; justify-content: space-between; align-items: center; font-size: 13px;"><span class="lbl">免提直充提款次数</span> <span class="val" style="font-family: monospace; font-weight: 600; color: #334155;">${dataMode === 'nodata' ? '-' : (user.directWithdrawCount !== undefined && user.directWithdrawCount !== '-' ? user.directWithdrawCount : '0')}</span></div>
                                 </div>
                             </div>
                             <!-- 成长与积分 -->
@@ -2327,29 +2603,17 @@ document.addEventListener('DOMContentLoaded', () => {
                             <!-- 用户标签 -->
                             <div class="detail-card ds-field" data-category="用户标签" data-ds-id="ds_tags" style="flex: 0 0 auto; display:${dataSourceFieldVisibility['ds_tags'] !== false ? '' : 'none'}">
                                 <div class="detail-card-header"><i class="ph ph-tag"></i> 用户标签</div>
-                                <div class="detail-card-body tags-column-grid" style="--tag-rows: ${Math.min(4, Math.max(1, (user.tags || []).length))};">
-                                    ${(user.tags && user.tags.length > 0) ? user.tags.map(t => `<span class="user-custom-tag tag-blue" title="${t}">${t}</span>`).join('') : '<span style="color:#94a3b8; font-size:13px;">无标签</span>'}
-                                </div>
-                            </div>
-                            <!-- 信贷 -->
-                            <div class="detail-card dc-list" data-category="信贷" style="flex: 0 0 auto; display: ${(dataSourceFieldVisibility['ds_debt'] !== false || dataSourceFieldVisibility['ds_creditVal'] !== false) ? 'block' : 'none'};">
-                                <div class="detail-card-header">
-                                    <div style="display: flex; align-items: center; gap: 8px;"><i class="ph ph-credit-card"></i> 信贷</div>
-                                    ${renderDropdownUI(mainCurrencyText(user))}
-                                </div>
-                                <div class="detail-card-body flex-list-col">
-                                    <div class="ds-field" data-ds-id="ds_debt" style="display:${dataSourceFieldVisibility['ds_debt'] !== false ? '' : 'none'}"><span class="lbl">欠款</span> ${window.renderClickableAmount('欠款', user.arrears, user.currency, 'color: #ef4444;', dataMode === 'nodata')}</div>
-                                    <div class="ds-field" data-ds-id="ds_creditVal" style="display:${dataSourceFieldVisibility['ds_creditVal'] !== false ? '' : 'none'}"><span class="lbl">信用值</span> <span class="val">${formatAmount(user.creditValue, 'RMB')}</span></div>
+                                <div class="detail-card-body tags-column-grid" style="--tag-rows: ${Math.min(5, Math.max(1, (user.tags || []).length))};">
+                                    ${(window.dataMode !== 'nodata' && user.tags && Array.isArray(user.tags) && user.tags.length > 0 && user.tags.some(t => t && t !== '-')) ? user.tags.map(t => `<span class="user-custom-tag tag-blue" title="${formatTagName(t)}">${formatTagName(t)}</span>`).join('') : '<span class="data-empty" style="color: #94a3b8; font-size: 13px;">无数据</span>'}
                                 </div>
                             </div>
                         </div>
-                        <!-- 其他 (备注等底部信息) -->
-                        <!-- 其他 (备注等底部信息) -->
-                        <div class="detail-card" data-category="其他" style="display: ${(dataSourceFieldVisibility['ds_remark'] !== false || dataSourceFieldVisibility['ds_followup'] !== false) ? 'block' : 'none'}; border: none; box-shadow: none; background: transparent; padding: 0;">
-                            <div style="width:100%; border-bottom: 1px dashed #e2e8f0; margin: 16px 0;"></div>
-                            <div class="detail-card-body" style="width:100%; display:flex; gap:32px; margin-bottom: 8px; padding: 0 40px;">
-                                <div class="ds-field" data-ds-id="ds_remark" style="display:${dataSourceFieldVisibility['ds_remark'] !== false ? 'flex' : 'none'}; gap:8px;"><span style="color:#64748b;">备注</span> ${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : `<span title="${user.remark || ''}">${user.remark ? (user.remark.length > 20 ? user.remark.substring(0, 20) + '...' : user.remark) : '-'}</span>`}</div>
-                                <div class="ds-field" data-ds-id="ds_followup" style="display:${dataSourceFieldVisibility['ds_followup'] !== false ? 'flex' : 'none'}; gap:8px;"><span style="color:#64748b;">回访备注</span> ${dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : `<span title="${user.followRemark || ''}">${user.followRemark ? (user.followRemark.length > 20 ? user.followRemark.substring(0, 20) + '...' : user.followRemark) : '-'}</span>`}</div>
+                        <!-- 其他 (备注等底部信息) - 放在卡片下方 -->
+                        <div class="detail-card detail-bottom-info" data-category="其他" style="display: ${(dataSourceFieldVisibility['ds_remark'] !== false || dataSourceFieldVisibility['ds_followup'] !== false) ? 'block' : 'none'};">
+                            <div class="bottom-divider"></div>
+                            <div class="detail-bottom-body">
+                                <div class="ds-field" data-ds-id="ds_remark" style="display:${dataSourceFieldVisibility['ds_remark'] !== false ? 'flex' : 'none'};"><span class="lbl">备注</span> <span class="val">${renderDataState(user.remark, 'remark')}</span></div>
+                                <div class="ds-field" data-ds-id="ds_followup" style="display:${dataSourceFieldVisibility['ds_followup'] !== false ? 'flex' : 'none'};"><span class="lbl">回访备注</span> <span class="val">${renderDataState(user.followRemark, 'remark')}</span></div>
                             </div>
                         </div>
                     </td>
@@ -2445,10 +2709,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Bind Expand Row Event
             userTableBody.querySelectorAll('.expand-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
+                const td = btn.closest('td');
+                const handler = (e) => {
                     e.stopPropagation();
                     const tr = btn.closest('tr');
-                    const expandTr = tr.nextElementSibling;
+                    const expandTr = tr ? tr.nextElementSibling : null;
                     if (expandTr && expandTr.classList.contains('expanded-detail-row')) {
                         if (expandTr.style.display === 'none') {
                             expandTr.style.display = 'table-row';
@@ -2464,13 +2729,16 @@ document.addEventListener('DOMContentLoaded', () => {
                             tr.style.backgroundColor = '';
                         }
                     }
-                });
+                };
+                btn.addEventListener('click', handler);
+                if (td) td.addEventListener('click', handler);
             });
 
             // Bind Expand All Event
             const expandAllBtn = document.querySelector('.expand-all-btn');
             if (expandAllBtn) {
-                expandAllBtn.addEventListener('click', (e) => {
+                const th = expandAllBtn.closest('th');
+                const allHandler = (e) => {
                     e.stopPropagation();
                     const isExpanded = expandAllBtn.classList.contains('ph-caret-down');
                     const expandBtns = userTableBody.querySelectorAll('.expand-btn');
@@ -2490,7 +2758,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             if (btn.classList.contains('ph-caret-right')) btn.click();
                         });
                     }
-                });
+                };
+                expandAllBtn.addEventListener('click', allHandler);
+                if (th) th.addEventListener('click', allHandler);
             }
 
             // Bind Sort Events
@@ -2784,7 +3054,9 @@ document.addEventListener('DOMContentLoaded', () => {
             Object.keys(columnVisibility).forEach(k => columnVisibility[k] = true);
             applyColumnVisibility();
         } else {
-            compactColumnsConfig.forEach(col => compactColumnVisibility[col.id] = true);
+            compactColumnsConfig.forEach(col => {
+                compactColumnVisibility[col.id] = ['lastLogin', 'lastLoginIp', 'registerIp'].includes(col.id) ? false : true;
+            });
             pinnedColumnIds = [];
             renderTable();
         }
@@ -2864,7 +3136,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 新增时间范围校验：开始时间不可晚于结束时间
+    // 注册时间范围校验：开始时间不可晚于结束时间
     const DATE_RANGE_ERROR_MSG = '开始时间不可晚于结束时间';
     function getDateRangePairs() {
         return [
@@ -2906,7 +3178,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnSearch) {
         btnSearch.addEventListener('click', () => {
             if (!validateAllDateRanges()) {
-                showToast(`新增时间：${DATE_RANGE_ERROR_MSG}`);
+                showToast(`注册时间：${DATE_RANGE_ERROR_MSG}`);
                 return;
             }
             updateFilters();
@@ -3103,64 +3375,458 @@ document.addEventListener('DOMContentLoaded', () => {
         setTag(drawerEl.querySelector('.ued-tag-vip'), user.level);
     }
 
+    let currentEditingUid = null;
+
+    // Helper: Birthday dropdowns population (YYYY, MM, DD)
+    function initBirthdayDropdowns() {
+        const yearSel = document.getElementById('editFormBirthYear');
+        const monthSel = document.getElementById('editFormBirthMonth');
+        const daySel = document.getElementById('editFormBirthDay');
+        const birthdayIn = document.getElementById('editFormBirthday');
+
+        if (yearSel && yearSel.options.length <= 1) {
+            yearSel.innerHTML = '<option value="">YYYY</option>';
+            const currentYear = new Date().getFullYear();
+            for (let y = currentYear; y >= 1940; y--) {
+                const opt = document.createElement('option');
+                opt.value = String(y);
+                opt.textContent = String(y);
+                yearSel.appendChild(opt);
+            }
+        }
+
+        if (monthSel && monthSel.options.length <= 1) {
+            monthSel.innerHTML = '<option value="">MM</option>';
+            for (let m = 1; m <= 12; m++) {
+                const val = m < 10 ? '0' + m : String(m);
+                const opt = document.createElement('option');
+                opt.value = val;
+                opt.textContent = val;
+                monthSel.appendChild(opt);
+            }
+        }
+
+        if (daySel && daySel.options.length <= 1) {
+            daySel.innerHTML = '<option value="">DD</option>';
+            for (let d = 1; d <= 31; d++) {
+                const val = d < 10 ? '0' + d : String(d);
+                const opt = document.createElement('option');
+                opt.value = val;
+                opt.textContent = val;
+                daySel.appendChild(opt);
+            }
+        }
+
+        function syncBirthdayHidden() {
+            if (birthdayIn && yearSel && monthSel && daySel) {
+                if (yearSel.value && monthSel.value && daySel.value) {
+                    birthdayIn.value = `${yearSel.value}-${monthSel.value}-${daySel.value}`;
+                }
+            }
+        }
+
+        if (yearSel) yearSel.addEventListener('change', syncBirthdayHidden);
+        if (monthSel) monthSel.addEventListener('change', syncBirthdayHidden);
+        if (daySel) daySel.addEventListener('change', syncBirthdayHidden);
+    }
+    initBirthdayDropdowns();
+
+    // Helper: Update Status Badge
+    function updateUedStatusBadge(statusText) {
+        const badge = document.getElementById('ued-status-badge');
+        if (!badge) return;
+        badge.className = 'ued-status-badge';
+        const st = statusText || '正常';
+        if (st === '正常' || st === 'normal') {
+            badge.classList.add('ued-status-normal');
+            badge.innerHTML = '<span class="ued-status-dot"></span>目前状态：正常';
+        } else if (st === '冻结') {
+            badge.classList.add('ued-status-frozen');
+            badge.innerHTML = '<span class="ued-status-dot"></span>目前状态：冻结';
+        } else if (st === '待审核') {
+            badge.classList.add('ued-status-pending');
+            badge.innerHTML = '<span class="ued-status-dot"></span>目前状态：待审核';
+        } else {
+            badge.classList.add('ued-status-disabled');
+            badge.innerHTML = '<span class="ued-status-dot"></span>目前状态：停用';
+        }
+    }
+
+    const editFormStatusEl = document.getElementById('editFormStatus');
+    if (editFormStatusEl) {
+        editFormStatusEl.addEventListener('change', (e) => {
+            updateUedStatusBadge(e.target.value);
+        });
+    }
+
+    function getWithdrawSubOptionsHtml(type, subValue = '') {
+        if (type === '银行卡') {
+            const banks = ['绑定银行29', '中国工商银行', '中国农业银行', '中国建设银行', '招商银行', 'TEST'];
+            const options = banks.map(b => `<option value="${b}" ${b === subValue ? 'selected' : ''}>${b}</option>`).join('');
+            return `<select class="ued-select-sm wdr-sub-select">${options}</select>`;
+        } else if (type === 'PIX') {
+            const pixOptions = [
+                { val: '', label: '请选择', disabled: true },
+                { val: 'Banco do Brasil', label: 'Banco do Brasil' },
+                { val: 'Nubank', label: 'Nubank' },
+                { val: 'Itau', label: 'Itaú' },
+                { val: 'Bradesco', label: 'Bradesco' },
+                { val: 'Caixa', label: 'Caixa' },
+                { val: 'PIX', label: 'PIX' }
+            ];
+            const isDefault = !subValue || subValue === '请选择';
+            const options = pixOptions.map(p => 
+                `<option value="${p.val}" ${p.disabled ? 'disabled' : ''} ${(p.val === subValue || (isDefault && p.disabled)) ? 'selected' : ''}>${p.label}</option>`
+            ).join('');
+            return `<select class="ued-select-sm wdr-sub-select" style="${isDefault ? 'color:#94a3b8;' : ''}">${options}</select>`;
+        } else if (type === '虚拟币') {
+            const cryptoOptions = [
+                { val: '', label: '请选择', disabled: true },
+                { val: 'TRC20', label: 'TRC20' },
+                { val: 'ERC20', label: 'ERC20' },
+                { val: 'BEP20', label: 'BEP20' },
+                { val: 'BTC', label: 'BTC' },
+                { val: 'USDT', label: 'USDT' }
+            ];
+            const isDefault = !subValue || subValue === '请选择';
+            const options = cryptoOptions.map(c => 
+                `<option value="${c.val}" ${c.disabled ? 'disabled' : ''} ${(c.val === subValue || (isDefault && c.disabled)) ? 'selected' : ''}>${c.label}</option>`
+            ).join('');
+            return `<select class="ued-select-sm wdr-sub-select" style="${isDefault ? 'color:#94a3b8;' : ''}">${options}</select>`;
+        } else if (type === 'EWallet') {
+            const ewalletOptions = [
+                { val: '', label: '请选择', disabled: true },
+                { val: 'GCash', label: 'GCash' },
+                { val: 'PayMaya', label: 'PayMaya' },
+                { val: 'GrabPay', label: 'GrabPay' },
+                { val: 'PayPal', label: 'PayPal' }
+            ];
+            const isDefault = !subValue || subValue === '请选择';
+            const options = ewalletOptions.map(w => 
+                `<option value="${w.val}" ${w.disabled ? 'disabled' : ''} ${(w.val === subValue || (isDefault && w.disabled)) ? 'selected' : ''}>${w.label}</option>`
+            ).join('');
+            return `<select class="ued-select-sm wdr-sub-select" style="${isDefault ? 'color:#94a3b8;' : ''}">${options}</select>`;
+        } else {
+            // 支付宝 or 请选择: 留空 (无下拉框)
+            return '';
+        }
+    }
+
+    function getWithdrawEmailPhoneHtml(type, val = '') {
+        if (type === 'PIX') {
+            return `<input type="text" class="ued-input-sm wdr-email-phone-input" value="${val || ''}">`;
+        }
+        return '';
+    }
+
+    function createWithdrawRow(data = {}) {
+        const type = data.type || '请选择';
+        const subValue = data.subValue || '';
+        const account = data.account || '';
+        const emailPhone = data.emailPhone || '';
+        const branch = data.branch || '';
+        const types = ['银行卡', 'PIX', '虚拟币', 'EWallet', '支付宝', '请选择'];
+        const isDefaultType = type === '请选择';
+        const typeOptions = types.map(t => `<option value="${t}" ${t === type ? 'selected' : ''}>${t}</option>`).join('');
+
+        const tr = document.createElement('tr');
+        tr.setAttribute('data-wdr-type', type);
+        tr.innerHTML = `
+            <td>
+                <select class="ued-select-sm wdr-type-select" style="${isDefaultType ? 'color:#94a3b8;' : ''}">
+                    ${typeOptions}
+                </select>
+            </td>
+            <td class="wdr-col-sub">${getWithdrawSubOptionsHtml(type, subValue)}</td>
+            <td class="wdr-col-account">
+                <input type="text" class="ued-input-sm wdr-account-input" value="${account}" data-field="wdr">
+            </td>
+            <td class="wdr-col-email-phone">${getWithdrawEmailPhoneHtml(type, emailPhone)}</td>
+            <td class="wdr-col-branch">
+                <input type="text" class="ued-input-sm wdr-branch-input" value="${branch}">
+            </td>
+            <td class="ued-withdraw-actions">
+                <button type="button" class="ued-action-save">保存</button>
+                <button type="button" class="ued-action-del">删除</button>
+            </td>
+        `;
+        return tr;
+    }
+
+    function updateWithdrawRowFields(tr, newType) {
+        tr.setAttribute('data-wdr-type', newType);
+        const typeSelect = tr.querySelector('.wdr-type-select');
+        if (typeSelect) {
+            typeSelect.style.color = (newType === '请选择') ? '#94a3b8' : '#1e293b';
+        }
+        const subTd = tr.querySelector('.wdr-col-sub');
+        if (subTd) {
+            subTd.innerHTML = getWithdrawSubOptionsHtml(newType, '');
+        }
+        const emailPhoneTd = tr.querySelector('.wdr-col-email-phone');
+        if (emailPhoneTd) {
+            emailPhoneTd.innerHTML = getWithdrawEmailPhoneHtml(newType, '');
+        }
+    }
+
+    function getDefaultWithdrawRowsHtml() {
+        return `
+            <!-- 1. 银行卡 -->
+            <tr data-wdr-type="银行卡">
+                <td>
+                    <select class="ued-select-sm wdr-type-select">
+                        <option value="银行卡" selected>银行卡</option>
+                        <option value="PIX">PIX</option>
+                        <option value="虚拟币">虚拟币</option>
+                        <option value="EWallet">EWallet</option>
+                        <option value="支付宝">支付宝</option>
+                        <option value="请选择">请选择</option>
+                    </select>
+                </td>
+                <td class="wdr-col-sub">
+                    <select class="ued-select-sm wdr-sub-select">
+                        <option value="绑定银行29" selected>绑定银行29</option>
+                        <option value="中国工商银行">中国工商银行</option>
+                        <option value="中国农业银行">中国农业银行</option>
+                        <option value="中国建设银行">中国建设银行</option>
+                        <option value="招商银行">招商银行</option>
+                        <option value="TEST">TEST</option>
+                    </select>
+                </td>
+                <td class="wdr-col-account">
+                    <input type="text" class="ued-input-sm wdr-account-input" value="3455333" data-raw="3455333" data-masked="34***33" data-field="wdr">
+                </td>
+                <td class="wdr-col-email-phone"></td>
+                <td class="wdr-col-branch">
+                    <input type="text" class="ued-input-sm wdr-branch-input" value="">
+                </td>
+                <td class="ued-withdraw-actions">
+                    <button type="button" class="ued-action-save">保存</button>
+                    <button type="button" class="ued-action-del">删除</button>
+                </td>
+            </tr>
+            <!-- 2. PIX -->
+            <tr data-wdr-type="PIX">
+                <td>
+                    <select class="ued-select-sm wdr-type-select">
+                        <option value="银行卡">银行卡</option>
+                        <option value="PIX" selected>PIX</option>
+                        <option value="虚拟币">虚拟币</option>
+                        <option value="EWallet">EWallet</option>
+                        <option value="支付宝">支付宝</option>
+                        <option value="请选择">请选择</option>
+                    </select>
+                </td>
+                <td class="wdr-col-sub">
+                    <select class="ued-select-sm wdr-sub-select" style="color: #94a3b8;">
+                        <option value="" selected disabled>请选择</option>
+                        <option value="Banco do Brasil">Banco do Brasil</option>
+                        <option value="Nubank">Nubank</option>
+                        <option value="Itau">Itaú</option>
+                        <option value="Bradesco">Bradesco</option>
+                        <option value="Caixa">Caixa</option>
+                        <option value="PIX">PIX</option>
+                    </select>
+                </td>
+                <td class="wdr-col-account">
+                    <input type="text" class="ued-input-sm wdr-account-input" value="" data-field="wdr">
+                </td>
+                <td class="wdr-col-email-phone">
+                    <input type="text" class="ued-input-sm wdr-email-phone-input" value="">
+                </td>
+                <td class="wdr-col-branch">
+                    <input type="text" class="ued-input-sm wdr-branch-input" value="">
+                </td>
+                <td class="ued-withdraw-actions">
+                    <button type="button" class="ued-action-save">保存</button>
+                    <button type="button" class="ued-action-del">删除</button>
+                </td>
+            </tr>
+            <!-- 3. 虚拟币 -->
+            <tr data-wdr-type="虚拟币">
+                <td>
+                    <select class="ued-select-sm wdr-type-select">
+                        <option value="银行卡">银行卡</option>
+                        <option value="PIX">PIX</option>
+                        <option value="虚拟币" selected>虚拟币</option>
+                        <option value="EWallet">EWallet</option>
+                        <option value="支付宝">支付宝</option>
+                        <option value="请选择">请选择</option>
+                    </select>
+                </td>
+                <td class="wdr-col-sub">
+                    <select class="ued-select-sm wdr-sub-select" style="color: #94a3b8;">
+                        <option value="" selected disabled>请选择</option>
+                        <option value="TRC20">TRC20</option>
+                        <option value="ERC20">ERC20</option>
+                        <option value="BEP20">BEP20</option>
+                        <option value="BTC">BTC</option>
+                        <option value="USDT">USDT</option>
+                    </select>
+                </td>
+                <td class="wdr-col-account">
+                    <input type="text" class="ued-input-sm wdr-account-input" value="" data-field="wdr">
+                </td>
+                <td class="wdr-col-email-phone"></td>
+                <td class="wdr-col-branch">
+                    <input type="text" class="ued-input-sm wdr-branch-input" value="">
+                </td>
+                <td class="ued-withdraw-actions">
+                    <button type="button" class="ued-action-save">保存</button>
+                    <button type="button" class="ued-action-del">删除</button>
+                </td>
+            </tr>
+            <!-- 4. EWallet -->
+            <tr data-wdr-type="EWallet">
+                <td>
+                    <select class="ued-select-sm wdr-type-select">
+                        <option value="银行卡">银行卡</option>
+                        <option value="PIX">PIX</option>
+                        <option value="虚拟币">虚拟币</option>
+                        <option value="EWallet" selected>EWallet</option>
+                        <option value="支付宝">支付宝</option>
+                        <option value="请选择">请选择</option>
+                    </select>
+                </td>
+                <td class="wdr-col-sub">
+                    <select class="ued-select-sm wdr-sub-select" style="color: #94a3b8;">
+                        <option value="" selected disabled>请选择</option>
+                        <option value="GCash">GCash</option>
+                        <option value="PayMaya">PayMaya</option>
+                        <option value="GrabPay">GrabPay</option>
+                        <option value="PayPal">PayPal</option>
+                    </select>
+                </td>
+                <td class="wdr-col-account">
+                    <input type="text" class="ued-input-sm wdr-account-input" value="" data-field="wdr">
+                </td>
+                <td class="wdr-col-email-phone"></td>
+                <td class="wdr-col-branch">
+                    <input type="text" class="ued-input-sm wdr-branch-input" value="">
+                </td>
+                <td class="ued-withdraw-actions">
+                    <button type="button" class="ued-action-save">保存</button>
+                    <button type="button" class="ued-action-del">删除</button>
+                </td>
+            </tr>
+            <!-- 5. 支付宝 -->
+            <tr data-wdr-type="支付宝">
+                <td>
+                    <select class="ued-select-sm wdr-type-select">
+                        <option value="银行卡">银行卡</option>
+                        <option value="PIX">PIX</option>
+                        <option value="虚拟币">虚拟币</option>
+                        <option value="EWallet">EWallet</option>
+                        <option value="支付宝" selected>支付宝</option>
+                        <option value="请选择">请选择</option>
+                    </select>
+                </td>
+                <td class="wdr-col-sub"></td>
+                <td class="wdr-col-account">
+                    <input type="text" class="ued-input-sm wdr-account-input" value="" data-field="wdr">
+                </td>
+                <td class="wdr-col-email-phone"></td>
+                <td class="wdr-col-branch">
+                    <input type="text" class="ued-input-sm wdr-branch-input" value="">
+                </td>
+                <td class="ued-withdraw-actions">
+                    <button type="button" class="ued-action-save">保存</button>
+                    <button type="button" class="ued-action-del">删除</button>
+                </td>
+            </tr>
+            <!-- 6. 请选择 -->
+            <tr data-wdr-type="请选择">
+                <td>
+                    <select class="ued-select-sm wdr-type-select" style="color: #94a3b8;">
+                        <option value="银行卡">银行卡</option>
+                        <option value="PIX">PIX</option>
+                        <option value="虚拟币">虚拟币</option>
+                        <option value="EWallet">EWallet</option>
+                        <option value="支付宝">支付宝</option>
+                        <option value="请选择" selected>请选择</option>
+                    </select>
+                </td>
+                <td class="wdr-col-sub"></td>
+                <td class="wdr-col-account">
+                    <input type="text" class="ued-input-sm wdr-account-input" value="" data-field="wdr">
+                </td>
+                <td class="wdr-col-email-phone"></td>
+                <td class="wdr-col-branch">
+                    <input type="text" class="ued-input-sm wdr-branch-input" value="">
+                </td>
+                <td class="ued-withdraw-actions">
+                    <button type="button" class="ued-action-save">保存</button>
+                    <button type="button" class="ued-action-del">删除</button>
+                </td>
+            </tr>
+        `;
+    }
+
     function openUserEditModal(uid) {
         if (!userEditDrawer) return;
         const user = (mockUsers || []).find(u => u.uid === uid) || (mockUsers && mockUsers[0]);
         if (!user) return;
+        currentEditingUid = user.uid;
 
         // Update title
         const titleEl = document.getElementById('userEditDrawerTitle');
-        if (titleEl) titleEl.textContent = `修改用户详情 · ${user.account}`;
-        updateDrawerHeaderTags(userEditDrawer, user);
+        if (titleEl) titleEl.textContent = `编辑用户 · ${user.account}`;
 
-        // Update status badge
-        const badge = document.getElementById('ued-status-badge');
-        if (badge) {
-            badge.className = 'ued-status-badge';
-            let statusText = user.status || '正常';
-            if (statusText === '正常' || statusText === 'normal') {
-                badge.classList.add('ued-status-normal');
-                badge.innerHTML = '<span class="ued-status-dot"></span>目前状态：正常';
-            } else if (statusText === '冻结' || statusText === '冻结') {
-                badge.classList.add('ued-status-frozen');
-                badge.innerHTML = '<span class="ued-status-dot"></span>目前状态：冻结';
-            } else {
-                badge.classList.add('ued-status-disabled');
-                badge.innerHTML = '<span class="ued-status-dot"></span>目前状态：停用';
+        // 1. 状态 (待审核、正常、冻结、停用)
+        const currentStatus = user.status || '正常';
+        if (editFormStatusEl) editFormStatusEl.value = currentStatus;
+        updateUedStatusBadge(currentStatus);
+
+        // 2. 登录密码 (文字输入框)
+        const pwdIn = document.getElementById('editFormPassword');
+        if (pwdIn) pwdIn.value = (window.dataMode === 'nodata') ? '-' : '';
+
+        // 3. 真实姓名 (文字输入框)
+        const realNameIn = document.getElementById('editFormRealName');
+        if (realNameIn) realNameIn.value = (window.dataMode === 'nodata' || user.realName === '-') ? '-' : (user.realName || '-');
+
+        // 4. 生日：年月日下拉选单 (YYYY、MM、DD)
+        const birthYearSel = document.getElementById('editFormBirthYear');
+        const birthMonthSel = document.getElementById('editFormBirthMonth');
+        const birthDaySel = document.getElementById('editFormBirthDay');
+        const birthdayIn = document.getElementById('editFormBirthday');
+
+        let bYear = '1991', bMonth = '02', bDay = '11';
+        if (user.birthday && user.birthday !== '-') {
+            const parts = user.birthday.split('-');
+            if (parts.length === 3) {
+                bYear = parts[0]; bMonth = parts[1]; bDay = parts[2];
+            }
+        } else if (user.date && user.date !== '-') {
+            const parts = user.date.split(' ')[0].split('-');
+            if (parts.length === 3) {
+                bYear = parts[0]; bMonth = parts[1]; bDay = parts[2];
             }
         }
 
-        // Update status radio buttons highlight
-        const radioLabels = document.querySelectorAll('#ued-status-radio .ued-radio-btn');
-        radioLabels.forEach(l => l.classList.remove('ued-radio-active'));
+        if (window.dataMode === 'nodata') {
+            if (birthYearSel) birthYearSel.value = '';
+            if (birthMonthSel) birthMonthSel.value = '';
+            if (birthDaySel) birthDaySel.value = '';
+            if (birthdayIn) birthdayIn.value = '-';
+        } else {
+            if (birthYearSel) birthYearSel.value = bYear;
+            if (birthMonthSel) birthMonthSel.value = bMonth;
+            if (birthDaySel) birthDaySel.value = bDay;
+            if (birthdayIn) birthdayIn.value = `${bYear}-${bMonth}-${bDay}`;
+        }
 
-        // Account
-        const accountEl = document.getElementById('editFormAccount');
-        if (accountEl) accountEl.value = user.account;
-
-        // Member type
-        const memberTypeEl = document.getElementById('editFormMemberType');
-        if (memberTypeEl) memberTypeEl.value = user.userType || '代理会员';
-
-        // Status radios
-        const statusRadios = document.querySelectorAll('input[name="editStatus"]');
-        statusRadios.forEach(r => {
-            r.checked = (r.value === (user.status || '正常'));
-        });
-
-        // Inputs
-        const realNameIn = document.getElementById('editFormRealName');
-        if (realNameIn) realNameIn.value = (window.dataMode === 'nodata' || user.realName === '-') ? '-' : user.realName;
-
-        const birthdayIn = document.getElementById('editFormBirthday');
-        if (birthdayIn) birthdayIn.value = (window.dataMode === 'nodata' || !user.birthday || user.birthday === '-') ? '' : user.birthday;
-
+        // 5. 昵称：文字输入框（预设带有 ad***13）
         const nicknameIn = document.getElementById('editFormNickname');
-        if (nicknameIn) nicknameIn.value = (window.dataMode === 'nodata' || user.nickname === '-') ? '-' : user.nickname;
+        if (nicknameIn) {
+            if (window.dataMode === 'nodata') {
+                nicknameIn.value = '-';
+            } else {
+                nicknameIn.value = (user.nickname && user.nickname !== '-') ? user.nickname : 'ad***13';
+            }
+        }
 
-        const phoneIn = document.getElementById('editFormPhone');
-        if (phoneIn) phoneIn.value = (window.dataMode === 'nodata' || user.phone === '未绑定') ? '-' : user.phone;
-
+        // 6. 会员层级：下拉选单（预设为 默认层）
         const payLevelSel = document.getElementById('editFormPayLevel');
         if (payLevelSel) {
             if (window.dataMode === 'nodata') {
@@ -3173,35 +3839,168 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        // 7. 电话前缀国码：下拉选单（预设为 +86）
+        const phonePrefixSel = document.getElementById('editFormPhonePrefix');
+        if (phonePrefixSel) {
+            phonePrefixSel.value = (window.dataMode === 'nodata') ? '-' : (user.phonePrefix || '+86');
+        }
+
+        // 8. 手机号：文字输入框
+        const maskHelper = window.getMaskedValue || ((v) => v);
+        const phoneIn = document.getElementById('editFormPhone');
+        if (phoneIn) {
+            const rawPhone = (window.dataMode === 'nodata') ? '-' : (user.phone && user.phone !== '未绑定' && user.phone !== '未验证' ? user.phone : '13800138000');
+            phoneIn.setAttribute('data-raw', rawPhone);
+            phoneIn.setAttribute('data-masked', maskHelper(rawPhone, 'phone'));
+            phoneIn.value = rawPhone;
+        }
+
+        // 9. CPF：文字输入框
+        const cpfIn = document.getElementById('editFormCpf');
+        if (cpfIn) {
+            cpfIn.value = (window.dataMode === 'nodata') ? '-' : (user.cpf || '123.456.789-00');
+        }
+
+        // 10. 邮箱：文字输入框
+        const emailIn = document.getElementById('editFormEmail');
+        if (emailIn) {
+            const rawEmail = (window.dataMode === 'nodata') ? '-' : (user.email || 'user1@example.com');
+            emailIn.setAttribute('data-raw', rawEmail);
+            emailIn.setAttribute('data-masked', maskHelper(rawEmail, 'email'));
+            emailIn.value = rawEmail;
+        }
+
+        // 11. 地址：文字输入框
+        const addressIn = document.getElementById('editFormAddress');
+        if (addressIn) {
+            addressIn.value = (window.dataMode === 'nodata') ? '-' : (user.address || '朝阳区建国门外大街1号');
+        }
+
+        // 12. 省：文字输入框
+        const provIn = document.getElementById('editFormProvince');
+        if (provIn) {
+            provIn.value = (window.dataMode === 'nodata') ? '-' : (user.province || '北京市');
+        }
+
+        // 13. 城市：文字输入框
+        const cityIn = document.getElementById('editFormCity');
+        if (cityIn) {
+            cityIn.value = (window.dataMode === 'nodata') ? '-' : (user.city || '北京市');
+        }
+
+        // 14. 邮递区号：文字输入框
+        const zipIn = document.getElementById('editFormZipCode');
+        if (zipIn) {
+            zipIn.value = (window.dataMode === 'nodata') ? '-' : (user.zipCode || '100000');
+        }
+
+        // 15. QQ：文字输入框
+        const qqIn = document.getElementById('editFormQQ');
+        if (qqIn) {
+            const rawQQ = (window.dataMode === 'nodata') ? '-' : (user.qq || '123451');
+            qqIn.setAttribute('data-raw', rawQQ);
+            qqIn.setAttribute('data-masked', maskHelper(rawQQ, 'qq'));
+            qqIn.value = rawQQ;
+        }
+
+        // 16. 微信：文字输入框
+        const wechatIn = document.getElementById('editFormWechat');
+        if (wechatIn) {
+            const rawWechat = (window.dataMode === 'nodata') ? '-' : (user.wechat || (user.account === 'mingv0717001' ? 'wx_mingv0717001' : `wx_${user.account}`));
+            wechatIn.setAttribute('data-raw', rawWechat);
+            wechatIn.setAttribute('data-masked', maskHelper(rawWechat, 'wechat'));
+            wechatIn.value = rawWechat;
+        }
+
+        // 17. zalo：文字输入框
+        const zaloIn = document.getElementById('editFormZalo');
+        if (zaloIn) {
+            const rawZalo = (window.dataMode === 'nodata') ? '-' : (user.zalo || (user.account === 'mingv0717001' ? 'zalo_mingv0717001' : `zalo_${user.account}`));
+            zaloIn.setAttribute('data-raw', rawZalo);
+            zaloIn.setAttribute('data-masked', maskHelper(rawZalo, 'zalo'));
+            zaloIn.value = rawZalo;
+        }
+
+        // 18. whatsapp：文字输入框
+        const whatsappIn = document.getElementById('editFormWhatsapp');
+        if (whatsappIn) {
+            const rawWa = (window.dataMode === 'nodata') ? '-' : (user.whatsapp || '+1234567891');
+            whatsappIn.setAttribute('data-raw', rawWa);
+            whatsappIn.setAttribute('data-masked', maskHelper(rawWa, 'wa'));
+            whatsappIn.value = rawWa;
+        }
+
+        // 19. telegram：文字输入框
+        const telegramIn = document.getElementById('editFormTelegram');
+        if (telegramIn) {
+            const rawTg = (window.dataMode === 'nodata') ? '-' : (user.telegram || (user.account === 'mingv0717001' ? '@tg_mingv0717001' : `@tg_${user.account}`));
+            telegramIn.setAttribute('data-raw', rawTg);
+            telegramIn.setAttribute('data-masked', maskHelper(rawTg, 'tg'));
+            telegramIn.value = rawTg;
+        }
+
+        // 20. facebook：文字输入框
+        const facebookIn = document.getElementById('editFormFacebook');
+        if (facebookIn) {
+            const rawFb = (window.dataMode === 'nodata') ? '-' : (user.facebook || (user.account === 'mingv0717001' ? 'fb_mingv0717001' : `fb_${user.account}`));
+            facebookIn.setAttribute('data-raw', rawFb);
+            facebookIn.setAttribute('data-masked', maskHelper(rawFb, 'fb'));
+            facebookIn.value = rawFb;
+        }
+
+        // 21. line：文字输入框
+        const lineIn = document.getElementById('editFormLine');
+        if (lineIn) {
+            lineIn.value = (window.dataMode === 'nodata') ? '-' : (user.line || `line_${user.account}`);
+        }
+
+        // 22. instagram：文字输入框
+        const instagramIn = document.getElementById('editFormInstagram');
+        if (instagramIn) {
+            instagramIn.value = (window.dataMode === 'nodata') ? '-' : (user.instagram || `ig_${user.account}`);
+        }
+
+        // 23. tiktok：文字输入框
+        const tiktokIn = document.getElementById('editFormTiktok');
+        if (tiktokIn) {
+            tiktokIn.value = (window.dataMode === 'nodata') ? '-' : (user.tiktok || `@${user.account}_tiktok`);
+        }
+
+        // 24. twitter：文字输入框
+        const twitterIn = document.getElementById('editFormTwitter');
+        if (twitterIn) {
+            twitterIn.value = (window.dataMode === 'nodata') ? '-' : (user.twitter || `@${user.account}_tw`);
+        }
+
+        // 25. 谷歌帐号：显示「暂未绑定」
+        const googleAccountEl = document.getElementById('editFormGoogleAccount');
+        if (googleAccountEl) {
+            googleAccountEl.textContent = (window.dataMode === 'nodata') ? '-' : '暂未绑定';
+        }
+
+        // Hidden / Compatibility fields
+        const accountEl = document.getElementById('editFormAccount');
+        if (accountEl) accountEl.value = user.account;
+        const memberTypeEl = document.getElementById('editFormMemberType');
+        if (memberTypeEl) memberTypeEl.value = user.userType || '代理会员';
         const levelSel = document.getElementById('editFormLevel');
-        if (levelSel) {
-            if (window.dataMode === 'nodata') {
-                if (!Array.from(levelSel.options).some(o => o.value === '-')) {
-                    levelSel.add(new Option('-', '-'));
-                }
-                levelSel.value = '-';
-            } else {
-                levelSel.value = user.level || '普通会员';
-            }
-        }
-
+        if (levelSel) levelSel.value = user.level || '普通会员';
         const remarkIn = document.getElementById('editFormRemark');
-        if (remarkIn) remarkIn.value = (window.dataMode === 'nodata' || user.remark === '-') ? '-' : user.remark;
+        if (remarkIn) remarkIn.value = (window.dataMode === 'nodata' || user.remark === '-') ? '-' : (user.remark || '');
 
-        // Handle extra hardcoded inputs for nodata mode
-        if (window.dataMode === 'nodata') {
-            const extraInputs = ['editFormEmail', 'editFormQQ', 'editFormWechat', 'editFormZalo', 'editFormWhatsapp', 'editFormTelegram', 'editFormFacebook'];
-            extraInputs.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.value = '-';
-            });
-
-            // Clear withdraw info content in edit modal
-            const withdrawTableBody = document.getElementById('withdrawTableBody');
-            if (withdrawTableBody) {
-                withdrawTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #94a3b8; padding: 32px 0;">-</td></tr>`;
-            }
+        if (window.updateSensitiveFields) {
+            window.updateSensitiveFields(window.currentPermissions);
         }
+
+        // Nodata mode handling for withdraw table
+        const withdrawTableBody = document.getElementById('withdrawTableBody');
+    if (withdrawTableBody) {
+        if (window.dataMode === 'nodata') {
+            withdrawTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #94a3b8; padding: 32px 0;">-</td></tr>`;
+        } else if (withdrawTableBody.children.length === 1 && withdrawTableBody.children[0].textContent.trim() === '-') {
+            withdrawTableBody.innerHTML = getDefaultWithdrawRowsHtml();
+        }
+    }
 
         // Reset to Basic Tab on open
         const basicTabBtn = document.querySelector('.user-edit-tab-item[data-tab="basic"]');
@@ -3211,6 +4010,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (overlay) overlay.classList.add('active');
     }
 
+    
     /* =========================================================
        查看详情 Drawer Logic
        ========================================================= */
@@ -3244,28 +4044,95 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // 会员信息：基本资料 / 联络方式 / 备注 follow the user's own data (missing fields show '-')
+        // 会员信息：基本资料 / 联络与地址资讯 / 社群与通讯软件 / 备注资讯
         const dtlVal = (v, emptyVals = []) => (window.dataMode === 'nodata' || v === undefined || v === null || v === '' || v === '-' || emptyVals.includes(v)) ? '-' : v;
+        const isMing = user.account === 'mingv0717001';
+
+        const rawPhone = dtlVal(isMing ? '13800138000' : (user.phone && user.phone !== '未绑定' && user.phone !== '未验证' ? user.phone : '13800138000'));
+        const rawEmail = dtlVal(isMing ? 'user1@example.com' : (user.email || 'user1@example.com'));
+        const rawQQ = dtlVal(isMing ? '123451' : (user.qq || '123451'));
+        const rawWechat = dtlVal(isMing ? 'wx_mingv0717001' : (user.wechat || 'wx_mingv0717001'));
+        const rawZalo = dtlVal(isMing ? 'zalo_mingv0717001' : (user.zalo || 'zalo_mingv0717001'));
+        const rawFacebook = dtlVal(isMing ? 'fb_mingv0717001' : (user.facebook || 'fb_mingv0717001'));
+        const rawWhatsapp = dtlVal(isMing ? '+1234567891' : (user.whatsapp || '+1234567891'));
+        const rawTelegram = dtlVal(isMing ? '@tg_mingv0717001' : (user.telegram || '@tg_mingv0717001'));
+        const rawSecurityQuestion = dtlVal(user.securityQuestion || '您最喜欢的宠物名字？');
+        const rawSecurityAnswer = dtlVal(user.securityAnswer || '我的宠物');
+
         const dtlFields = {
-            dtlNickname: dtlVal(user.nickname),
-            dtlAccount: dtlVal(user.account),
-            dtlRealName: dtlVal(user.realName),
-            dtlBirthday: dtlVal(user.birthday),
-            dtlPhone: dtlVal(user.phone, ['未绑定']),
-            dtlEmail: dtlVal(user.email),
-            dtlQQ: dtlVal(user.qq),
-            dtlWechat: dtlVal(user.wechat),
-            dtlZalo: dtlVal(user.zalo),
-            dtlWhatsapp: dtlVal(user.whatsapp),
-            dtlTelegram: dtlVal(user.telegram),
-            dtlFacebook: dtlVal(user.facebook),
-            dtlRemark: dtlVal(user.remark),
-            dtlFollowRemark: dtlVal(user.followRemark) === '-' ? '暂无回访备注' : user.followRemark
+            dtlNickname: (window.dataMode === 'nodata' || !user.nickname || user.nickname === '-' || user.nickname === '无数据' || user.nickname === 'N/A') ? '<span class="data-na" style="color: #94a3b8;">N/A</span>' : (isMing ? 'mingv0717001' : (user.nickname || user.account)),
+            dtlAccount: (window.dataMode === 'nodata' || !user.account || user.account === '-' || user.account === '无数据' || user.account === 'N/A') ? '<span class="data-na" style="color: #94a3b8;">N/A</span>' : user.account,
+            dtlRealName: (window.dataMode === 'nodata' || !user.realName || user.realName === '-' || user.realName === '无数据' || user.realName === 'N/A') ? '<span class="data-na" style="color: #94a3b8;">N/A</span>' : (isMing ? '李小明' : user.realName),
+            dtlBirthday: dtlVal(isMing ? '1991-02-11' : (user.birthday || '-')),
+            dtlPhoneCode: dtlVal(isMing ? '+55' : (user.phoneCode || '-')),
+            dtlPhone: rawPhone,
+            dtlEmail: rawEmail,
+            dtlAddress: dtlVal(user.address),
+            dtlProvince: dtlVal(user.province),
+            dtlCity: dtlVal(user.city),
+            dtlZipCode: dtlVal(user.zipCode),
+            dtlQQ: rawQQ,
+            dtlWechat: rawWechat,
+            dtlZalo: rawZalo,
+            dtlFacebook: rawFacebook,
+            dtlWhatsapp: rawWhatsapp,
+            dtlTelegram: rawTelegram,
+            dtlSecurityQuestion: rawSecurityQuestion,
+            dtlSecurityAnswer: rawSecurityAnswer,
+            dtlRemark: (window.dataMode === 'nodata' || !user.remark || user.remark === '-' || user.remark === '暂无备注' || user.remark === '无数据' || user.remark === 'N/A') ? '<span class="data-na" style="color: #94a3b8;">N/A</span>' : user.remark,
+            dtlFollowRemark: (window.dataMode === 'nodata' || !user.followRemark || user.followRemark === '-' || user.followRemark === '暂无回访备注' || user.followRemark === '无数据' || user.followRemark === 'N/A') ? '<span class="data-na" style="color: #94a3b8;">N/A</span>' : user.followRemark
         };
+
+        const maskHelper = window.getMaskedValue || ((v) => v);
+        const sensitiveFieldTypes = {
+            dtlPhone: 'phone',
+            dtlEmail: 'email',
+            dtlQQ: 'qq',
+            dtlWechat: 'wechat',
+            dtlZalo: 'zalo',
+            dtlFacebook: 'fb',
+            dtlWhatsapp: 'wa',
+            dtlTelegram: 'tg',
+            dtlSecurityAnswer: 'qa'
+        };
+
         Object.entries(dtlFields).forEach(([id, val]) => {
             const el = document.getElementById(id);
-            if (el) el.textContent = val;
+            if (el) {
+                if (typeof val === 'string' && val.includes('<')) {
+                    el.innerHTML = val;
+                } else {
+                    el.textContent = val;
+                }
+                if (sensitiveFieldTypes[id]) {
+                    const fType = sensitiveFieldTypes[id];
+                    el.setAttribute('data-raw', val);
+                    el.setAttribute('data-masked', maskHelper(val, fType));
+                }
+            }
         });
+
+        // 提现信息卡片数据绑定与脱敏属性设定
+        const wdrBankSpan = document.getElementById('dtlWdrBank');
+        if (wdrBankSpan) {
+            const rawBank = dtlVal(user.bankCard || '6222021234561234');
+            wdrBankSpan.setAttribute('data-raw', rawBank);
+            wdrBankSpan.setAttribute('data-masked', maskHelper(rawBank, 'wdr'));
+        }
+        const wdrCryptoSpan = document.getElementById('dtlWdrCrypto');
+        if (wdrCryptoSpan) {
+            const rawCrypto = dtlVal(user.walletAddress || 'TR7NHqJEgqST6kPjnyuYqN4e1Rj');
+            wdrCryptoSpan.setAttribute('data-raw', rawCrypto);
+            wdrCryptoSpan.setAttribute('data-masked', maskHelper(rawCrypto, 'wdr'));
+        }
+
+        // 即时应用目前启用的权限状态（脱敏或完整显示）
+        if (window.updateSensitiveFields) {
+            window.updateSensitiveFields(window.currentPermissions);
+        }
+
+        const loginDeviceTypeEl = document.getElementById('dtlLoginDeviceType');
+        if (loginDeviceTypeEl) loginDeviceTypeEl.textContent = dtlVal(user.deviceType || 'iOS');
 
         // 最新登入纪录：IP / 时间 / 同IP人数 follow the user's own data (so the IP shown can be found via the 登录IP filter)
         if (window.dataMode !== 'nodata') {
@@ -3302,9 +4169,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.dataMode === 'nodata') {
             const readonlyTexts = userDetailDrawer.querySelectorAll('.ued-readonly-text');
             readonlyTexts.forEach(el => {
-                // If it doesn't contain an icon (like the avatar does), replace with '-'
-                if (!el.querySelector('i')) {
-                    el.innerText = '-';
+                if (['dtlAccount', 'dtlRealName', 'dtlNickname', 'dtlRemark', 'dtlFollowRemark'].includes(el.id)) {
+                    el.innerHTML = '<span class="data-na" style="color: #94a3b8;">N/A</span>';
+                    return;
+                }
+
+                const span = el.querySelector('span');
+                if (span) span.textContent = '-';
+                if (!el.querySelector('.ph-user')) {
+                    if (!span) el.innerText = '-';
                 }
             });
             // Also override unbind boxes if they are hardcoded in the view modal
@@ -3347,6 +4220,7 @@ document.addEventListener('DOMContentLoaded', () => {
         userDetailDrawer.classList.add('active');
         if (overlay) overlay.classList.add('active');
     }
+    window.openUserDetailModal = openUserDetailModal;
 
     function closeUserDetailDrawer() {
         if (userDetailDrawer) userDetailDrawer.classList.remove('active');
@@ -3537,12 +4411,27 @@ document.addEventListener('DOMContentLoaded', () => {
         // Ignored if it's nested trigger, handled above
         if (e.target.closest('.nested-trigger')) return;
 
-        // 复制：表格内可复制文字（用户ID / 会员名等）
-        const copyable = e.target.closest('.copyable-text[data-copy]');
-        if (copyable) {
+        // 复制：表格内可复制文字（用户ID / 会员名等）与复制按钮
+        const copyTarget = e.target.closest('.btn-copy-icon[data-copy], .copyable-text[data-copy]');
+        if (copyTarget) {
             e.preventDefault();
             e.stopPropagation();
-            copyWithToast(copyable.dataset.copy);
+            const textToCopy = copyTarget.dataset.copy;
+            const label = copyTarget.dataset.label || '';
+            const btn = copyTarget.classList.contains('btn-copy-icon') ? copyTarget : copyTarget.querySelector('.btn-copy-icon');
+            if (btn) {
+                const icon = btn.querySelector('i');
+                if (icon) {
+                    const originalClass = icon.className;
+                    icon.className = 'ph-bold ph-check';
+                    btn.classList.add('copied');
+                    setTimeout(() => {
+                        icon.className = originalClass;
+                        btn.classList.remove('copied');
+                    }, 1200);
+                }
+            }
+            copyWithToast(textToCopy, label);
             return;
         }
 
@@ -3582,27 +4471,132 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             showToast('即将跳转至团队页面...');
         }
-
-        const walletLink = e.target.closest('.wallet-detail-link');
-        if (walletLink) {
-            e.preventDefault();
-            const title = walletLink.getAttribute('data-title');
-            const wallet = walletLink.getAttribute('data-wallet');
-            const amount = walletLink.getAttribute('data-amount');
-            if (typeof openWalletDetailModal === 'function') {
-                openWalletDetailModal(title, wallet, amount);
-            }
-        }
     });
 
     if (btnUserEditClose) btnUserEditClose.addEventListener('click', closeUserEditDrawer);
     if (btnUserEditCancel) btnUserEditCancel.addEventListener('click', closeUserEditDrawer);
     if (btnUserEditSave) {
         btnUserEditSave.addEventListener('click', () => {
+            if (currentEditingUid) {
+                const u = (mockUsers || []).find(x => x.uid === currentEditingUid);
+                if (u) {
+                    const st = document.getElementById('editFormStatus');
+                    if (st) u.status = st.value;
+                    const nick = document.getElementById('editFormNickname');
+                    if (nick && nick.value !== '-') u.nickname = nick.value;
+                    const real = document.getElementById('editFormRealName');
+                    if (real && real.value !== '-') u.realName = real.value;
+                    const ph = document.getElementById('editFormPhone');
+                    if (ph && ph.value !== '-') u.phone = ph.value;
+                    const pay = document.getElementById('editFormPayLevel');
+                    if (pay && pay.value !== '-') u.payLevel = pay.value;
+                    if (typeof renderUsersTable === 'function') renderUsersTable();
+                }
+            }
             showToast('用户详情已更新！');
             closeUserEditDrawer();
         });
     }
+
+    // Member Settings Tab Interactions
+    const toggleWithdrawPwdBtn = document.getElementById('toggleWithdrawPwd');
+    const settingWithdrawPwdInput = document.getElementById('settingWithdrawPassword');
+    if (toggleWithdrawPwdBtn && settingWithdrawPwdInput) {
+        toggleWithdrawPwdBtn.addEventListener('click', () => {
+            if (settingWithdrawPwdInput.type === 'password') {
+                settingWithdrawPwdInput.type = 'text';
+                toggleWithdrawPwdBtn.className = 'ph ph-eye toggle-password-visibility';
+            } else {
+                settingWithdrawPwdInput.type = 'password';
+                toggleWithdrawPwdBtn.className = 'ph ph-eye-slash toggle-password-visibility';
+            }
+        });
+    }
+
+    const btnClearPwdError = document.getElementById('btnClearPwdError');
+    if (btnClearPwdError) {
+        btnClearPwdError.addEventListener('click', () => {
+            const el = document.getElementById('displayPwdErrorCount');
+            if (el) el.textContent = '0次';
+            showToast('今日密码错误次数已清除');
+        });
+    }
+
+    const btnClearFundPwdError = document.getElementById('btnClearFundPwdError');
+    if (btnClearFundPwdError) {
+        btnClearFundPwdError.addEventListener('click', () => {
+            const el = document.getElementById('displayFundPwdErrorCount');
+            if (el) el.textContent = '0次';
+            showToast('今日资金密码错误数已清除');
+        });
+    }
+
+    
+    // =========================================================
+    // 停用会员确认弹窗 (Disable User Confirm Modal)
+    // =========================================================
+    let targetDisableUid = null;
+    let targetDisableAccount = null;
+
+    function openDisableUserModal(uid, account) {
+        targetDisableUid = uid;
+        targetDisableAccount = account;
+        const modal = document.getElementById('disableUserConfirmModal');
+        const promptText = document.getElementById('disableUserPromptText');
+        if (promptText) {
+            promptText.textContent = `确定要停用会员 ${account} 吗？`;
+        }
+        if (modal) modal.classList.add('show');
+    }
+
+    function closeDisableUserModal() {
+        const modal = document.getElementById('disableUserConfirmModal');
+        if (modal) modal.classList.remove('show');
+        targetDisableUid = null;
+        targetDisableAccount = null;
+    }
+
+    const btnDisableUserClose = document.getElementById('btnDisableUserClose');
+    if (btnDisableUserClose) btnDisableUserClose.addEventListener('click', closeDisableUserModal);
+
+    const btnDisableUserCancel = document.getElementById('btnDisableUserCancel');
+    if (btnDisableUserCancel) btnDisableUserCancel.addEventListener('click', closeDisableUserModal);
+
+    const btnDisableUserConfirm = document.getElementById('btnDisableUserConfirm');
+    if (btnDisableUserConfirm) {
+        btnDisableUserConfirm.addEventListener('click', () => {
+            if (targetDisableUid || targetDisableAccount) {
+                const user = (mockUsers || []).find(u => u.uid === targetDisableUid || u.account === targetDisableAccount);
+                if (user) {
+                    user.status = '停用';
+                }
+                showToast(`已停用会员 ${targetDisableAccount}！`);
+                if (typeof renderUsersTable === 'function') renderUsersTable();
+            }
+            closeDisableUserModal();
+        });
+    }
+
+    const disableUserModal = document.getElementById('disableUserConfirmModal');
+    if (disableUserModal) {
+        disableUserModal.addEventListener('click', (e) => {
+            if (e.target === disableUserModal) {
+                closeDisableUserModal();
+            }
+        });
+    }
+
+    // Event delegation for disable user icon click
+    document.addEventListener('click', (e) => {
+        const disableBtn = e.target.closest('.btn-disable-user-icon');
+        if (disableBtn) {
+            e.stopPropagation();
+            e.preventDefault();
+            const uid = disableBtn.getAttribute('data-uid');
+            const account = disableBtn.getAttribute('data-account');
+            openDisableUserModal(uid, account);
+        }
+    });
 
     // Toast Function
     function showToast(message) {
@@ -3799,6 +4793,47 @@ document.addEventListener('DOMContentLoaded', () => {
         btnToggleStats.addEventListener('click', () => {
             bottomStatsBar.classList.toggle('collapsed');
             document.body.classList.toggle('stats-collapsed');
+        });
+    }
+
+    // Toggle stat balance visibility (mask/unmask)
+    if (bottomStatsBar) {
+        bottomStatsBar.querySelectorAll('.stat-eye-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const targetId = btn.getAttribute('data-target');
+                const targetEl = document.getElementById(targetId);
+                if (!targetEl) return;
+                if (targetEl.textContent.trim() === '-') return;
+
+                const icon = btn.querySelector('i');
+                const textSpan = btn.querySelector('.btn-text');
+                const isCurrentlyMasked = targetEl.textContent.trim() === '***' || targetEl.textContent.trim() === '****' || !targetEl.classList.contains('unmasked');
+
+                if (isCurrentlyMasked) {
+                    targetEl.textContent = targetEl.getAttribute('data-raw') || targetEl.textContent;
+                    targetEl.classList.add('unmasked');
+                    btn.classList.add('unmasked');
+                    if (icon) {
+                        icon.className = 'ph ph-eye-slash';
+                    }
+                    if (textSpan) {
+                        textSpan.textContent = '';
+                    }
+                    btn.setAttribute('title', '点击隐藏金额');
+                } else {
+                    targetEl.textContent = '***';
+                    targetEl.classList.remove('unmasked');
+                    btn.classList.remove('unmasked');
+                    if (icon) {
+                        icon.className = 'ph ph-eye';
+                    }
+                    if (textSpan) {
+                        textSpan.textContent = '';
+                    }
+                    btn.setAttribute('title', '点击显示金额');
+                }
+            });
         });
     }
 
@@ -4026,25 +5061,28 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 'ds_memberType', label: '会员类型', category: '基本资料' },
         { id: 'ds_level', label: '等级', category: '基本资料' },
         { id: 'ds_regMode', label: '注册模式', category: '基本资料' },
-        { id: 'ds_nickname', label: '暱称', category: '基本资料' },
+        { id: 'ds_nickname', label: '昵称', category: '基本资料' },
         { id: 'ds_phone', label: '手机号', category: '基本资料' },
-        { id: 'currency', label: '主钱包币种', category: '额度' },
+        { id: 'ds_deviceType', label: '设备类型', category: '基本资料' },
+        { id: 'country', label: '国家', category: '基本资料' },
+        { id: 'offlineDays', label: '离开天数', category: '基本资料', sortable: true },
+        { id: 'currency', label: '用户币别', category: '额度' },
         { id: 'availableCredit', label: '可用额度', category: '额度', sortable: true },
         { id: 'thirdBal', label: '三方余额', category: '额度', sortable: true },
-        { id: 'ds_depTotal_main', label: '存款总额', category: '存取款资料', group: '主钱包', tag: '主钱包', tagColor: 'blue', sortable: true },
-        { id: 'ds_depCount_main', label: '存款次数', category: '存取款资料', group: '主钱包', tag: '主钱包', tagColor: 'blue' },
-        { id: 'ds_wdrTotal_main', label: '取款总额', category: '存取款资料', group: '主钱包', tag: '主钱包', tagColor: 'blue', sortable: true },
-        { id: 'ds_wdrCount_main', label: '取款次数', category: '存取款资料', group: '主钱包', tag: '主钱包', tagColor: 'blue' },
-        { id: 'ds_wdrFee_main', label: '提款预扣金额', category: '存取款资料', group: '主钱包', tag: '主钱包', tagColor: 'blue', sortable: true },
-        { id: 'ds_sysAdd_main', label: '后台加款总额', category: '存取款资料', group: '主钱包', tag: '主钱包', tagColor: 'blue', sortable: true },
-        { id: 'ds_sysSub_main', label: '后台扣款总额', category: '存取款资料', group: '主钱包', tag: '主钱包', tagColor: 'blue', sortable: true },
-        { id: 'ds_depTotal_summary', label: '存款总额', category: '存取款资料', group: '汇总 USDT', tag: '汇总', tagColor: 'purple', sortable: true },
-        { id: 'ds_depCount_summary', label: '存款次数', category: '存取款资料', group: '汇总 USDT', tag: '汇总', tagColor: 'purple' },
-        { id: 'ds_wdrTotal_summary', label: '取款总额', category: '存取款资料', group: '汇总 USDT', tag: '汇总', tagColor: 'purple', sortable: true },
-        { id: 'ds_wdrCount_summary', label: '取款次数', category: '存取款资料', group: '汇总 USDT', tag: '汇总', tagColor: 'purple' },
-        { id: 'ds_wdrFee_summary', label: '提款预扣金额', category: '存取款资料', group: '汇总 USDT', tag: '汇总', tagColor: 'purple', sortable: true },
-        { id: 'ds_sysAdd_summary', label: '后台加款总额', category: '存取款资料', group: '汇总 USDT', tag: '汇总', tagColor: 'purple', sortable: true },
-        { id: 'ds_sysSub_summary', label: '后台扣款总额', category: '存取款资料', group: '汇总 USDT', tag: '汇总', tagColor: 'purple', sortable: true },
+        { id: 'ds_depTotal_main', label: '存款总额', category: '存取款资料', group: '存取款', sortable: true },
+        { id: 'ds_depCount_main', label: '存款次数', category: '存取款资料', group: '存取款' },
+        { id: 'ds_wdrTotal_main', label: '提款总额', category: '存取款资料', group: '存取款', sortable: true },
+        { id: 'ds_wdrCount_main', label: '提款次数', category: '存取款资料', group: '存取款' },
+        { id: 'ds_sysAdd_main', label: '后台加款总额', category: '存取款资料', group: '存取款', sortable: true },
+        { id: 'ds_sysSub_main', label: '后台扣款总额', category: '存取款资料', group: '存取款', sortable: true },
+        { id: 'ds_sysActAdd_main', label: '后台活动加款总额', category: '存取款资料', group: '存取款', sortable: true },
+        { id: 'ds_sysAddCount_main', label: '后台加款次数', category: '存取款资料', group: '存取款' },
+        { id: 'ds_sysSubCount_main', label: '后台扣款次数', category: '存取款资料', group: '存取款' },
+        { id: 'ds_sysActAddCount_main', label: '后台活动加款次数', category: '存取款资料', group: '存取款' },
+        { id: 'ds_directDepTotal_main', label: '免提直充充值总额', category: '存取款资料', group: '存取款', sortable: true },
+        { id: 'ds_directDepCount_main', label: '免提直充充值次数', category: '存取款资料', group: '存取款' },
+        { id: 'ds_directWdrTotal_main', label: '免提直充提款总额', category: '存取款资料', group: '存取款', sortable: true },
+        { id: 'ds_directWdrCount_main', label: '免提直充提款次数', category: '存取款资料', group: '存取款' },
         { id: 'ds_growth', label: '成长值', category: '成长与积分' },
         { id: 'ds_vipGrowth', label: 'VIP成长值', category: '成长与积分' },
         { id: 'ds_points', label: '会员积分', category: '成长与积分' },
@@ -4054,8 +5092,6 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 'ds_commBal', label: '佣金余额', category: '推荐关系', sortable: true },
         { id: 'ds_balTreas', label: '余额', category: '余额宝', sortable: true },
         { id: 'ds_balInt', label: '利息', category: '余额宝', sortable: true },
-        { id: 'ds_debt', label: '欠款', category: '信贷', sortable: true },
-        { id: 'ds_creditVal', label: '信用值', category: '信贷', sortable: true },
         { id: 'ds_tags', label: '用户标签', category: '用户标签' },
         { id: 'ds_remark', label: '备注', category: '其他' },
         { id: 'ds_followup', label: '回访备注', category: '其他' },
@@ -4078,21 +5114,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 case 'ds_regMode': val = user.registerMode || '一般注册'; break;
                 case 'ds_nickname': val = renderDataState(user.nickname, 'na'); break;
                 case 'ds_phone': val = renderDataState(user.phone, 'phone'); break;
+                case 'ds_deviceType': val = window.dataMode === 'nodata' ? '-' : (user.deviceType || 'iOS'); break;
+                case 'country': val = window.dataMode === 'nodata' || !user.country || user.country === '-' ? '-' : `<span class="country-highlight-val">${user.country || '中国'}</span>`; break;
                 case 'currency': val = mainCurrencyText(user); break;
-                case 'ds_depTotal_main': val = window.renderClickableAmount('存款总额', user.deposit, user.currency, 'color: #4f46e5;', false); extraClass = 'cell-money text-blue'; break;
-                case 'ds_depCount_main': val = user.depositCount || '0'; break;
-                case 'ds_wdrTotal_main': val = window.renderClickableAmount('取款总额', user.withdraw, user.currency, 'color: #4f46e5;', false); extraClass = 'cell-money text-blue'; break;
-                case 'ds_wdrCount_main': val = user.withdrawCount || '0'; break;
-                case 'ds_wdrFee_main': val = window.renderClickableAmount('提款预扣金额', user.withdrawPre, user.currency, '', false); extraClass = 'cell-money'; break;
-                case 'ds_sysAdd_main': val = window.renderClickableAmount('后台加款总额', user.adminAdd || 200, user.currency, 'color: #10b981;', false); extraClass = 'cell-money text-green'; break;
-                case 'ds_sysSub_main': val = window.renderClickableAmount('后台扣款总额', user.adminDeduct || 0, user.currency, 'color: #ef4444;', false); extraClass = 'cell-money text-red'; break;
-                case 'ds_depTotal_summary': val = formatAmount(user.deposit, 'USDT'); extraClass = 'cell-money text-blue'; break;
-                case 'ds_depCount_summary': val = user.depositCount || '0'; break;
-                case 'ds_wdrTotal_summary': val = formatAmount(user.withdraw, 'USDT'); extraClass = 'cell-money text-blue'; break;
-                case 'ds_wdrCount_summary': val = user.withdrawCount || '0'; break;
-                case 'ds_wdrFee_summary': val = formatAmount(user.withdrawPre, 'USDT'); extraClass = 'cell-money'; break;
-                case 'ds_sysAdd_summary': val = window.dataMode === 'nodata' ? '-' : formatAmount(user.adminAdd || 200, 'USDT'); extraClass = 'cell-money text-green'; break;
-                case 'ds_sysSub_summary': val = window.dataMode === 'nodata' ? '-' : formatAmount(user.adminDeduct || 0, 'USDT'); extraClass = 'cell-money text-red'; break;
+                case 'ds_depTotal_main': val = window.renderClickableAmount('存款总额', user.deposit !== undefined ? user.deposit : 0, user.currency, 'color: #4f46e5;', false); extraClass = 'cell-money text-blue'; break;
+                case 'ds_depCount_main': val = window.dataMode === 'nodata' ? '-' : (user.depositCount !== undefined && user.depositCount !== '-' ? user.depositCount : '0'); break;
+                case 'ds_wdrTotal_main': val = window.renderClickableAmount('提款总额', user.withdraw !== undefined ? user.withdraw : 0, user.currency, 'color: #4f46e5;', false); extraClass = 'cell-money text-blue'; break;
+                case 'ds_wdrCount_main': val = window.dataMode === 'nodata' ? '-' : (user.withdrawCount !== undefined && user.withdrawCount !== '-' ? user.withdrawCount : '0'); break;
+                case 'ds_sysAdd_main': val = window.renderClickableAmount('后台加款总额', user.adminAdd !== undefined ? user.adminAdd : 50000, user.currency, 'color: #10b981;', false); extraClass = 'cell-money text-green'; break;
+                case 'ds_sysSub_main': val = window.renderClickableAmount('后台扣款总额', user.adminDeduct !== undefined ? user.adminDeduct : '-', user.currency, 'color: #a1a1aa;', false); extraClass = 'cell-money'; break;
+                case 'ds_sysActAdd_main': val = window.renderClickableAmount('后台活动加款总额', user.adminActAdd !== undefined ? user.adminActAdd : 0, user.currency, 'color: #10b981;', false); extraClass = 'cell-money text-green'; break;
+                case 'ds_sysAddCount_main': val = window.dataMode === 'nodata' ? '-' : (user.adminAddCount !== undefined && user.adminAddCount !== '-' ? user.adminAddCount : '1'); break;
+                case 'ds_sysSubCount_main': val = window.dataMode === 'nodata' ? '-' : (user.adminDeductCount !== undefined && user.adminDeductCount !== '-' ? user.adminDeductCount : '0'); break;
+                case 'ds_sysActAddCount_main': val = window.dataMode === 'nodata' ? '-' : (user.adminActAddCount !== undefined && user.adminActAddCount !== '-' ? user.adminActAddCount : '0'); break;
+                case 'ds_directDepTotal_main': val = window.renderClickableAmount('免提直充充值总额', user.directDepositTotal !== undefined ? user.directDepositTotal : 0, user.currency, 'color: #4f46e5;', false); extraClass = 'cell-money text-blue'; break;
+                case 'ds_directDepCount_main': val = window.dataMode === 'nodata' ? '-' : (user.directDepositCount !== undefined && user.directDepositCount !== '-' ? user.directDepositCount : '0'); break;
+                case 'ds_directWdrTotal_main': val = window.renderClickableAmount('免提直充提款总额', user.directWithdrawTotal !== undefined ? user.directWithdrawTotal : 0, user.currency, 'color: #4f46e5;', false); extraClass = 'cell-money text-blue'; break;
+                case 'ds_directWdrCount_main': val = window.dataMode === 'nodata' ? '-' : (user.directWithdrawCount !== undefined && user.directWithdrawCount !== '-' ? user.directWithdrawCount : '0'); break;
                 case 'ds_growth': val = user.growth || '0'; break;
                 case 'ds_vipGrowth': val = user.vipGrowth || '0'; break;
                 case 'ds_points': val = formatAmount(user.points, '积分'); break;
@@ -4104,9 +5142,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 case 'ds_balInt': val = window.renderClickableAmount('利息', user.interest || 35, user.currency, 'color: #10b981;', false); extraClass = 'cell-money text-green'; break;
                 case 'ds_debt': val = window.renderClickableAmount('欠款', user.arrears, user.currency, 'color: #ef4444;', false); extraClass = 'cell-money text-red'; break;
                 case 'ds_creditVal': val = formatAmount(user.creditValue, 'RMB'); extraClass = 'cell-val'; break;
-                case 'ds_tags': val = (user.tags && user.tags.length > 0) ? user.tags.map(t => `<span class="user-custom-tag tag-blue" style="max-width: 100%; overflow: hidden; text-overflow: ellipsis;" title="${t}">${t}</span>`).join(' ') : '-'; break;
-                case 'ds_remark': val = window.dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : `<span title="${user.remark || ''}">${user.remark ? (user.remark.length > 20 ? user.remark.substring(0, 20) + '...' : user.remark) : '-'}</span>`; break;
-                case 'ds_followup': val = window.dataMode === 'nodata' ? '<span class="data-na">N/A</span>' : `<span title="${user.followRemark || ''}">${user.followRemark ? (user.followRemark.length > 20 ? user.followRemark.substring(0, 20) + '...' : user.followRemark) : '-'}</span>`; break;
+                case 'ds_tags': val = (window.dataMode !== 'nodata' && user.tags && Array.isArray(user.tags) && user.tags.length > 0 && user.tags.some(t => t && t !== '-')) ? user.tags.map(t => `<span class="user-custom-tag tag-blue" style="max-width: 100%; overflow: hidden; text-overflow: ellipsis;" title="${formatTagName(t)}">${formatTagName(t)}</span>`).join(' ') : '<span class="data-empty" style="color: #94a3b8;">无数据</span>'; break;
+                case 'ds_remark': val = renderDataState(user.remark, 'remark'); break;
+                case 'ds_followup': val = renderDataState(user.followRemark, 'remark'); break;
+                case 'lastLogin': val = window.dataMode === 'nodata' ? '-' : formatNestedLastLogin(user); break;
+                case 'offlineDays': val = (window.dataMode === 'nodata' || user.offlineDays === '-' || user.offlineDays === undefined) ? '-' : (user.offlineDays + '天'); break;
+                case 'lastLoginIp': val = window.dataMode === 'nodata' ? '-' : renderDataState(user.lastLoginIp || user.ip, 'ip'); break;
+                case 'registerIp': val = window.dataMode === 'nodata' ? '-' : renderDataState(user.registerIp || user.regIp || user.ip, 'ip'); break;
             }
             return `<td class="${extraClass}" data-col="${col.id}">${val}</td>`;
         };
@@ -4122,42 +5164,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const nowVisible = dataSourceFieldVisibility[id] !== false;
         
         document.querySelectorAll(`.ds-field[data-ds-id="${id}"]`).forEach(el => {
-            // For deposit/withdrawal card fields, use visibility+width instead of display
-            // to avoid collapsing grid cells abruptly
             el.style.display = nowVisible ? '' : 'none';
         });
         
-        // Custom logic for deposit/withdrawal card rows
-        if (id.endsWith('_main') || id.endsWith('_summary')) {
-            const baseId = id.replace('_main', '').replace('_summary', '');
-            const mainVisible = dataSourceFieldVisibility[baseId + '_main'] !== false;
-            const summaryVisible = dataSourceFieldVisibility[baseId + '_summary'] !== false;
-            
-            // Update using reliable data-ds-row + .ds-val-grid selectors
-            document.querySelectorAll(`[data-ds-row="${baseId}"]`).forEach(row => {
-                const valGrid = row.querySelector('.ds-val-grid');
-                if (!mainVisible && !summaryVisible) {
-                    row.style.display = 'none';
-                } else {
-                    row.style.display = 'flex';
-                    if (valGrid) {
-                        valGrid.style.gridTemplateColumns = (mainVisible && summaryVisible) ? '1fr 1fr' : '1fr';
-                    }
-                }
-            });
-        }
-        
         // Update parent card visibility
         document.querySelectorAll('.detail-card').forEach(card => {
+            const hasVisibleField = Array.from(card.querySelectorAll('.ds-field')).some(el => el.style.display !== 'none');
             if (card.dataset.category === '存取款资料') {
-                const hasVisibleRow = Array.from(card.querySelectorAll('[data-ds-row]')).some(el => el.style.display !== 'none');
-                card.style.display = hasVisibleRow ? 'flex' : 'none';
+                card.style.display = hasVisibleField ? 'flex' : 'none';
             } else if (card.dataset.category !== '其他' && card.dataset.category !== '用户标签') {
-                const hasVisibleField = Array.from(card.querySelectorAll('.ds-field')).some(el => el.style.display !== 'none');
                 card.style.display = hasVisibleField ? 'block' : 'none';
-            } else if (card.dataset.category === '其他' || card.dataset.category === '用户标签') {
-                const hasVisibleField = Array.from(card.querySelectorAll('.ds-field')).some(el => el.style.display !== 'none');
-                // Other and User Tags cards have border:none or specific layouts, but their wrapper visibility applies normally
+            } else {
                 card.style.display = hasVisibleField ? (card.dataset.category === '其他' ? 'block' : '') : 'none';
             }
         });
@@ -4176,10 +5193,10 @@ document.addEventListener('DOMContentLoaded', () => {
         Object.keys(compactColumnVisibility).forEach(k => delete compactColumnVisibility[k]);
         Object.assign(compactColumnVisibility, customColumnDefaults.compactVisibility);
         Object.keys(tableFieldVisibility).forEach(k => delete tableFieldVisibility[k]);
+        Object.assign(tableFieldVisibility, customColumnDefaults.compactVisibility);
         drawerCategoryOrder.length = 0;
         drawerCategoryOrder.push(...customColumnDefaults.categoryOrder);
         dataSourceFieldVisibility = { ...customColumnDefaults.dataSourceVisibility };
-        depositCardSubOrder.splice(0, depositCardSubOrder.length, ...DEPOSIT_SUB_TAGS);
 
         renderDrawerStates();
         updateTableFromDrawer();
@@ -4306,7 +5323,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 compactColumnsConfig.some(c => c.id === col.id);
             
 
-                const isChecked = isLeftPanel ? (tableFieldVisibility[col.id] !== false) : (dataSourceFieldVisibility[col.id] !== false);
+                const isChecked = isLeftPanel ? 
+                    (currentTableMode === 'nested' ? (nestedColumnVisibility[col.id] !== false) : (compactColumnVisibility[col.id] !== false)) : 
+                    (dataSourceFieldVisibility[col.id] !== false);
                 const onChangeHtml = isLeftPanel ? `onchange="window.toggleTableFieldVisibility('${col.id}', this.checked)"` : `onchange="window.toggleDataSourceFieldVisibility('${col.id}')"`;
                 
                 const color = isChecked ? '#3b82f6' : '#64748b';
@@ -4357,19 +5376,15 @@ document.addEventListener('DOMContentLoaded', () => {
             '存取款资料': 'ph-bold ph-wallet',
             '推荐关系': 'ph-bold ph-share-network',
             '余额宝': 'ph-bold ph-wallet',
-            '信贷': 'ph-bold ph-credit-card',
             '其他': 'ph-bold ph-folder',
             '大头照': 'ph-bold ph-user-square',
             '账号信息': 'ph-bold ph-user',
             '基本资料': 'ph-bold ph-user',
             '成长与积分': 'ph-bold ph-trend-up',
-            '主钱包': 'ph-bold ph-wallet',
-            '汇总 USDT': 'ph-bold ph-wallet'
+            '日期信息': 'ph-bold ph-calendar'
         };
 
         let blockBorder = '#e2e8f0';
-        if (groupName === '主钱包') blockBorder = '#bfdbfe';
-        else if (groupName === '汇总 USDT') blockBorder = '#e9d5ff';
 
         const upFn = isLeftPanel ? `window.moveLeftCategoryUp('${groupName}')` : `window.moveRightCategoryUp('${groupName}')`;
         const downFn = isLeftPanel ? `window.moveLeftCategoryDown('${groupName}')` : `window.moveRightCategoryDown('${groupName}')`;
@@ -4401,40 +5416,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         <button type="button" class="cat-move-btn" ${canDown ? '' : 'disabled aria-disabled="true"'} style="background:none; border:none; color:#94a3b8; cursor:pointer; padding: 4px 8px; display:flex; align-items:center; justify-content:center; ${canDown ? '' : MOVE_BTN_DISABLED_STYLE}" onclick="${downFn}" title="${canDown ? '向下移动' : '已在最下方'}"><i class="ph-bold ph-caret-down"></i></button>
                     </div>`}
                 </div>
-        `;
-
-        if (groupName === '存取款资料') {
-            // 主钱包 / 汇总 (USDT) sub-blocks, each movable up/down (主表: column order; 展开卡片: card column order)
-            const subDefs = {
-                '主钱包': { label: '主钱包', color: '#1d4ed8', border: '#eff6ff', cols: cols.filter(c => c.tag === '主钱包') },
-                '汇总': { label: '汇总 (USDT)', color: '#7e22ce', border: '#faf5ff', cols: cols.filter(c => c.tag === '汇总') }
-            };
-            const subOrder = isLeftPanel ? getDepositSubOrder(cols) : depositCardSubOrder;
-            const target = isLeftPanel ? 'table' : 'card';
-            subOrder.forEach((tag, i) => {
-                const def = subDefs[tag];
-                const canSubUp = i > 0;
-                const canSubDown = i < subOrder.length - 1;
-                innerHtml += `
-                <div class="deposit-subgroup" data-subgroup="${tag}" style="border: 1px solid ${def.border}; border-radius: 6px; background: #f8fafc; padding: 12px; ${i < subOrder.length - 1 ? 'margin-bottom: 12px;' : ''}">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                        <div style="font-size: 13px; font-weight: 600; color: ${def.color};">${def.label}</div>
-                        <div style="display:flex; align-items:center; border: 1px solid #e2e8f0; background: #fff; border-radius: 6px; overflow: hidden;" onclick="event.stopPropagation()">
-                            <button type="button" class="subgroup-move-btn" ${canSubUp ? '' : 'disabled aria-disabled="true"'} style="background:none; border:none; color:#94a3b8; cursor:pointer; padding: 2px 6px; border-right: 1px solid #e2e8f0; display:flex; align-items:center; justify-content:center; ${canSubUp ? '' : MOVE_BTN_DISABLED_STYLE}" onclick="window.moveDepositSubgroup('${target}', '${tag}', -1)" title="${canSubUp ? '向上移动' : '已在最上方'}"><i class="ph-bold ph-caret-up"></i></button>
-                            <button type="button" class="subgroup-move-btn" ${canSubDown ? '' : 'disabled aria-disabled="true"'} style="background:none; border:none; color:#94a3b8; cursor:pointer; padding: 2px 6px; display:flex; align-items:center; justify-content:center; ${canSubDown ? '' : MOVE_BTN_DISABLED_STYLE}" onclick="window.moveDepositSubgroup('${target}', '${tag}', 1)" title="${canSubDown ? '向下移动' : '已在最下方'}"><i class="ph-bold ph-caret-down"></i></button>
-                        </div>
-                    </div>
-                    ${renderPills(def.cols, isLeftPanel)}
-                </div>`;
-            });
-        } else {
-            innerHtml += `
                 <div style="padding-top: 4px;">
                     ${renderPills(cols, isLeftPanel)}
                 </div>
-            `;
-        }
-        innerHtml += `</div>`;
+            </div>
+        `;
         return innerHtml;
     }
 
@@ -4608,10 +5594,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!col1 || !col2) return;
         drawerFlip([col1, col2], _renderDrawerStatesOriginal, { seeds });
     }
-    // Group a pill belongs to in the drawer (存取款资料 is split into 主钱包 / 汇总 sub-groups)
     function columnMoveGroupKey(col) {
-        const grp = col.category || col.group || '其他';
-        return grp === '存取款资料' ? `${grp}|${col.tag || ''}` : grp;
+        return col.category || col.group || '其他';
     }
 
     // ◀▶: swap with the nearest column of the same group; no-op at the group boundary
@@ -4630,40 +5614,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateTableFromDrawer();
     }
 
-    // 存取款资料 sub-block order. 主表 follows the column order; 展开卡片 keeps its own order
-    function getDepositSubOrder(cols) {
-        const order = [];
-        cols.forEach(c => { if (DEPOSIT_SUB_TAGS.includes(c.tag) && !order.includes(c.tag)) order.push(c.tag); });
-        DEPOSIT_SUB_TAGS.forEach(t => { if (!order.includes(t)) order.push(t); });
-        return order;
-    }
-
-    window.moveDepositSubgroup = function (target, tag, dir) {
-        if (target === 'card') {
-            const idx = depositCardSubOrder.indexOf(tag);
-            const j = idx + dir;
-            if (idx < 0 || j < 0 || j >= depositCardSubOrder.length) return;
-            [depositCardSubOrder[idx], depositCardSubOrder[j]] = [depositCardSubOrder[j], depositCardSubOrder[idx]];
-            renderDrawerStates();
-            window.applyDrawerOrderToTable();
-            return;
-        }
-        const list = currentTableMode === 'nested' ? nestedColumnsConfig : compactColumnsConfig;
-        const positions = [];
-        list.forEach((c, i) => {
-            if ((c.category || c.group) === '存取款资料' && DEPOSIT_SUB_TAGS.includes(c.tag)) positions.push(i);
-        });
-        const cols = positions.map(i => list[i]);
-        const order = getDepositSubOrder(cols);
-        const idx = order.indexOf(tag);
-        const j = idx + dir;
-        if (idx < 0 || j < 0 || j >= order.length) return;
-        [order[idx], order[j]] = [order[j], order[idx]];
-        const sorted = cols.slice().sort((a, b) => order.indexOf(a.tag) - order.indexOf(b.tag)); // stable: keeps order inside each block
-        positions.forEach((pos, k) => { list[pos] = sorted[k]; });
-        renderDrawerStates();
-        updateTableFromDrawer();
-    };
+    window.moveDepositSubgroup = function () {};
 
     window.moveColumnLeft = function (id) { moveColumnWithinGroup(id, -1); };
     window.moveColumnRight = function (id) { moveColumnWithinGroup(id, 1); };
@@ -4846,62 +5797,36 @@ document.addEventListener('DOMContentLoaded', () => {
     const withdrawTableBody = document.getElementById('withdrawTableBody');
     if (btnAddWithdraw && withdrawTableBody) {
         btnAddWithdraw.addEventListener('click', () => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><select class="ued-select-sm"><option>请选择</option><option>银行卡</option><option>支付宝</option><option>虚拟币</option><option>ewallet</option></select></td>
-                <td><input type="text" class="ued-input-sm" value=""></td>
-                <td>
-                    <select class="ued-select-sm"><option>请选择</option><option>中国工商银行</option><option>USDT / USD</option></select>
-                </td>
-                <td><input type="text" class="ued-input-sm" value=""></td>
-                <td class="ued-withdraw-actions">
-                    <button class="ued-action-del">删除</button>
-                    <button class="ued-action-save">储存</button>
-                </td>
-                <td>
-                    <label class="ued-toggle-switch ued-withdraw-toggle">
-                        <input type="checkbox">
-                        <span class="ued-toggle-thumb"></span>
-                    </label>
-                </td>
-            `;
+            const tr = createWithdrawRow({ type: '请选择' });
             withdrawTableBody.appendChild(tr);
+            showToast("已添加新提款记录");
+        });
+
+        // Event delegation for type select & sub-select changes
+        withdrawTableBody.addEventListener('change', (e) => {
+            if (e.target.classList.contains('wdr-type-select')) {
+                const tr = e.target.closest('tr');
+                if (tr) updateWithdrawRowFields(tr, e.target.value);
+            } else if (e.target.classList.contains('wdr-sub-select')) {
+                e.target.style.color = e.target.value ? '#1e293b' : '#94a3b8';
+            }
         });
 
         // Event delegation for delete and save actions
         withdrawTableBody.addEventListener('click', (e) => {
             if (e.target.classList.contains('ued-action-del')) {
-                if (window.confirm("你确定要提交吗？")) {
+                if (window.confirm("你确定要删除吗？")) {
                     const tr = e.target.closest('tr');
                     if (tr) tr.remove();
+                    showToast("已删除该提款信息");
                 }
             } else if (e.target.classList.contains('ued-action-save')) {
-                window.confirm("你确定要提交吗？");
-            }
-        });
-
-        // Event delegation for toggle disable/enable action
-        withdrawTableBody.addEventListener('change', (e) => {
-            if (e.target.type === 'checkbox' && e.target.closest('.ued-withdraw-toggle')) {
-                if (e.target.checked) {
-                    // Attempting to disable (switch turned to the right)
-                    if (window.confirm("你确定要提交吗？")) {
-                        showToast("提现信息已被禁用成功");
-                    } else {
-                        // Revert check state (cancel disable)
-                        e.target.checked = false;
-                    }
-                } else {
-                    // Attempting to enable (switch turned to the left)
-                    if (window.confirm("你确定要提交吗？")) {
-                        showToast("提现信息已被启用成功");
-                    } else {
-                        // Revert check state (cancel enable)
-                        e.target.checked = true;
-                    }
+                if (window.confirm("你确定要保存吗？")) {
+                    showToast("提款信息保存成功");
                 }
             }
         });
+    }
 
         // Event delegation for Member Settings toggles
         const settingsTab = document.getElementById('tabContentSettings');
@@ -4924,7 +5849,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
-    }
 
     const walletDetailModal = document.getElementById('walletDetailModal');
     const walletDetailTitle = document.getElementById('walletDetailTitle');
@@ -4932,13 +5856,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const walletDetailBody = document.getElementById('walletDetailBody');
     const btnWalletDetailClose = document.getElementById('btnWalletDetailClose');
 
-    // Nested-mode amount links share the same per-currency modal as the compact table / expanded cards
-    window.openWalletDetailModal = function (title, wallet, mainAmount) {
-        if (!['RMB', 'VND', 'PHP', 'MYR', 'USDT'].includes(wallet)) return; // e.g. 会员积分 has no currency breakdown
-        const raw = mainAmount === undefined || mainAmount === null ? '' : String(mainAmount).replace(/,/g, '').trim();
-        const amount = raw === '' || raw === '-' || isNaN(Number(raw)) ? null : Number(raw);
-        window.openCurrencyModal(title, amount, wallet);
-    };
+    // Amounts are non-clickable
+    window.openWalletDetailModal = function () {};
 
     if (btnWalletDetailClose) {
         btnWalletDetailClose.addEventListener('click', () => {
@@ -5095,9 +6014,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     switch(dsId) {
                         case 'ds_depTotal_main': rawVal = user.deposit; isAmount = true; break;
                         case 'ds_wdrTotal_main': rawVal = user.withdraw; isAmount = true; break;
+                        case 'ds_sysAdd_main': rawVal = user.adminAdd !== undefined ? user.adminAdd : 50000; isAmount = true; break;
+                        case 'ds_sysSub_main': rawVal = user.adminDeduct !== undefined ? user.adminDeduct : '-'; isAmount = true; break;
+                        case 'ds_sysActAdd_main': rawVal = user.adminActAdd !== undefined ? user.adminActAdd : 0; isAmount = true; break;
+                        case 'ds_directDepTotal_main': rawVal = user.directDepositTotal; isAmount = true; break;
+                        case 'ds_directWdrTotal_main': rawVal = user.directWithdrawTotal; isAmount = true; break;
                         case 'ds_wdrFee_main': rawVal = user.withdrawPre; isAmount = true; break;
-                        case 'ds_sysAdd_main': rawVal = user.adminAdd !== undefined ? user.adminAdd : 200; isAmount = true; break;
-                        case 'ds_sysSub_main': rawVal = user.adminDeduct !== undefined ? user.adminDeduct : 0; isAmount = true; break;
                         case 'ds_commBal': rawVal = user.commissionBal; isAmount = true; break;
                         case 'ds_balTreas': rawVal = 15000; isAmount = true; break;
                         case 'ds_balInt': rawVal = 35; isAmount = true; break;
@@ -5545,6 +6467,7 @@ const item = list.splice(idxFrom, 1)[0];
     // Ordered top-most first; each closes through its own close button so existing cleanup still runs.
     (function initClickOutsideToClose() {
         const panels = [
+            { id: 'confirmLogoutModal', openClass: 'show', closeBtn: 'btnConfirmLogoutClose', modal: true },
             { id: 'walletDetailModal', openClass: 'show', closeBtn: 'btnWalletDetailClose', modal: true },
             { id: 'subordinateModal', openClass: 'show', closeBtn: 'btnSubordinateModalClose', modal: true },
             { id: 'customizeFilterModal', openClass: 'show', closeBtn: 'btnCustomizeFilterClose', modal: true },
@@ -5606,17 +6529,18 @@ const item = list.splice(idxFrom, 1)[0];
     (function initGlobalTooltip() {
         const tip = document.createElement('div');
         tip.id = 'global-tooltip';
+        tip.innerHTML = '<span class="tip-text"></span><div class="tip-arrow"></div>';
         Object.assign(tip.style, {
             position: 'fixed',
-            background: '#1e293b',
+            background: '#2b3648',
             color: '#fff',
-            padding: '6px 10px',
+            padding: '5px 8px',
             borderRadius: '4px',
             fontSize: '12px',
             whiteSpace: 'nowrap',
             pointerEvents: 'none',
             zIndex: '999999',
-            boxShadow: '0 4px 6px -1px rgba(0,0,0,.15)',
+            boxShadow: '0 4px 6px -1px rgba(0,0,0,.25)',
             opacity: '0',
             transition: 'opacity 0.15s ease',
             display: 'none'
@@ -5625,45 +6549,179 @@ const item = list.splice(idxFrom, 1)[0];
 
         let hideTimer;
 
-        document.addEventListener('mouseover', (e) => {
-            const el = e.target.closest('[data-tooltip]');
-            if (!el) return;
+        function updateTipPosition(el) {
+            const rect = el.getBoundingClientRect();
+            const tipW = tip.offsetWidth || 60;
+            const tipH = tip.offsetHeight || 26;
+            const gap = 8;
+            const preferTop = el.dataset.tooltipPos === 'top' || el.classList.contains('btn-force-logout') || el.classList.contains('btn-disable-user-icon');
 
+            let top = preferTop ? (rect.top - tipH - gap) : (rect.bottom + gap);
+            let isTop = preferTop;
+
+            if (preferTop && top < 8) {
+                top = rect.bottom + gap;
+                isTop = false;
+            } else if (!preferTop && (top + tipH > window.innerHeight - 10)) {
+                top = rect.top - tipH - gap;
+                isTop = true;
+            }
+
+            let left = rect.left + rect.width / 2 - tipW / 2;
+            left = Math.max(8, Math.min(left, window.innerWidth - tipW - 8));
+
+            tip.classList.toggle('pos-top', isTop);
+            tip.classList.toggle('pos-bottom', !isTop);
+
+            const arrow = tip.querySelector('.tip-arrow');
+            if (arrow) {
+                const arrowLeft = Math.max(8, Math.min(tipW - 8, (rect.left + rect.width / 2) - left));
+                arrow.style.left = arrowLeft + 'px';
+            }
+
+            tip.style.top = top + 'px';
+            tip.style.left = left + 'px';
+            tip.style.opacity = '1';
+        }
+
+        function showTip(el) {
             clearTimeout(hideTimer);
-            tip.textContent = el.dataset.tooltip;
+            const textSpan = tip.querySelector('.tip-text') || tip;
+            const tooltipText = el.dataset.tooltip || el.getAttribute('data-tooltip') || '';
+            if (!tooltipText) return;
+            textSpan.textContent = tooltipText;
             tip.style.display = 'block';
 
-            // Position: below element by default, auto-flip if near bottom
-            requestAnimationFrame(() => {
-                const rect = el.getBoundingClientRect();
-                const tipW = tip.offsetWidth;
-                const tipH = tip.offsetHeight;
-                const gap = 8;
+            updateTipPosition(el);
+            requestAnimationFrame(() => updateTipPosition(el));
+        }
 
-                let top = rect.bottom + gap;
-                let left = rect.left + rect.width / 2 - tipW / 2;
+        document.addEventListener('mouseover', (e) => {
+            const el = e.target.closest('[data-tooltip]');
+            if (el) showTip(el);
+        });
 
-                // Flip upward if overflows viewport bottom
-                if (top + tipH > window.innerHeight - 10) {
-                    top = rect.top - tipH - gap;
-                }
-                // Clamp horizontally
-                left = Math.max(8, Math.min(left, window.innerWidth - tipW - 8));
-
-                tip.style.top = top + 'px';
-                tip.style.left = left + 'px';
-                tip.style.opacity = '1';
-            });
+        document.addEventListener('mousemove', (e) => {
+            const el = e.target.closest('[data-tooltip]');
+            if (el && tip.style.display !== 'block') {
+                showTip(el);
+            }
         });
 
         document.addEventListener('mouseout', (e) => {
             const el = e.target.closest('[data-tooltip]');
             if (!el) return;
+            if (e.relatedTarget && (el === e.relatedTarget || el.contains(e.relatedTarget))) return;
             hideTimer = setTimeout(() => {
                 tip.style.opacity = '0';
                 tip.style.display = 'none';
             }, 80);
         });
+
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('[data-tooltip]')) {
+                tip.style.opacity = '0';
+                tip.style.display = 'none';
+            }
+        });
     })();
+
+    // ── 强制登出在线用户 (二次确认弹窗处理逻辑) ──
+    let pendingLogoutUser = null;
+    const confirmLogoutModal = document.getElementById('confirmLogoutModal');
+    const confirmLogoutUserAccount = document.getElementById('confirmLogoutUserAccount');
+    const btnConfirmLogoutClose = document.getElementById('btnConfirmLogoutClose');
+    const btnConfirmLogoutCancel = document.getElementById('btnConfirmLogoutCancel');
+    const btnConfirmLogoutSubmit = document.getElementById('btnConfirmLogoutSubmit');
+
+    function openConfirmLogoutModal(uid, account) {
+        pendingLogoutUser = { uid, account };
+        if (confirmLogoutUserAccount) {
+            confirmLogoutUserAccount.textContent = account || uid || '-';
+        }
+        if (confirmLogoutModal) {
+            confirmLogoutModal.classList.add('show');
+        }
+    }
+
+    function closeConfirmLogoutModal() {
+        pendingLogoutUser = null;
+        if (confirmLogoutModal) {
+            confirmLogoutModal.classList.remove('show');
+        }
+    }
+
+    if (btnConfirmLogoutClose) btnConfirmLogoutClose.addEventListener('click', closeConfirmLogoutModal);
+    if (btnConfirmLogoutCancel) btnConfirmLogoutCancel.addEventListener('click', closeConfirmLogoutModal);
+    if (btnConfirmLogoutSubmit) {
+        btnConfirmLogoutSubmit.addEventListener('click', () => {
+            if (!pendingLogoutUser) return;
+            const targetUid = pendingLogoutUser.uid;
+
+            // 更新数据状态为离线
+            if (window.mockUsers) {
+                const user = window.mockUsers.find(u => u.uid == targetUid);
+                if (user) {
+                    user.offlineDays = 1;
+                }
+            }
+
+            // 更新 DOM 对应行
+            if (userTableBody) {
+                const row = userTableBody.querySelector(`tr[data-uid="${targetUid}"]`);
+                if (row) {
+                    const onlineCell = row.querySelector('td[data-col="online"]');
+                    if (onlineCell) {
+                        onlineCell.innerHTML = `
+                            <div class="online-cell-container">
+                                <span class="status-dot-icon offline" title="离线"></span>
+                            </div>
+                        `;
+                    }
+                    const avatarCell = row.querySelector('.user-avatar-circle-grey');
+                    if (avatarCell) {
+                        const dot = avatarCell.querySelector('.status-dot-icon');
+                        if (dot) {
+                            dot.className = 'status-dot-icon offline';
+                            dot.title = '离线';
+                        }
+                        const logoutBtn = row.querySelector('.btn-force-logout');
+                        if (logoutBtn) logoutBtn.remove();
+                    }
+                }
+            }
+
+            // 隐藏残留 tooltip
+            const tip = document.getElementById('global-tooltip');
+            if (tip) {
+                tip.style.opacity = '0';
+                tip.style.display = 'none';
+            }
+
+            closeConfirmLogoutModal();
+            showToast('已成功将该会员踢下线');
+        });
+    }
+
+    if (userTableBody) {
+        userTableBody.addEventListener('click', (e) => {
+            const btn = e.target.closest('.btn-force-logout');
+            if (btn) {
+                e.preventDefault();
+                e.stopPropagation();
+                const uid = btn.getAttribute('data-uid');
+                const account = btn.getAttribute('data-account');
+                openConfirmLogoutModal(uid, account);
+            }
+        });
+    }
+
+    if (urlParams.get('openDetail') === '1' || urlParams.get('openDetail') === 'true') {
+        setTimeout(() => {
+            if (typeof openUserDetailModal === 'function') {
+                openUserDetailModal('1239361225');
+            }
+        }, 150);
+    }
 
 });

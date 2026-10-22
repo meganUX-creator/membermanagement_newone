@@ -32,30 +32,37 @@
 
 ## 3. 分页规格：基本信息 (Tab: Basic Information)
 
-### 3.1 账户概况 (Account Overview)
-表单栏位配置如下：
+### 3.1 基本信息表单栏位配置 (25个字段)
 
-| 栏位名称 | 建议变数名 | 组件类型 | 说明 / 验证规则 |
-| :--- | :--- | :--- | :--- |
-| 账号 | `account` | 唯读文字 (Readonly Text) | 显示用户账号名称（如：test_user_1） |
-| 会员类型 | `memberType` | 唯读 / 下拉选单 (Select) | 显示或设定代理会员等身分 |
-| 账户状态 | `accountStatus`| 单选 / 下拉选单 (Select/Radio)| 选项：正常 (Normal)、冻结 (Frozen)、停用 (Disabled) |
-| 用户暱称 | `nickname` | 文字输入框 (Input) | |
-| 真实姓名 | `realName` | 文字输入框 (Input) | |
-| 出生年月日| `birthday` | 日期选择器 (DatePicker) | |
-| 用户等级 | `userLevel` | 下拉选单 (Select) | 选项：VIP会员、普通会员、黄金会员等 |
-| 支付层级 | `paymentTier` | 下拉选单 (Select) | 选项：默认层、VIP层等 |
+| 序号 | 栏位名称 | 建议变数名 | 组件类型 | 说明 / 预设值 |
+| :--- | :--- | :--- | :--- | :--- |
+| 1 | 状态 | `status` | 下拉选单 (Select) | 选项：待审核、正常、冻结、停用 |
+| 2 | 登录密码 | `password` | 文字输入框 (Input) | |
+| 3 | 真实姓名 | `realName` | 文字输入框 (Input) | |
+| 4 | 生日 | `birthday` | 年月日下拉选单 (YYYY、MM、DD) | 包含年、月、日联动选单 |
+| 5 | 昵称 | `nickname` | 文字输入框 (Input) | 预设带有 `ad***13` |
+| 6 | 会员层级 | `payLevel` | 下拉选单 (Select) | 预设为 `默认层` |
+| 7 | 电话前缀国码 | `phonePrefix` | 下拉选单 (Select) | 预设为 `+86` |
+| 8 | 手机号 | `phone` | 文字输入框 (Input) | |
+| 9 | CPF | `cpf` | 文字输入框 (Input) | |
+| 10 | 邮箱 | `email` | 文字输入框 (Input) | |
+| 11 | 地址 | `address` | 文字输入框 (Input) | |
+| 12 | 省 | `province` | 文字输入框 (Input) | |
+| 13 | 城市 | `city` | 文字输入框 (Input) | |
+| 14 | 邮递区号 | `zipCode` | 文字输入框 (Input) | |
+| 15 | QQ | `qq` | 文字输入框 (Input) | |
+| 16 | 微信 | `wechat` | 文字输入框 (Input) | |
+| 17 | zalo | `zalo` | 文字输入框 (Input) | |
+| 18 | whatsapp | `whatsapp` | 文字输入框 (Input) | |
+| 19 | telegram | `telegram` | 文字输入框 (Input) | |
+| 20 | facebook | `facebook` | 文字输入框 (Input) | |
+| 21 | line | `line` | 文字输入框 (Input) | |
+| 22 | instagram | `instagram` | 文字输入框 (Input) | |
+| 23 | tiktok | `tiktok` | 文字输入框 (Input) | |
+| 24 | twitter | `twitter` | 文字输入框 (Input) | |
+| 25 | 谷歌帐号 | `googleAccount` | 状态显示区块 | 统一显示「暂未绑定」 |
 
-### 3.2 联络方式与第三方绑定 (Contact & 3rd Party Binding)
-- **电话 (Phone)**：文字输入框 `Input`（需附带格式校验/正则表达式功能）。
-- **Email**：文字输入框 `Input`（需附带 Email 格式校验）。
-- **社群与通讯软体 (Social Media)**：
-  - 提供多个 `Input`，包含：QQ, 微信 (WeChat), Zalo, WhatsApp, Telegram, Facebook。
-- **第三方登入绑定状态 (3rd Party Login Status)**：
-  - 显示 Facebook, Google, Telegram 的绑定状态。
-  - UI 建议：使用图标 + 文字标签（如：`<Badge status="success" text="已绑定" />` / `<Badge status="default" text="尚未绑定" />`）。
-
-### 3.3 提现信息 (Withdrawal Information)
+### 3.2 提现信息 (Withdrawal Information)
 这是一个**动态列表 (Dynamic List/Table)**，支援增删改查。
 - **列表栏位**：
   1. 出款类型（银行卡 / 支付宝 / 虚拟币等）
