@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>会员管理 Prototype</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=37">
+    <link rel="stylesheet" href="style.css?v=38">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <style>
         /* 权限细粒度隐藏样式 */
@@ -847,14 +847,22 @@
                     </div>
                     <div class="ued-withdraw-table-wrap">
                         <table class="ued-withdraw-table">
+                            <colgroup>
+                                <col style="width: 13%;">
+                                <col style="width: 18%;">
+                                <col style="width: 21%;">
+                                <col style="width: 16%;">
+                                <col style="width: 14%;">
+                                <col style="width: 18%;">
+                            </colgroup>
                             <thead>
                                 <tr>
-                                    <th style="width: 14%;">提款类型</th>
-                                    <th style="width: 20%;">开户银行/虚拟币合约/PIX</th>
-                                    <th style="width: 24%;">银行卡号/虚拟币地址/支付宝帐号/CPF</th>
+                                    <th style="width: 13%;">提款类型</th>
+                                    <th style="width: 18%;">开户银行/虚拟币合约/PIX</th>
+                                    <th style="width: 21%;">银行卡号/虚拟币地址/支付宝帐号/CPF</th>
                                     <th style="width: 16%;">邮箱/手机号/EVP</th>
                                     <th style="width: 14%;">分行地址</th>
-                                    <th style="width: 12%;">操作</th>
+                                    <th style="width: 18%;">操作</th>
                                 </tr>
                             </thead>
                             <tbody id="withdrawTableBody">
@@ -1370,9 +1378,9 @@
                             <div
                                 style="display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: #334155; margin-bottom: 4px;">
                                 <span id="dtlLoginIp">54.150.111.152</span>
-                                <button class="ued-copy-btn" title="复制" style="color: #94a3b8; padding: 2px;"><i
+                                <button class="ued-copy-btn" id="btnCopyDtlLoginIp" title="复制" style="color: #94a3b8; padding: 2px;"><i
                                         class="ph ph-copy"></i></button>
-                                <button class="ued-copy-btn" title="IP统计" style="color: #3b82f6; padding: 2px;"
+                                <button class="ued-copy-btn" id="btnLinkDtlLoginIp" title="IP统计" style="color: #3b82f6; padding: 2px;"
                                     onclick="if(typeof showToast !== 'undefined') showToast('到IP统计页面'); else alert('到IP统计页面');"><i
                                         class="ph ph-link"></i></button>
                             </div>
@@ -1388,10 +1396,10 @@
                         <div>
                             <div style="font-size: 13px; color: #475569; margin-bottom: 8px; font-weight: 600;">设备号
                             </div>
-                            <div
+                            <div id="dtlLoginDeviceWrapper"
                                 style="display: flex; align-items: flex-start; gap: 6px; font-size: 14px; font-weight: 500; color: #334155; word-break: break-all; line-height: 1.5;">
-                                ee5868d85af7f68cf088a<br>6780ff8882a
-                                <button class="ued-copy-btn" title="复制"
+                                <span id="dtlLoginDeviceVal">ee5868d85af7f68cf088a<br>6780ff8882a</span>
+                                <button class="ued-copy-btn" id="btnCopyDtlLoginDevice" title="复制"
                                     style="color: #94a3b8; padding: 2px; margin-top: -2px;"><i
                                         class="ph ph-copy"></i></button>
                             </div>
@@ -1413,7 +1421,7 @@
                             <div style="font-size: 13px; color: #475569; margin-bottom: 8px; font-weight: 600;">同设备人数
                             </div>
                             <div>
-                                <a href="#" class="nested-trigger" data-type="device"
+                                <a href="#" id="dtlLoginSameDevice" class="nested-trigger" data-type="device"
                                     data-val="ee5868d85af7f68cf088a6780ff8882a"
                                     style="font-size: 15px; font-weight: 600; color: #3b82f6; text-decoration: underline;">28</a>
                             </div>
@@ -1448,9 +1456,9 @@
                             <div
                                 style="display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: #334155; margin-bottom: 4px;">
                                 <span id="dtlRegIp">54.150.111.152</span>
-                                <button class="ued-copy-btn" title="复制" style="color: #94a3b8; padding: 2px;"><i
+                                <button class="ued-copy-btn" id="btnCopyDtlRegIp" title="复制" style="color: #94a3b8; padding: 2px;"><i
                                         class="ph ph-copy"></i></button>
-                                <button class="ued-copy-btn" title="IP统计" style="color: #3b82f6; padding: 2px;"
+                                <button class="ued-copy-btn" id="btnLinkDtlRegIp" title="IP统计" style="color: #3b82f6; padding: 2px;"
                                     onclick="if(typeof showToast !== 'undefined') showToast('到IP统计页面'); else alert('到IP统计页面');"><i
                                         class="ph ph-link"></i></button>
                             </div>
@@ -1458,17 +1466,17 @@
                         </div>
                         <div>
                             <div style="font-size: 13px; color: #475569; margin-bottom: 8px; font-weight: 600;">时间</div>
-                            <div style="font-size: 14px; font-weight: 500; color: #94a3b8; line-height: 1.5;">
-                                -
+                            <div id="dtlRegTime" style="font-size: 14px; font-weight: 500; color: #334155; line-height: 1.5;">
+                                2026-06-10<br>14:20:15
                             </div>
                         </div>
                         <div>
                             <div style="font-size: 13px; color: #475569; margin-bottom: 8px; font-weight: 600;">设备号
                             </div>
-                            <div
+                            <div id="dtlRegDeviceWrapper"
                                 style="display: flex; align-items: flex-start; gap: 6px; font-size: 14px; font-weight: 500; color: #334155; word-break: break-all; line-height: 1.5;">
-                                ee5868d85af7f68cf088a<br>6780ff8882a
-                                <button class="ued-copy-btn" title="复制"
+                                <span id="dtlRegDeviceVal">ee5868d85af7f68cf088a<br>6780ff8882a</span>
+                                <button class="ued-copy-btn" id="btnCopyDtlRegDevice" title="复制"
                                     style="color: #94a3b8; padding: 2px; margin-top: -2px;"><i
                                         class="ph ph-copy"></i></button>
                             </div>
@@ -1490,7 +1498,7 @@
                             <div style="font-size: 13px; color: #475569; margin-bottom: 8px; font-weight: 600;">同设备人数
                             </div>
                             <div>
-                                <a href="#" class="nested-trigger" data-type="device"
+                                <a href="#" id="dtlRegSameDevice" class="nested-trigger" data-type="device"
                                     data-val="ee5868d85af7f68cf088a6780ff8882a"
                                     style="font-size: 15px; font-weight: 600; color: #3b82f6; text-decoration: underline;">18</a>
                             </div>
@@ -2019,8 +2027,12 @@
                             if (!span.getAttribute('data-raw')) span.setAttribute('data-raw', raw);
                             if (!span.getAttribute('data-masked')) span.setAttribute('data-masked', masked);
 
-                            if (window.dataMode === 'nodata' || raw === '-') {
-                                span.textContent = '-';
+                            if (window.dataMode === 'nodata' || raw === '-' || raw === 'N/A' || span.textContent.trim() === 'N/A' || (span.querySelector && span.querySelector('.data-na'))) {
+                                if (cfg.field === 'qa') {
+                                    span.innerHTML = '<span class="data-na" style="color: #94a3b8;">N/A</span>';
+                                } else {
+                                    span.textContent = '-';
+                                }
                             } else if (cfg.allowed) {
                                 span.textContent = raw;
                             } else {

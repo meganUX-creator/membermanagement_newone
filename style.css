@@ -5303,6 +5303,7 @@ textarea.ued-textarea {
 }
 .ued-withdraw-table {
     width: 100%;
+    table-layout: fixed;
     border-collapse: collapse;
     font-size: 12px;
 }
@@ -5390,16 +5391,31 @@ input.ued-input-sm:focus {
     padding: 2px 8px;
     display: inline-block;
 }
+.ued-withdraw-table td.ued-withdraw-actions {
+    display: table-cell !important;
+    vertical-align: middle;
+    text-align: center;
+    white-space: nowrap;
+    padding: 6px 2px;
+}
+.ued-withdraw-table td.ued-withdraw-actions .ued-action-del,
+.ued-withdraw-table td.ued-withdraw-actions .ued-action-save,
+.ued-withdraw-table td.ued-withdraw-actions .ued-action-disable {
+    display: inline-block;
+    vertical-align: middle;
+    margin: 0 2px;
+    height: 26px;
+    line-height: 26px;
+    padding: 0 8px;
+    font-size: 12px;
+}
 .ued-withdraw-actions {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: nowrap;
+    text-align: center;
+    white-space: nowrap;
 }
 .ued-action-del, .ued-action-save, .ued-action-disable {
     height: 28px;
-    padding: 0 14px;
+    padding: 0 10px;
     border-radius: 4px;
     font-size: 12.5px;
     cursor: pointer;

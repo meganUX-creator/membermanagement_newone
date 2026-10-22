@@ -1058,7 +1058,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 'registerIp', group: '日期信息', label: '注册 IP', checkboxIndex: 9, render: (user) => `<td class="cell-val" data-col="registerIp"><div class="ip-row" style="display: flex; align-items: center; gap: 4px;">${dataMode === 'nodata' ? '-' : renderDataState(user.registerIp || user.regIp || user.ip, 'ip')}</div></td>` },
         {
             id: 'action', group: '', label: '操作', checkboxIndex: 10, render: (user) => `<td class="cell-action sticky-col-right" data-col="action" style="text-align: center; width: 100px;">
-            <div class="op-dropdown-container">
+            <div class="op-dropdown-container" data-uid="${user.uid}">
                 <button type="button" class="btn-icon-only btn-text btn-op-more" style="border: none; background: transparent; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; margin: 0 auto; color: #1f2937; cursor: pointer;">
                     <i class="ph ph-dots-three" style="font-size:16px;"></i>
                 </button>
@@ -2684,14 +2684,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     e.stopPropagation();
                     const text = li.textContent.trim();
                     const tr = li.closest('tr');
-                    // find user account/id if needed
+                    const container = li.closest('.op-dropdown-container');
                     const userCell = tr ? tr.querySelector('[data-uid]') : null;
-                    const uid = userCell ? userCell.getAttribute('data-uid') : null;
+                    const uid = (container && container.getAttribute('data-uid')) || (userCell ? userCell.getAttribute('data-uid') : null) || (window.dataMode === 'nodata' ? '-' : null);
 
-                    if (text === '编辑用户' || text === '编辑用户') {
-                        if (uid) openUserEditModal(uid);
-                    } else if (text === '查看详情' || text === '查看详情') {
-                        if (uid) openUserDetailModal(uid);
+                    if (text === '编辑用户') {
+                        openUserEditModal(uid || '-');
+                    } else if (text === '查看详情') {
+                        openUserDetailModal(uid || '-');
                     } else {
                         // other menu items: placeholder (no alert)
                     }
@@ -3271,7 +3271,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Initialize UI
-    setTableMode('compact');
+    const initialMode = urlParams.get('mode') === 'nested' ? 'nested' : 'compact';
+    setTableMode(initialMode);
     updateFilters();
 
 
@@ -3437,6 +3438,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!badge) return;
         badge.className = 'ued-status-badge';
         const st = statusText || '正常';
+        if (window.dataMode === 'nodata' || st === '-') {
+            badge.classList.add('ued-status-disabled');
+            badge.innerHTML = '<span class="ued-status-dot"></span>目前状态：-';
+            return;
+        }
         if (st === '正常' || st === 'normal') {
             badge.classList.add('ued-status-normal');
             badge.innerHTML = '<span class="ued-status-dot"></span>目前状态：正常';
@@ -3460,6 +3466,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getWithdrawSubOptionsHtml(type, subValue = '') {
+        if (window.dataMode === 'nodata' || type === '-') {
+            return `<select class="ued-select-sm wdr-sub-select" style="color: #94a3b8;"><option value="-">-</option></select>`;
+        }
         if (type === '银行卡') {
             const banks = ['绑定银行29', '中国工商银行', '中国农业银行', '中国建设银行', '招商银行', 'TEST'];
             const options = banks.map(b => `<option value="${b}" ${b === subValue ? 'selected' : ''}>${b}</option>`).join('');
@@ -3513,6 +3522,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getWithdrawEmailPhoneHtml(type, val = '') {
+        if (window.dataMode === 'nodata' || type === '-') {
+            return `<input type="text" class="ued-input-sm wdr-email-phone-input" value="-" style="color: #94a3b8;">`;
+        }
         if (type === 'PIX') {
             return `<input type="text" class="ued-input-sm wdr-email-phone-input" value="${val || ''}">`;
         }
@@ -3520,6 +3532,38 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function createWithdrawRow(data = {}) {
+        const isNoData = window.dataMode === 'nodata' || data.isNoData || data.type === '-';
+        if (isNoData) {
+            const tr = document.createElement('tr');
+            tr.setAttribute('data-wdr-type', '-');
+            tr.innerHTML = `
+                <td>
+                    <select class="ued-select-sm wdr-type-select" style="color: #94a3b8;">
+                        <option value="-">-</option>
+                    </select>
+                </td>
+                <td class="wdr-col-sub">
+                    <select class="ued-select-sm wdr-sub-select" style="color: #94a3b8;">
+                        <option value="-">-</option>
+                    </select>
+                </td>
+                <td class="wdr-col-account">
+                    <input type="text" class="ued-input-sm wdr-account-input" value="-" style="color: #94a3b8;" data-field="wdr">
+                </td>
+                <td class="wdr-col-email-phone">
+                    <input type="text" class="ued-input-sm wdr-email-phone-input" value="-" style="color: #94a3b8;">
+                </td>
+                <td class="wdr-col-branch">
+                    <input type="text" class="ued-input-sm wdr-branch-input" value="-" style="color: #94a3b8;">
+                </td>
+                <td class="ued-withdraw-actions">
+                    <button type="button" class="ued-action-save">保存</button>
+                    <button type="button" class="ued-action-del">删除</button>
+                </td>
+            `;
+            return tr;
+        }
+
         const type = data.type || '请选择';
         const subValue = data.subValue || '';
         const account = data.account || '';
@@ -3554,6 +3598,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateWithdrawRowFields(tr, newType) {
+        if (window.dataMode === 'nodata' || newType === '-') {
+            tr.setAttribute('data-wdr-type', '-');
+            const subTd = tr.querySelector('.wdr-col-sub');
+            if (subTd) {
+                subTd.innerHTML = `<select class="ued-select-sm wdr-sub-select" style="color: #94a3b8;"><option value="-">-</option></select>`;
+            }
+            const emailPhoneTd = tr.querySelector('.wdr-col-email-phone');
+            if (emailPhoneTd) {
+                emailPhoneTd.innerHTML = `<input type="text" class="ued-input-sm wdr-email-phone-input" value="-" style="color: #94a3b8;">`;
+            }
+            return;
+        }
         tr.setAttribute('data-wdr-type', newType);
         const typeSelect = tr.querySelector('.wdr-type-select');
         if (typeSelect) {
@@ -3770,11 +3826,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Update title
         const titleEl = document.getElementById('userEditDrawerTitle');
-        if (titleEl) titleEl.textContent = `编辑用户 · ${user.account}`;
+        if (titleEl) {
+            const acc = (window.dataMode === 'nodata' || !user.account || user.account === '-') ? '-' : user.account;
+            titleEl.textContent = `编辑用户 · ${acc}`;
+        }
 
         // 1. 状态 (待审核、正常、冻结、停用)
         const currentStatus = user.status || '正常';
-        if (editFormStatusEl) editFormStatusEl.value = currentStatus;
+        if (editFormStatusEl) {
+            if (window.dataMode === 'nodata' || currentStatus === '-') {
+                if (!Array.from(editFormStatusEl.options).some(o => o.value === '-')) {
+                    editFormStatusEl.add(new Option('-', '-'), 0);
+                }
+                editFormStatusEl.value = '-';
+            } else {
+                const dashOpt = Array.from(editFormStatusEl.options).find(o => o.value === '-');
+                if (dashOpt) editFormStatusEl.remove(dashOpt.index);
+                editFormStatusEl.value = currentStatus;
+            }
+        }
         updateUedStatusBadge(currentStatus);
 
         // 2. 登录密码 (文字输入框)
@@ -3805,14 +3875,41 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (window.dataMode === 'nodata') {
-            if (birthYearSel) birthYearSel.value = '';
-            if (birthMonthSel) birthMonthSel.value = '';
-            if (birthDaySel) birthDaySel.value = '';
+            if (birthYearSel) {
+                if (!Array.from(birthYearSel.options).some(o => o.value === '-')) {
+                    birthYearSel.add(new Option('-', '-'), 0);
+                }
+                birthYearSel.value = '-';
+            }
+            if (birthMonthSel) {
+                if (!Array.from(birthMonthSel.options).some(o => o.value === '-')) {
+                    birthMonthSel.add(new Option('-', '-'), 0);
+                }
+                birthMonthSel.value = '-';
+            }
+            if (birthDaySel) {
+                if (!Array.from(birthDaySel.options).some(o => o.value === '-')) {
+                    birthDaySel.add(new Option('-', '-'), 0);
+                }
+                birthDaySel.value = '-';
+            }
             if (birthdayIn) birthdayIn.value = '-';
         } else {
-            if (birthYearSel) birthYearSel.value = bYear;
-            if (birthMonthSel) birthMonthSel.value = bMonth;
-            if (birthDaySel) birthDaySel.value = bDay;
+            if (birthYearSel) {
+                const dashOpt = Array.from(birthYearSel.options).find(o => o.value === '-');
+                if (dashOpt) birthYearSel.remove(dashOpt.index);
+                birthYearSel.value = bYear;
+            }
+            if (birthMonthSel) {
+                const dashOpt = Array.from(birthMonthSel.options).find(o => o.value === '-');
+                if (dashOpt) birthMonthSel.remove(dashOpt.index);
+                birthMonthSel.value = bMonth;
+            }
+            if (birthDaySel) {
+                const dashOpt = Array.from(birthDaySel.options).find(o => o.value === '-');
+                if (dashOpt) birthDaySel.remove(dashOpt.index);
+                birthDaySel.value = bDay;
+            }
             if (birthdayIn) birthdayIn.value = `${bYear}-${bMonth}-${bDay}`;
         }
 
@@ -3831,10 +3928,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (payLevelSel) {
             if (window.dataMode === 'nodata') {
                 if (!Array.from(payLevelSel.options).some(o => o.value === '-')) {
-                    payLevelSel.add(new Option('-', '-'));
+                    payLevelSel.add(new Option('-', '-'), 0);
                 }
                 payLevelSel.value = '-';
             } else {
+                const dashOpt = Array.from(payLevelSel.options).find(o => o.value === '-');
+                if (dashOpt) payLevelSel.remove(dashOpt.index);
                 payLevelSel.value = user.payLevel || '默认层';
             }
         }
@@ -3842,7 +3941,16 @@ document.addEventListener('DOMContentLoaded', () => {
         // 7. 电话前缀国码：下拉选单（预设为 +86）
         const phonePrefixSel = document.getElementById('editFormPhonePrefix');
         if (phonePrefixSel) {
-            phonePrefixSel.value = (window.dataMode === 'nodata') ? '-' : (user.phonePrefix || '+86');
+            if (window.dataMode === 'nodata') {
+                if (!Array.from(phonePrefixSel.options).some(o => o.value === '-')) {
+                    phonePrefixSel.add(new Option('-', '-'), 0);
+                }
+                phonePrefixSel.value = '-';
+            } else {
+                const dashOpt = Array.from(phonePrefixSel.options).find(o => o.value === '-');
+                if (dashOpt) phonePrefixSel.remove(dashOpt.index);
+                phonePrefixSel.value = user.phonePrefix || '+86';
+            }
         }
 
         // 8. 手机号：文字输入框
@@ -3988,19 +4096,33 @@ document.addEventListener('DOMContentLoaded', () => {
         const remarkIn = document.getElementById('editFormRemark');
         if (remarkIn) remarkIn.value = (window.dataMode === 'nodata' || user.remark === '-') ? '-' : (user.remark || '');
 
+        // Tab 2 会员设置 fields
+        const settingWithdrawPassword = document.getElementById('settingWithdrawPassword');
+        if (settingWithdrawPassword) settingWithdrawPassword.value = (window.dataMode === 'nodata') ? '-' : '';
+        const settingStopThirdRebate = document.getElementById('settingStopThirdRebate');
+        if (settingStopThirdRebate) settingStopThirdRebate.checked = false;
+        const settingStopSportsRebate = document.getElementById('settingStopSportsRebate');
+        if (settingStopSportsRebate) settingStopSportsRebate.checked = false;
+        const settingMaxDepositRebateCount = document.getElementById('settingMaxDepositRebateCount');
+        if (settingMaxDepositRebateCount) settingMaxDepositRebateCount.value = (window.dataMode === 'nodata') ? '' : '0';
+        const displayPwdErrorCount = document.getElementById('displayPwdErrorCount');
+        if (displayPwdErrorCount) displayPwdErrorCount.textContent = (window.dataMode === 'nodata') ? '-' : '0次';
+        const displayFundPwdErrorCount = document.getElementById('displayFundPwdErrorCount');
+        if (displayFundPwdErrorCount) displayFundPwdErrorCount.textContent = (window.dataMode === 'nodata') ? '-' : '0次';
+
         if (window.updateSensitiveFields) {
             window.updateSensitiveFields(window.currentPermissions);
         }
 
         // Nodata mode handling for withdraw table
         const withdrawTableBody = document.getElementById('withdrawTableBody');
-    if (withdrawTableBody) {
-        if (window.dataMode === 'nodata') {
-            withdrawTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #94a3b8; padding: 32px 0;">-</td></tr>`;
-        } else if (withdrawTableBody.children.length === 1 && withdrawTableBody.children[0].textContent.trim() === '-') {
-            withdrawTableBody.innerHTML = getDefaultWithdrawRowsHtml();
+        if (withdrawTableBody) {
+            if (window.dataMode === 'nodata') {
+                withdrawTableBody.innerHTML = `<tr class="wdr-empty-row"><td colspan="6" style="text-align: center; color: #94a3b8; padding: 32px 0;">-</td></tr>`;
+            } else if (withdrawTableBody.children.length === 1 && withdrawTableBody.children[0].textContent.trim() === '-') {
+                withdrawTableBody.innerHTML = getDefaultWithdrawRowsHtml();
+            }
         }
-    }
 
         // Reset to Basic Tab on open
         const basicTabBtn = document.querySelector('.user-edit-tab-item[data-tab="basic"]');
@@ -4032,7 +4154,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (badge) {
             badge.className = 'ued-status-badge';
             let statusText = user.status || '正常';
-            if (statusText === '正常' || statusText === 'normal') {
+            if (window.dataMode === 'nodata' || statusText === '-') {
+                badge.classList.add('ued-status-disabled');
+                badge.innerHTML = '<span class="ued-status-dot"></span>目前状态：-';
+            } else if (statusText === '正常' || statusText === 'normal') {
                 badge.classList.add('ued-status-normal');
                 badge.innerHTML = '<span class="ued-status-dot"></span>目前状态：正常';
             } else if (statusText === '冻结' || statusText === '冻结') {
@@ -4045,7 +4170,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // 会员信息：基本资料 / 联络与地址资讯 / 社群与通讯软件 / 备注资讯
-        const dtlVal = (v, emptyVals = []) => (window.dataMode === 'nodata' || v === undefined || v === null || v === '' || v === '-' || emptyVals.includes(v)) ? '-' : v;
+        const isUserNoData = (window.dataMode === 'nodata' || !user.uid || user.uid === '-' || user.account === '-');
+        const dtlVal = (v, emptyVals = []) => (isUserNoData || v === undefined || v === null || v === '' || v === '-' || emptyVals.includes(v)) ? '-' : v;
         const isMing = user.account === 'mingv0717001';
 
         const rawPhone = dtlVal(isMing ? '13800138000' : (user.phone && user.phone !== '未绑定' && user.phone !== '未验证' ? user.phone : '13800138000'));
@@ -4056,13 +4182,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const rawFacebook = dtlVal(isMing ? 'fb_mingv0717001' : (user.facebook || 'fb_mingv0717001'));
         const rawWhatsapp = dtlVal(isMing ? '+1234567891' : (user.whatsapp || '+1234567891'));
         const rawTelegram = dtlVal(isMing ? '@tg_mingv0717001' : (user.telegram || '@tg_mingv0717001'));
-        const rawSecurityQuestion = dtlVal(user.securityQuestion || '您最喜欢的宠物名字？');
-        const rawSecurityAnswer = dtlVal(user.securityAnswer || '我的宠物');
+        const rawSecurityQuestion = (isUserNoData || !user.securityQuestion || user.securityQuestion === '-' || user.securityQuestion === '无数据' || user.securityQuestion === 'N/A')
+            ? '<span class="data-na" style="color: #94a3b8;">N/A</span>'
+            : (isMing ? '您最喜欢的宠物名字？' : (user.securityQuestion || '您最喜欢的宠物名字？'));
+        const rawSecurityAnswer = (isUserNoData || !user.securityAnswer || user.securityAnswer === '-' || user.securityAnswer === '无数据' || user.securityAnswer === 'N/A')
+            ? '<span class="data-na" style="color: #94a3b8;">N/A</span>'
+            : (isMing ? '我的宠物' : (user.securityAnswer || '我的宠物'));
 
         const dtlFields = {
-            dtlNickname: (window.dataMode === 'nodata' || !user.nickname || user.nickname === '-' || user.nickname === '无数据' || user.nickname === 'N/A') ? '<span class="data-na" style="color: #94a3b8;">N/A</span>' : (isMing ? 'mingv0717001' : (user.nickname || user.account)),
-            dtlAccount: (window.dataMode === 'nodata' || !user.account || user.account === '-' || user.account === '无数据' || user.account === 'N/A') ? '<span class="data-na" style="color: #94a3b8;">N/A</span>' : user.account,
-            dtlRealName: (window.dataMode === 'nodata' || !user.realName || user.realName === '-' || user.realName === '无数据' || user.realName === 'N/A') ? '<span class="data-na" style="color: #94a3b8;">N/A</span>' : (isMing ? '李小明' : user.realName),
+            dtlNickname: (isUserNoData || !user.nickname || user.nickname === '-' || user.nickname === '无数据' || user.nickname === 'N/A') ? '<span class="data-na" style="color: #94a3b8;">N/A</span>' : (isMing ? 'mingv0717001' : (user.nickname || user.account)),
+            dtlAccount: (isUserNoData || !user.account || user.account === '-' || user.account === '无数据' || user.account === 'N/A') ? '<span class="data-na" style="color: #94a3b8;">N/A</span>' : user.account,
+            dtlRealName: (isUserNoData || !user.realName || user.realName === '-' || user.realName === '无数据' || user.realName === 'N/A') ? '<span class="data-na" style="color: #94a3b8;">N/A</span>' : (isMing ? '李小明' : user.realName),
             dtlBirthday: dtlVal(isMing ? '1991-02-11' : (user.birthday || '-')),
             dtlPhoneCode: dtlVal(isMing ? '+55' : (user.phoneCode || '-')),
             dtlPhone: rawPhone,
@@ -4079,8 +4209,8 @@ document.addEventListener('DOMContentLoaded', () => {
             dtlTelegram: rawTelegram,
             dtlSecurityQuestion: rawSecurityQuestion,
             dtlSecurityAnswer: rawSecurityAnswer,
-            dtlRemark: (window.dataMode === 'nodata' || !user.remark || user.remark === '-' || user.remark === '暂无备注' || user.remark === '无数据' || user.remark === 'N/A') ? '<span class="data-na" style="color: #94a3b8;">N/A</span>' : user.remark,
-            dtlFollowRemark: (window.dataMode === 'nodata' || !user.followRemark || user.followRemark === '-' || user.followRemark === '暂无回访备注' || user.followRemark === '无数据' || user.followRemark === 'N/A') ? '<span class="data-na" style="color: #94a3b8;">N/A</span>' : user.followRemark
+            dtlRemark: (isUserNoData || !user.remark || user.remark === '-' || user.remark === '暂无备注' || user.remark === '无数据' || user.remark === 'N/A') ? '<span class="data-na" style="color: #94a3b8;">N/A</span>' : user.remark,
+            dtlFollowRemark: (isUserNoData || !user.followRemark || user.followRemark === '-' || user.followRemark === '暂无回访备注' || user.followRemark === '无数据' || user.followRemark === 'N/A') ? '<span class="data-na" style="color: #94a3b8;">N/A</span>' : user.followRemark
         };
 
         const maskHelper = window.getMaskedValue || ((v) => v);
@@ -4131,37 +4261,210 @@ document.addEventListener('DOMContentLoaded', () => {
             window.updateSensitiveFields(window.currentPermissions);
         }
 
-        const loginDeviceTypeEl = document.getElementById('dtlLoginDeviceType');
-        if (loginDeviceTypeEl) loginDeviceTypeEl.textContent = dtlVal(user.deviceType || 'iOS');
+        // ===== Tab 4: 设备与IP纪录 数据渲染 =====
+        const isDeviceNoData = (window.dataMode === 'nodata' || !user.ip || user.ip === '-');
 
-        // 最新登入纪录：IP / 时间 / 同IP人数 follow the user's own data (so the IP shown can be found via the 登录IP filter)
-        if (window.dataMode !== 'nodata') {
-            const loginIpEl = document.getElementById('dtlLoginIp');
-            const loginGeoEl = document.getElementById('dtlLoginIpGeo');
-            const loginTimeEl = document.getElementById('dtlLoginTime');
-            const sameIpEl = document.getElementById('dtlLoginSameIp');
-            const ip = user.ip && user.ip !== '-' ? user.ip : '-';
-            if (loginIpEl) loginIpEl.textContent = ip;
-            if (loginGeoEl) loginGeoEl.textContent = `(${getIpGeo(ip)})`;
+        // Card 1: 最新登入纪录
+        const loginIpEl = document.getElementById('dtlLoginIp');
+        const btnCopyLoginIp = document.getElementById('btnCopyDtlLoginIp');
+        const btnLinkLoginIp = document.getElementById('btnLinkDtlLoginIp');
+        const loginGeoEl = document.getElementById('dtlLoginIpGeo');
+        const loginTimeEl = document.getElementById('dtlLoginTime');
+        const loginDeviceValEl = document.getElementById('dtlLoginDeviceVal');
+        const btnCopyLoginDevice = document.getElementById('btnCopyDtlLoginDevice');
+        const loginSameIpEl = document.getElementById('dtlLoginSameIp');
+        const loginSameDeviceEl = document.getElementById('dtlLoginSameDevice');
+        const loginDeviceTypeEl = document.getElementById('dtlLoginDeviceType');
+
+        // Card 2: 注册纪录
+        const regIpEl = document.getElementById('dtlRegIp');
+        const btnCopyRegIp = document.getElementById('btnCopyDtlRegIp');
+        const btnLinkRegIp = document.getElementById('btnLinkDtlRegIp');
+        const regGeoEl = document.getElementById('dtlRegIpGeo');
+        const regTimeEl = document.getElementById('dtlRegTime');
+        const regDeviceValEl = document.getElementById('dtlRegDeviceVal');
+        const btnCopyRegDevice = document.getElementById('btnCopyDtlRegDevice');
+        const regSameIpEl = document.getElementById('dtlRegSameIp');
+        const regSameDeviceEl = document.getElementById('dtlRegSameDevice');
+
+        if (isDeviceNoData) {
+            // 所有数值/数据栏位统一显示为灰色的 "-"，所有标题完整保留
+            // 1. 最新登入纪录
+            if (loginIpEl) {
+                loginIpEl.textContent = '-';
+                loginIpEl.style.color = '#94a3b8';
+                loginIpEl.style.fontWeight = '500';
+            }
+            if (btnCopyLoginIp) btnCopyLoginIp.style.display = 'none';
+            if (btnLinkLoginIp) btnLinkLoginIp.style.display = 'none';
+            if (loginGeoEl) loginGeoEl.style.display = 'none';
+
             if (loginTimeEl) {
-                const [d, t] = String(user.lastLogin || '-').split(' ');
+                loginTimeEl.innerHTML = '-';
+                loginTimeEl.style.color = '#94a3b8';
+            }
+
+            if (loginDeviceValEl) {
+                loginDeviceValEl.textContent = '-';
+                loginDeviceValEl.style.color = '#94a3b8';
+            }
+            if (btnCopyLoginDevice) btnCopyLoginDevice.style.display = 'none';
+
+            if (loginSameIpEl) {
+                loginSameIpEl.textContent = '-';
+                loginSameIpEl.dataset.val = '-';
+                loginSameIpEl.style.color = '#94a3b8';
+                loginSameIpEl.style.textDecoration = 'none';
+                loginSameIpEl.style.cursor = 'default';
+                loginSameIpEl.style.pointerEvents = 'none';
+            }
+
+            if (loginSameDeviceEl) {
+                loginSameDeviceEl.textContent = '-';
+                loginSameDeviceEl.dataset.val = '-';
+                loginSameDeviceEl.style.color = '#94a3b8';
+                loginSameDeviceEl.style.textDecoration = 'none';
+                loginSameDeviceEl.style.cursor = 'default';
+                loginSameDeviceEl.style.pointerEvents = 'none';
+            }
+
+            if (loginDeviceTypeEl) {
+                loginDeviceTypeEl.textContent = '-';
+                loginDeviceTypeEl.style.color = '#94a3b8';
+            }
+
+            // 2. 注册纪录
+            if (regIpEl) {
+                regIpEl.textContent = '-';
+                regIpEl.style.color = '#94a3b8';
+                regIpEl.style.fontWeight = '500';
+            }
+            if (btnCopyRegIp) btnCopyRegIp.style.display = 'none';
+            if (btnLinkRegIp) btnLinkRegIp.style.display = 'none';
+            if (regGeoEl) regGeoEl.style.display = 'none';
+
+            if (regTimeEl) {
+                regTimeEl.innerHTML = '-';
+                regTimeEl.style.color = '#94a3b8';
+            }
+
+            if (regDeviceValEl) {
+                regDeviceValEl.textContent = '-';
+                regDeviceValEl.style.color = '#94a3b8';
+            }
+            if (btnCopyRegDevice) btnCopyRegDevice.style.display = 'none';
+
+            if (regSameIpEl) {
+                regSameIpEl.textContent = '-';
+                regSameIpEl.dataset.val = '-';
+                regSameIpEl.style.color = '#94a3b8';
+                regSameIpEl.style.textDecoration = 'none';
+                regSameIpEl.style.cursor = 'default';
+                regSameIpEl.style.pointerEvents = 'none';
+            }
+
+            if (regSameDeviceEl) {
+                regSameDeviceEl.textContent = '-';
+                regSameDeviceEl.dataset.val = '-';
+                regSameDeviceEl.style.color = '#94a3b8';
+                regSameDeviceEl.style.textDecoration = 'none';
+                regSameDeviceEl.style.cursor = 'default';
+                regSameDeviceEl.style.pointerEvents = 'none';
+            }
+        } else {
+            // 正常有数据状态
+            const ip = user.ip && user.ip !== '-' ? user.ip : '54.150.111.152';
+            const regIp = user.regIp && user.regIp !== '-' ? user.regIp : ip;
+
+            // 1. 最新登入纪录
+            if (loginIpEl) {
+                loginIpEl.textContent = ip;
+                loginIpEl.style.color = '#334155';
+                loginIpEl.style.fontWeight = '600';
+            }
+            if (btnCopyLoginIp) btnCopyLoginIp.style.display = '';
+            if (btnLinkLoginIp) btnLinkLoginIp.style.display = '';
+            if (loginGeoEl) {
+                loginGeoEl.style.display = '';
+                loginGeoEl.textContent = `(${getIpGeo(ip)})`;
+            }
+
+            if (loginTimeEl) {
+                loginTimeEl.style.color = '#334155';
+                const [d, t] = String(user.lastLogin || '2026-07-28 16:30:42').split(' ');
                 loginTimeEl.innerHTML = t ? `${d}<br>${t}` : d;
             }
-            if (sameIpEl) {
-                sameIpEl.dataset.val = ip;
-                sameIpEl.textContent = ip === '-' ? '-' : getUsersByIp(ip).length.toLocaleString();
+
+            if (loginDeviceValEl) {
+                loginDeviceValEl.innerHTML = 'ee5868d85af7f68cf088a<br>6780ff8882a';
+                loginDeviceValEl.style.color = '#334155';
+            }
+            if (btnCopyLoginDevice) btnCopyLoginDevice.style.display = '';
+
+            if (loginSameIpEl) {
+                loginSameIpEl.dataset.val = ip;
+                loginSameIpEl.textContent = getUsersByIp(ip).length.toLocaleString();
+                loginSameIpEl.style.color = '#3b82f6';
+                loginSameIpEl.style.textDecoration = 'underline';
+                loginSameIpEl.style.cursor = 'pointer';
+                loginSameIpEl.style.pointerEvents = 'auto';
             }
 
-            // 注册纪录：mock 资料无独立注册 IP，沿用用户 IP；同IP人数与下钻列表同源
-            const regIp = user.regIp && user.regIp !== '-' ? user.regIp : ip;
-            const regIpEl = document.getElementById('dtlRegIp');
-            const regGeoEl = document.getElementById('dtlRegIpGeo');
-            const regSameIpEl = document.getElementById('dtlRegSameIp');
-            if (regIpEl) regIpEl.textContent = regIp;
-            if (regGeoEl) regGeoEl.textContent = `(${getIpGeo(regIp)})`;
+            if (loginSameDeviceEl) {
+                loginSameDeviceEl.dataset.val = 'ee5868d85af7f68cf088a6780ff8882a';
+                loginSameDeviceEl.textContent = '28';
+                loginSameDeviceEl.style.color = '#3b82f6';
+                loginSameDeviceEl.style.textDecoration = 'underline';
+                loginSameDeviceEl.style.cursor = 'pointer';
+                loginSameDeviceEl.style.pointerEvents = 'auto';
+            }
+
+            if (loginDeviceTypeEl) {
+                loginDeviceTypeEl.textContent = user.deviceType || 'iOS';
+                loginDeviceTypeEl.style.color = '#334155';
+            }
+
+            // 2. 注册纪录
+            if (regIpEl) {
+                regIpEl.textContent = regIp;
+                regIpEl.style.color = '#334155';
+                regIpEl.style.fontWeight = '600';
+            }
+            if (btnCopyRegIp) btnCopyRegIp.style.display = '';
+            if (btnLinkRegIp) btnLinkRegIp.style.display = '';
+            if (regGeoEl) {
+                regGeoEl.style.display = '';
+                regGeoEl.textContent = `(${getIpGeo(regIp)})`;
+            }
+
+            if (regTimeEl) {
+                regTimeEl.style.color = '#334155';
+                const [rd, rt] = String(user.date || '2026-06-10 14:20:15').split(' ');
+                regTimeEl.innerHTML = rt ? `${rd}<br>${rt}` : (rd || '-');
+            }
+
+            if (regDeviceValEl) {
+                regDeviceValEl.innerHTML = 'ee5868d85af7f68cf088a<br>6780ff8882a';
+                regDeviceValEl.style.color = '#334155';
+            }
+            if (btnCopyRegDevice) btnCopyRegDevice.style.display = '';
+
             if (regSameIpEl) {
                 regSameIpEl.dataset.val = regIp;
-                regSameIpEl.textContent = regIp === '-' ? '-' : getUsersByIp(regIp).length.toLocaleString();
+                regSameIpEl.textContent = getUsersByIp(regIp).length.toLocaleString();
+                regSameIpEl.style.color = '#3b82f6';
+                regSameIpEl.style.textDecoration = 'underline';
+                regSameIpEl.style.cursor = 'pointer';
+                regSameIpEl.style.pointerEvents = 'auto';
+            }
+
+            if (regSameDeviceEl) {
+                regSameDeviceEl.dataset.val = 'ee5868d85af7f68cf088a6780ff8882a';
+                regSameDeviceEl.textContent = '18';
+                regSameDeviceEl.style.color = '#3b82f6';
+                regSameDeviceEl.style.textDecoration = 'underline';
+                regSameDeviceEl.style.cursor = 'pointer';
+                regSameDeviceEl.style.pointerEvents = 'auto';
             }
         }
 
@@ -4169,8 +4472,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.dataMode === 'nodata') {
             const readonlyTexts = userDetailDrawer.querySelectorAll('.ued-readonly-text');
             readonlyTexts.forEach(el => {
-                if (['dtlAccount', 'dtlRealName', 'dtlNickname', 'dtlRemark', 'dtlFollowRemark'].includes(el.id)) {
+                if (['dtlAccount', 'dtlRealName', 'dtlNickname', 'dtlRemark', 'dtlFollowRemark', 'dtlSecurityQuestion'].includes(el.id)) {
                     el.innerHTML = '<span class="data-na" style="color: #94a3b8;">N/A</span>';
+                    return;
+                }
+                const secAns = el.querySelector('#dtlSecurityAnswer');
+                if (secAns) {
+                    secAns.innerHTML = '<span class="data-na" style="color: #94a3b8;">N/A</span>';
+                    secAns.setAttribute('data-raw', 'N/A');
+                    secAns.setAttribute('data-masked', 'N/A');
                     return;
                 }
 
@@ -4190,16 +4500,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Ignore columns that have buttons (actions) or tags
                 if (!td.querySelector('button') && !td.querySelector('.user-custom-tag')) {
                     td.innerText = '-';
-                }
-            });
-
-            // Override mockup grids in Device / IP tab
-            const nestedTriggers = userDetailDrawer.querySelectorAll('.nested-trigger');
-            nestedTriggers.forEach(el => el.innerText = '-');
-            const dataDivs = userDetailDrawer.querySelectorAll('div');
-            dataDivs.forEach(div => {
-                if (div.innerText.trim() === '54.150.111.152' || div.innerText.includes('ee5868d85af7f68cf088a')) {
-                    div.innerHTML = '-';
                 }
             });
 
@@ -4351,8 +4651,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const nestedTrigger = e.target.closest('.nested-trigger');
         if (nestedTrigger) {
             e.preventDefault();
+            if (window.dataMode === 'nodata' || nestedTrigger.textContent.trim() === '-' || nestedTrigger.style.pointerEvents === 'none') {
+                return;
+            }
             const type = nestedTrigger.getAttribute('data-type');
             const val = nestedTrigger.getAttribute('data-val');
+            if (!val || val === '-') return;
             openNestedDrawer(type, val);
         }
     });
@@ -4364,6 +4668,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Expose to global scope for inline onclick
     window._openUserEditModalGlobal = openUserEditModal;
+    window.openUserEditModal = openUserEditModal;
 
     // Copy helper: Clipboard API with execCommand fallback (e.g. non-secure context / iframe without permission)
     function copyToClipboard(text) {
@@ -4447,22 +4752,26 @@ document.addEventListener('DOMContentLoaded', () => {
         const link = e.target.closest('.user-detail-link');
         if (link) {
             e.preventDefault();
-            // 无数据（N/A）时不开启任何抽屉
-            if (window.dataMode === 'nodata' || link.querySelector('.data-na, .data-empty')) return;
-            const uid = link.getAttribute('data-uid');
             const text = link.textContent.trim();
+            const uid = link.getAttribute('data-uid') || (window.dataMode === 'nodata' ? '-' : null);
 
-            if (text === '查看详情' || text === '查看详情') {
+            if (text === '查看详情') {
+                openUserDetailModal(uid || '-');
+                return;
+            }
+            if (text === '编辑用户') {
+                openUserEditModal(uid || '-');
+                return;
+            }
+
+            // 列表其他下钻连结（如账号栏位），在无数据时不开启抽屉
+            if (window.dataMode === 'nodata' || link.querySelector('.data-na, .data-empty') || link.textContent.trim() === '-' || link.textContent.trim() === 'N/A') return;
+
+            // Fallback for general links (like the username column)
+            if (link.closest('#nestedDrilldownDrawer')) {
                 openUserDetailModal(uid);
-            } else if (text === '编辑用户' || text === '编辑用户') {
-                openUserEditModal(uid);
             } else {
-                // Fallback for general links (like the username column)
-                if (link.closest('#nestedDrilldownDrawer')) {
-                    openUserDetailModal(uid);
-                } else {
-                    openUserEditModal(uid);
-                }
+                openUserEditModal(uid);
             }
         }
 
@@ -5797,7 +6106,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const withdrawTableBody = document.getElementById('withdrawTableBody');
     if (btnAddWithdraw && withdrawTableBody) {
         btnAddWithdraw.addEventListener('click', () => {
-            const tr = createWithdrawRow({ type: '请选择' });
+            // Remove empty placeholder row if present
+            const emptyRow = withdrawTableBody.querySelector('.wdr-empty-row, td[colspan="6"]');
+            if (emptyRow) {
+                const trToRemove = emptyRow.tagName === 'TR' ? emptyRow : emptyRow.closest('tr');
+                if (trToRemove) trToRemove.remove();
+            }
+
+            const isNoData = window.dataMode === 'nodata';
+            const tr = createWithdrawRow(isNoData ? { type: '-', isNoData: true } : { type: '请选择' });
             withdrawTableBody.appendChild(tr);
             showToast("已添加新提款记录");
         });
@@ -5808,7 +6125,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const tr = e.target.closest('tr');
                 if (tr) updateWithdrawRowFields(tr, e.target.value);
             } else if (e.target.classList.contains('wdr-sub-select')) {
-                e.target.style.color = e.target.value ? '#1e293b' : '#94a3b8';
+                e.target.style.color = (e.target.value && e.target.value !== '-') ? '#1e293b' : '#94a3b8';
             }
         });
 
@@ -5819,6 +6136,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     const tr = e.target.closest('tr');
                     if (tr) tr.remove();
                     showToast("已删除该提款信息");
+
+                    // If table is now empty, restore empty placeholder row
+                    if (withdrawTableBody.querySelectorAll('tr').length === 0) {
+                        withdrawTableBody.innerHTML = `<tr class="wdr-empty-row"><td colspan="6" style="text-align: center; color: #94a3b8; padding: 32px 0;">-</td></tr>`;
+                    }
                 }
             } else if (e.target.classList.contains('ued-action-save')) {
                 if (window.confirm("你确定要保存吗？")) {
